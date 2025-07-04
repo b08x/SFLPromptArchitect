@@ -15,26 +15,31 @@ This systematic approach ensures your prompts are not just functional, but optim
 ## Key Features
 
 ### 🏗️ **Structured Prompt Creation**
+
 - Create prompts using the SFL framework with guided fields
 - Choose from predefined options or customize your own
 - Ensure consistency and completeness in prompt design
 
 ### 🧙‍♂️ **AI-Powered Prompt Wizard**
+
 - Describe your goal in natural language
 - Let Gemini AI generate a complete SFL-structured prompt
 - Refine and customize the AI-generated suggestions
 
 ### 🧪 **Live Prompt Testing**
+
 - Test prompts directly with Google Gemini API
 - Support for dynamic variables using `{{variable}}` syntax
 - View responses in real-time to iterate and improve
 
 ### 🔍 **Advanced Search & Organization**
+
 - Filter by topic, task type, AI persona, and output format
 - Full-text search across all prompt components
 - Organize your prompt library efficiently
 
 ### 📁 **Export & Management**
+
 - Export individual prompts as JSON files
 - Persistent storage with localStorage
 - Import/export functionality for sharing prompt libraries
@@ -42,34 +47,40 @@ This systematic approach ensures your prompts are not just functional, but optim
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - Google Gemini API key
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd sfl-prompt-architect
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
    - Copy `.env.local` and add your Gemini API key:
+
    ```
    GEMINI_API_KEY=your_api_key_here
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
 
 5. **Build for production**
+
    ```bash
    npm run build
    ```
@@ -81,11 +92,13 @@ This systematic approach ensures your prompts are not just functional, but optim
 **Scenario**: Sarah creates educational content for her YouTube channel about science topics.
 
 **SFL Breakdown**:
+
 - **Field**: Astrophysics, Explanation task, Simple analogies needed
 - **Tenor**: Friendly Teacher persona, Children (5-7 years) audience, Engaging tone
 - **Mode**: Plain text, Analogy-first structure, Short paragraph (~50 words)
 
 **Example Prompt Created**:
+
 ```
 "Explain what a black hole is in simple terms that a 5-year-old can understand. Use an analogy that relates to everyday objects they know. Keep it engaging and wonder-filled."
 ```
@@ -97,11 +110,13 @@ This systematic approach ensures your prompts are not just functional, but optim
 **Scenario**: Alex needs to generate Python functions for various algorithmic problems.
 
 **SFL Breakdown**:
+
 - **Field**: Programming, Code Generation, Python/Algorithms
 - **Tenor**: Expert Coder persona, Software Developers audience, Concise/Technical tone
 - **Mode**: Python Code format, Function definition structure, Include type hints
 
 **Example Prompt Created**:
+
 ```
 "Write a Python function called `{{function_name}}` that {{task_description}}. Include proper type hints, docstring, and handle edge cases. Make it production-ready."
 ```
@@ -113,11 +128,13 @@ This systematic approach ensures your prompts are not just functional, but optim
 **Scenario**: Maria needs to summarize complex market research reports for executive briefings.
 
 **SFL Breakdown**:
+
 - **Field**: Business Analysis, Summarization, Market Research
 - **Tenor**: Neutral Reporter persona, Business Professionals audience, Objective tone
 - **Mode**: Bullet Points format, Key findings structure, Executive summary length
 
 **Example Prompt Created**:
+
 ```
 "Summarize the following market research report for C-level executives. Focus on key findings, market trends, and actionable insights. Present as bullet points with clear categories: Market Size, Competition, Opportunities, Risks."
 ```
@@ -129,11 +146,13 @@ This systematic approach ensures your prompts are not just functional, but optim
 **Scenario**: David writes fantasy novels and needs help developing consistent character personalities.
 
 **SFL Breakdown**:
+
 - **Field**: Creative Writing, Character Development, Fantasy genre
 - **Tenor**: Creative Muse persona, Writers audience, Imaginative tone
 - **Mode**: Detailed description format, Character profile structure, Multiple paragraphs
 
 **Example Prompt Created**:
+
 ```
 "Create a detailed character profile for a {{character_type}} in a fantasy setting. Include personality traits, backstory, motivations, fears, and how they speak. Make them feel authentic and three-dimensional with internal contradictions that create depth."
 ```
@@ -145,11 +164,13 @@ This systematic approach ensures your prompts are not just functional, but optim
 **Scenario**: Dr. Chen conducts academic research and needs help analyzing research papers.
 
 **SFL Breakdown**:
+
 - **Field**: Academic Research, Analysis, Literature Review
 - **Tenor**: Expert persona, Academic Researchers audience, Formal tone
 - **Mode**: Structured report format, Critical analysis structure, Detailed analysis
 
 **Example Prompt Created**:
+
 ```
 "Analyze the following research paper and provide a critical review covering: methodology strengths/weaknesses, contribution to the field, limitations, and potential future research directions. Maintain academic rigor and cite specific examples from the text."
 ```
@@ -161,11 +182,13 @@ This systematic approach ensures your prompts are not just functional, but optim
 **Scenario**: Lisa needs fresh ideas for marketing campaigns across different demographics.
 
 **SFL Breakdown**:
+
 - **Field**: Marketing, Brainstorming, Campaign Development
 - **Tenor**: Creative Muse persona, Business Professionals audience, Enthusiastic tone
 - **Mode**: Bullet Points format, Campaign concept structure, Multiple ideas
 
 **Example Prompt Created**:
+
 ```
 "Generate 5 creative marketing campaign ideas for {{product_type}} targeting {{target_demographic}}. For each idea, include: core concept, key message, channel strategy, and what makes it unique. Think outside the box while staying brand-appropriate."
 ```
@@ -193,6 +216,7 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 ## Contributing
 
 This tool is designed to evolve with the prompt engineering community. Contributions welcome for:
+
 - New SFL categories and options
 - Additional AI provider integrations
 - Export format extensions
