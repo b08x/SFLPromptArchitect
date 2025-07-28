@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+SFL-Prompt-Architect.code-workspace
+.env

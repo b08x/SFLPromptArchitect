@@ -69,7 +69,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 3. **Set up environment variables**
    - Copy `.env.local` and add your Gemini API key:
 
-   ```
+   ```bash
    GEMINI_API_KEY=your_api_key_here
    ```
 
@@ -99,7 +99,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
 **Example Prompt Created**:
 
-```
+```shell
 "Explain what a black hole is in simple terms that a 5-year-old can understand. Use an analogy that relates to everyday objects they know. Keep it engaging and wonder-filled."
 ```
 
@@ -117,7 +117,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
 **Example Prompt Created**:
 
-```
+```shell
 "Write a Python function called `{{function_name}}` that {{task_description}}. Include proper type hints, docstring, and handle edge cases. Make it production-ready."
 ```
 
@@ -135,7 +135,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
 **Example Prompt Created**:
 
-```
+```shell
 "Summarize the following market research report for C-level executives. Focus on key findings, market trends, and actionable insights. Present as bullet points with clear categories: Market Size, Competition, Opportunities, Risks."
 ```
 
@@ -153,7 +153,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
 **Example Prompt Created**:
 
-```
+```shell
 "Create a detailed character profile for a {{character_type}} in a fantasy setting. Include personality traits, backstory, motivations, fears, and how they speak. Make them feel authentic and three-dimensional with internal contradictions that create depth."
 ```
 
@@ -171,7 +171,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
 **Example Prompt Created**:
 
-```
+```shell
 "Analyze the following research paper and provide a critical review covering: methodology strengths/weaknesses, contribution to the field, limitations, and potential future research directions. Maintain academic rigor and cite specific examples from the text."
 ```
 
@@ -189,7 +189,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
 **Example Prompt Created**:
 
-```
+```shell
 "Generate 5 creative marketing campaign ideas for {{product_type}} targeting {{target_demographic}}. For each idea, include: core concept, key message, channel strategy, and what makes it unique. Think outside the box while staying brand-appropriate."
 ```
 
