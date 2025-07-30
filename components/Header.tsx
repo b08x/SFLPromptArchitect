@@ -4,20 +4,30 @@ import PlusIcon from './icons/PlusIcon';
 import MagicWandIcon from './icons/MagicWandIcon';
 import ArrowUpTrayIcon from './icons/ArrowUpTrayIcon';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
+import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
 
 interface HeaderProps {
   onAddNewPrompt: () => void;
   onOpenWizard: () => void;
   onImportPrompts: () => void;
   onExportAllPrompts: () => void;
+  onOpenHelp: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts }) => {
+const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts, onOpenHelp }) => {
   return (
     <header className="mb-6 flex items-center justify-between">
       <h1 className="text-3xl font-bold text-[#e2a32d]">SFL Prompt Architect</h1>
       <div className="flex items-center space-x-3">
         <div className="flex space-x-2 border-r border-[#5c6f7e] pr-3 mr-1">
+            <button
+              onClick={onOpenHelp}
+              className="bg-transparent border border-[#5c6f7e] hover:bg-[#5c6f7e] text-gray-200 font-semibold py-2 px-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 ease-in-out flex items-center focus:outline-none focus:ring-2 focus:ring-[#95aac0] focus:ring-offset-2 focus:ring-offset-[#212934]"
+              aria-label="Open help guide"
+              title="Help Guide"
+            >
+              <QuestionMarkCircleIcon className="w-5 h-5" />
+            </button>
             <button
               onClick={onImportPrompts}
               className="bg-transparent border border-[#5c6f7e] hover:bg-[#5c6f7e] text-gray-200 font-semibold py-2 px-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 ease-in-out flex items-center focus:outline-none focus:ring-2 focus:ring-[#95aac0] focus:ring-offset-2 focus:ring-offset-[#212934]"

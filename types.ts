@@ -49,4 +49,5 @@ export enum ModalType {
   CREATE_EDIT_PROMPT,
   VIEW_PROMPT_DETAIL,
   WIZARD,
+  HELP,
 }

@@ -7,6 +7,7 @@ import PromptList from './components/PromptList';
 import PromptFormModal from './components/PromptFormModal';
 import PromptDetailModal from './components/PromptDetailModal';
 import PromptWizardModal from './components/PromptWizardModal';
+import HelpModal from './components/HelpModal';
 import { testPromptWithGemini } from './services/geminiService';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS } from './constants';
 
@@ -92,6 +93,10 @@ const App: React.FC = () => {
   const handleOpenCreateModal = () => {
     setSelectedPrompt(null);
     setActiveModal(ModalType.CREATE_EDIT_PROMPT);
+  };
+  
+  const handleOpenHelpModal = () => {
+    setActiveModal(ModalType.HELP);
   };
 
   const handleOpenWizard = () => {
@@ -318,6 +323,7 @@ const App: React.FC = () => {
           onOpenWizard={handleOpenWizard}
           onImportPrompts={handleImportPrompts}
           onExportAllPrompts={handleExportAllPrompts}
+          onOpenHelp={handleOpenHelpModal}
         />
          <input
             type="file"
@@ -364,6 +370,13 @@ const App: React.FC = () => {
           onSave={handleSavePrompt}
           appConstants={appConstants}
           onAddConstant={handleAddConstant}
+        />
+      )}
+
+      {activeModal === ModalType.HELP && (
+        <HelpModal
+          isOpen={true}
+          onClose={handleCloseModal}
         />
       )}
     </div>
