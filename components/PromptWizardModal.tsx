@@ -1,23 +1,36 @@
 
 import React, { useState } from 'react';
 import { PromptSFL } from '../types';
-import { generateSFLFromGoal } from '../services/geminiService';
-import { INITIAL_PROMPT_SFL, TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS } from '../constants';
+import { generateSFLFromGoal, regenerateSFLFromSuggestion } from '../services/geminiService';
+import { INITIAL_PROMPT_SFL } from '../constants';
 import ModalShell from './ModalShell';
+import SparklesIcon from './icons/SparklesIcon';
 
 interface PromptWizardModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (prompt: PromptSFL) => void;
+    appConstants: {
+        taskTypes: string[];
+        aiPersonas: string[];
+        targetAudiences: string[];
+        desiredTones: string[];
+        outputFormats: string[];
+        lengthConstraints: string[];
+    };
+    onAddConstant: (key: keyof PromptWizardModalProps['appConstants'], value: string) => void;
 }
 
 type WizardStep = 'input' | 'loading' | 'refinement' | 'error';
 
-const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, onSave }) => {
+const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, onSave, appConstants, onAddConstant }) => {
     const [step, setStep] = useState<WizardStep>('input');
     const [goal, setGoal] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
+    const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
+    const [regenState, setRegenState] = useState({ shown: false, suggestion: '', loading: false });
+
 
     const handleGenerate = async () => {
         if (!goal.trim()) {
@@ -44,6 +57,7 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         setFormData(INITIAL_PROMPT_SFL);
         setErrorMessage('');
         setStep('input');
+        setRegenState({ shown: false, suggestion: '', loading: false });
     };
 
     const handleSave = () => {
@@ -83,8 +97,70 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
             },
         }));
     };
+
+    const handleSFLDirectChange = <K extends 'sflField' | 'sflTenor' | 'sflMode', F extends keyof PromptSFL[K]>(sflType: K, field: F, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            [sflType]: {
+                ...prev[sflType],
+                [field]: value,
+            },
+        }));
+    }
     
-    const renderOption = (o) => <option key={o} value={o} className="bg-[#212934] text-gray-200">{o}</option>;
+    const handleTargetAudienceChange = (audience: string) => {
+        const currentAudiences = formData.sflTenor.targetAudience || [];
+        const newAudiences = currentAudiences.includes(audience)
+          ? currentAudiences.filter(a => a !== audience)
+          : [...currentAudiences, audience];
+        handleSFLDirectChange('sflTenor', 'targetAudience', newAudiences);
+    };
+
+    const handleAddNewOption = <
+        K extends 'sflField' | 'sflTenor' | 'sflMode',
+        F extends keyof PromptSFL[K]
+    >(constantsKey: keyof typeof appConstants, sflKey: K, fieldKey: F) => {
+        const value = newOptionValues[String(fieldKey)];
+        if(value && value.trim()){
+          onAddConstant(constantsKey, value);
+          handleSFLDirectChange(sflKey, fieldKey, value);
+          setNewOptionValues(prev => ({...prev, [String(fieldKey)]: ''}));
+        }
+    };
+    
+    const handleRegeneratePrompt = async () => {
+        if (!regenState.suggestion.trim()) return;
+        setRegenState(prev => ({ ...prev, loading: true }));
+        try {
+          const result = await regenerateSFLFromSuggestion(formData, regenState.suggestion);
+          setFormData(result);
+          setRegenState({ shown: false, suggestion: '', loading: false });
+        } catch (error) {
+          console.error(error);
+          alert('Failed to regenerate prompt: ' + (error instanceof Error ? error.message : String(error)));
+          setRegenState(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    const renderOption = (o: string) => <option key={o} value={o} className="bg-[#212934] text-gray-200">{o}</option>;
+    
+    const renderCreatableSelect = <
+        K extends 'sflField' | 'sflTenor' | 'sflMode',
+        F extends keyof PromptSFL[K]
+    >(label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: string[], constantsKey: keyof typeof appConstants, sflKey: K, fieldKey: F) => (
+        <div>
+            <label className={labelClasses}>{label}</label>
+            <select name={name} value={value} onChange={onChange} className={commonInputClasses}>
+                <option value="">Select...</option>
+                {options.map(renderOption)}
+            </select>
+             <div className="flex items-center space-x-2 mt-2">
+                <input type="text" placeholder="Add new option..." value={newOptionValues[String(fieldKey)] || ''} onChange={e => setNewOptionValues(prev => ({...prev, [String(fieldKey)]: e.target.value}))} className={`${commonInputClasses} text-sm`} />
+                <button type="button" onClick={() => handleAddNewOption(constantsKey, sflKey, fieldKey)} className="px-3 py-2 text-sm bg-[#5c6f7e] hover:bg-opacity-90 rounded-md shrink-0">Add</button>
+            </div>
+        </div>
+    );
+
 
     const renderRefinementForm = () => (
         <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
@@ -96,12 +172,32 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                 <label htmlFor="promptText" className={labelClasses}>Prompt Text</label>
                 <textarea id="promptText" name="promptText" value={formData.promptText} onChange={handleFormChange} rows={5} className={commonInputClasses} />
             </div>
+            
+            <div className="my-2 text-right">
+                <button type="button" onClick={() => setRegenState(prev => ({...prev, shown: !prev.shown, suggestion: ''}))} className="text-sm text-[#e2a32d] hover:text-yellow-300 flex items-center justify-end">
+                    <SparklesIcon className="w-5 h-5 mr-1"/> Refine Prompt with AI
+                </button>
+            </div>
+            
+            {regenState.shown && (
+                <div className="space-y-2 p-3 bg-[#212934] rounded-md border border-[#5c6f7e]">
+                    <label htmlFor="regenSuggestion-wiz" className={`${labelClasses} text-gray-200`}>How should this prompt be changed?</label>
+                    <textarea id="regenSuggestion-wiz" value={regenState.suggestion} onChange={e => setRegenState(prev => ({...prev, suggestion: e.target.value}))} rows={2} placeholder="e.g., Make the tone more formal..." className={commonInputClasses} />
+                    <div className="flex justify-end space-x-2">
+                        <button type="button" onClick={() => setRegenState({ shown: false, suggestion: '', loading: false })} className="px-3 py-1 text-xs bg-[#5c6f7e] rounded-md hover:bg-opacity-80">Cancel</button>
+                        <button type="button" onClick={handleRegeneratePrompt} disabled={regenState.loading || !regenState.suggestion.trim()} className="px-3 py-1 text-xs bg-[#c36e26] rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed flex items-center">
+                            {regenState.loading && <div className="w-3 h-3 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>}
+                            {regenState.loading ? 'Refining...' : 'Refine'}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <fieldset className="border border-[#5c6f7e] p-4 rounded-md">
               <legend className="text-lg font-medium text-gray-200 px-2">SFL: Field</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div><label className={labelClasses}>Topic</label><input type="text" name="sflField.topic" value={formData.sflField.topic} onChange={handleSFLChange} className={commonInputClasses}/></div>
-                <div><label className={labelClasses}>Task Type</label><select name="sflField.taskType" value={formData.sflField.taskType} onChange={handleSFLChange} className={commonInputClasses}><option value="">Select...</option>{TASK_TYPES.map(renderOption)}</select></div>
+                {renderCreatableSelect('Task Type', 'sflField.taskType', formData.sflField.taskType, handleSFLChange, appConstants.taskTypes, 'taskTypes', 'sflField', 'taskType')}
                 <div className="md:col-span-2"><label className={labelClasses}>Domain Specifics</label><input type="text" name="sflField.domainSpecifics" value={formData.sflField.domainSpecifics} onChange={handleSFLChange} className={commonInputClasses}/></div>
                 <div className="md:col-span-2"><label className={labelClasses}>Keywords</label><input type="text" name="sflField.keywords" value={formData.sflField.keywords} onChange={handleSFLChange} className={commonInputClasses}/></div>
               </div>
@@ -110,18 +206,39 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
             <fieldset className="border border-[#5c6f7e] p-4 rounded-md">
               <legend className="text-lg font-medium text-gray-200 px-2">SFL: Tenor</legend>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div><label className={labelClasses}>AI Persona</label><select name="sflTenor.aiPersona" value={formData.sflTenor.aiPersona} onChange={handleSFLChange} className={commonInputClasses}><option value="">Select...</option>{AI_PERSONAS.map(renderOption)}</select></div>
-                <div><label className={labelClasses}>Target Audience</label><select name="sflTenor.targetAudience" value={formData.sflTenor.targetAudience} onChange={handleSFLChange} className={commonInputClasses}><option value="">Select...</option>{TARGET_AUDIENCES.map(renderOption)}</select></div>
-                <div><label className={labelClasses}>Desired Tone</label><select name="sflTenor.desiredTone" value={formData.sflTenor.desiredTone} onChange={handleSFLChange} className={commonInputClasses}><option value="">Select...</option>{DESIRED_TONES.map(renderOption)}</select></div>
-                <div><label className={labelClasses}>Interpersonal Stance</label><input type="text" name="sflTenor.interpersonalStance" value={formData.sflTenor.interpersonalStance} onChange={handleSFLChange} className={commonInputClasses}/></div>
+                {renderCreatableSelect('AI Persona', 'sflTenor.aiPersona', formData.sflTenor.aiPersona, handleSFLChange, appConstants.aiPersonas, 'aiPersonas', 'sflTenor', 'aiPersona')}
+                {renderCreatableSelect('Desired Tone', 'sflTenor.desiredTone', formData.sflTenor.desiredTone, handleSFLChange, appConstants.desiredTones, 'desiredTones', 'sflTenor', 'desiredTone')}
+                <div className="md:col-span-2">
+                     <label className={labelClasses}>Target Audience</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1 max-h-40 overflow-y-auto p-2 border border-[#5c6f7e] rounded-md bg-[#212934]">
+                        {(appConstants.targetAudiences || []).map(audience => (
+                            <div key={audience} className="flex items-center">
+                                <input id={`wiz-audience-${audience}`} type="checkbox" checked={(formData.sflTenor.targetAudience || []).includes(audience)} onChange={() => handleTargetAudienceChange(audience)} className="h-4 w-4 rounded border-gray-400 text-[#c36e26] focus:ring-[#e2a32d] bg-[#212934]" />
+                                <label htmlFor={`wiz-audience-${audience}`} className="ml-2 text-sm text-gray-200 select-none">{audience}</label>
+                            </div>
+                        ))}
+                    </div>
+                     <div className="flex items-center space-x-2 mt-2">
+                        <input type="text" placeholder="Add new audience..." value={newOptionValues['targetAudience'] || ''} onChange={e => setNewOptionValues(prev => ({...prev, 'targetAudience': e.target.value}))} className={`${commonInputClasses} text-sm`} />
+                        <button type="button" onClick={() => {
+                            const value = newOptionValues['targetAudience'];
+                            if(value && value.trim()){
+                                onAddConstant('targetAudiences', value);
+                                handleTargetAudienceChange(value);
+                                setNewOptionValues(prev => ({...prev, 'targetAudience': ''}));
+                            }
+                        }} className="px-3 py-2 text-sm bg-[#5c6f7e] hover:bg-opacity-90 rounded-md shrink-0">Add</button>
+                    </div>
+                </div>
+                <div className="md:col-span-2"><label className={labelClasses}>Interpersonal Stance</label><input type="text" name="sflTenor.interpersonalStance" value={formData.sflTenor.interpersonalStance} onChange={handleSFLChange} className={commonInputClasses}/></div>
               </div>
             </fieldset>
 
             <fieldset className="border border-[#5c6f7e] p-4 rounded-md">
               <legend className="text-lg font-medium text-gray-200 px-2">SFL: Mode</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div><label className={labelClasses}>Output Format</label><select name="sflMode.outputFormat" value={formData.sflMode.outputFormat} onChange={handleSFLChange} className={commonInputClasses}><option value="">Select...</option>{OUTPUT_FORMATS.map(renderOption)}</select></div>
-                <div><label className={labelClasses}>Length Constraint</label><select name="sflMode.lengthConstraint" value={formData.sflMode.lengthConstraint} onChange={handleSFLChange} className={commonInputClasses}><option value="">Select...</option>{LENGTH_CONSTRAINTS.map(renderOption)}</select></div>
+                {renderCreatableSelect('Output Format', 'sflMode.outputFormat', formData.sflMode.outputFormat, handleSFLChange, appConstants.outputFormats, 'outputFormats', 'sflMode', 'outputFormat')}
+                {renderCreatableSelect('Length Constraint', 'sflMode.lengthConstraint', formData.sflMode.lengthConstraint, handleSFLChange, appConstants.lengthConstraints, 'lengthConstraints', 'sflMode', 'lengthConstraint')}
                 <div className="md:col-span-2"><label className={labelClasses}>Rhetorical Structure</label><input type="text" name="sflMode.rhetoricalStructure" value={formData.sflMode.rhetoricalStructure} onChange={handleSFLChange} className={commonInputClasses}/></div>
                 <div className="md:col-span-2"><label className={labelClasses}>Textual Directives</label><input type="text" name="sflMode.textualDirectives" value={formData.sflMode.textualDirectives} onChange={handleSFLChange} className={commonInputClasses}/></div>
               </div>
@@ -129,11 +246,12 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
 
             <div>
                 <label htmlFor="exampleOutput" className={labelClasses}>Example Output (Optional)</label>
-                <textarea id="exampleOutput" name="exampleOutput" value={formData.exampleOutput} onChange={handleFormChange} rows={3} className={commonInputClasses} />
+                <textarea id="exampleOutput" name="exampleOutput" value={formData.exampleOutput || ''} onChange={handleFormChange} rows={3} className={commonInputClasses} />
             </div>
+            
             <div>
                 <label htmlFor="notes" className={labelClasses}>Notes (Optional)</label>
-                <textarea id="notes" name="notes" value={formData.notes} onChange={handleFormChange} rows={2} className={commonInputClasses} />
+                <textarea id="notes" name="notes" value={formData.notes || ''} onChange={handleFormChange} rows={2} className={commonInputClasses} />
             </div>
         </form>
     );

@@ -8,7 +8,7 @@ export interface SFLField {
 
 export interface SFLTenor {
   aiPersona: string;
-  targetAudience: string;
+  targetAudience: string[];
   desiredTone: string;
   interpersonalStance: string;
 }

@@ -78,7 +78,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
           <section className="border border-[#5c6f7e] p-4 rounded-lg bg-[#212934]/50">
             <h3 className="text-md font-semibold text-gray-200 mb-2 border-b pb-1 border-[#5c6f7e]">Tenor</h3>
             <DetailItem label="AI Persona" value={prompt.sflTenor.aiPersona} />
-            <DetailItem label="Target Audience" value={prompt.sflTenor.targetAudience} />
+            <DetailItem label="Target Audience" value={prompt.sflTenor.targetAudience.join(', ')} />
             <DetailItem label="Desired Tone" value={prompt.sflTenor.desiredTone} />
             <DetailItem label="Interpersonal Stance" value={prompt.sflTenor.interpersonalStance} />
           </section>

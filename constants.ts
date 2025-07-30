@@ -38,7 +38,7 @@ export const SFL_EMPTY_FIELD: SFLField = {
   topic: "", taskType: TASK_TYPES[0] || "", domainSpecifics: "", keywords: ""
 };
 export const SFL_EMPTY_TENOR: SFLTenor = {
-  aiPersona: AI_PERSONAS[0] || "", targetAudience: TARGET_AUDIENCES[0] || "", 
+  aiPersona: AI_PERSONAS[0] || "", targetAudience: [], 
   desiredTone: DESIRED_TONES[0] || "", interpersonalStance: ""
 };
 export const SFL_EMPTY_MODE: SFLMode = {
