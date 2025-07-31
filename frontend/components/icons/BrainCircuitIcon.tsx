@@ -1,3 +1,10 @@
+/**
+ * @file BrainCircuitIcon.tsx
+ * @description BrainCircuitIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const BrainCircuitIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

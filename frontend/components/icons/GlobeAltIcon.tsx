@@ -1,3 +1,10 @@
+/**
+ * @file GlobeAltIcon.tsx
+ * @description GlobeAltIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const GlobeAltIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

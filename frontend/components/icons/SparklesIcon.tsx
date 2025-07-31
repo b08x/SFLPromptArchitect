@@ -1,3 +1,9 @@
+/**
+ * @file SparklesIcon.tsx
+ * @description SparklesIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

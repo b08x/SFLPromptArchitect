@@ -1,3 +1,10 @@
+/**
+ * @file FlaskIcon.tsx
+ * @description FlaskIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const FlaskIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

@@ -1,3 +1,10 @@
+/**
+ * @file LanguageIcon.tsx
+ * @description LanguageIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const LanguageIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

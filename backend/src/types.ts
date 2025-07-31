@@ -1,3 +1,14 @@
+/**
+ * @file types.ts
+ * @description This file contains TypeScript type definitions and interfaces for the backend.
+ * It defines the data structures for database entities like Prompts and Workflows,
+ * as well as the detailed SFL-structured prompt types that align with the frontend.
+ */
+
+/**
+ * @interface Prompt
+ * @description Represents the structure of a prompt record in the database.
+ */
 export interface Prompt {
   id: string;
   user_id: string;
@@ -8,14 +19,23 @@ export interface Prompt {
   updated_at: string;
 }
 
-// Frontend PromptSFL types for data mapping
+/**
+ * @interface SFLField
+ * @description Defines the structure for the "Field" component of the SFL framework.
+ * Aligns with the frontend `SFLField` type.
+ */
 export interface SFLField {
   topic: string;
   taskType: string;
   domainSpecifics: string;
-  keywords: string; // comma-separated
+  keywords: string;
 }
 
+/**
+ * @interface SFLTenor
+ * @description Defines the structure for the "Tenor" component of the SFL framework.
+ * Aligns with the frontend `SFLTenor` type.
+ */
 export interface SFLTenor {
   aiPersona: string;
   targetAudience: string[];
@@ -23,6 +43,11 @@ export interface SFLTenor {
   interpersonalStance: string;
 }
 
+/**
+ * @interface SFLMode
+ * @description Defines the structure for the "Mode" component of the SFL framework.
+ * Aligns with the frontend `SFLMode` type.
+ */
 export interface SFLMode {
   outputFormat: string;
   rhetoricalStructure: string;
@@ -30,6 +55,11 @@ export interface SFLMode {
   textualDirectives: string;
 }
 
+/**
+ * @interface PromptSFL
+ * @description Represents a complete SFL-structured prompt, aligning with the frontend `PromptSFL` type.
+ * This is the primary data structure for prompts used in the API.
+ */
 export interface PromptSFL {
   id: string;
   title: string;
@@ -39,8 +69,8 @@ export interface PromptSFL {
   sflMode: SFLMode;
   exampleOutput?: string;
   notes?: string;
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
+  createdAt: string;
+  updatedAt: string;
   geminiResponse?: string;
   geminiTestError?: string;
   isTesting?: boolean;
@@ -50,6 +80,10 @@ export interface PromptSFL {
   };
 }
 
+/**
+ * @interface Workflow
+ * @description Represents the structure of a workflow record in the database.
+ */
 export interface Workflow {
   id: string;
   user_id: string;

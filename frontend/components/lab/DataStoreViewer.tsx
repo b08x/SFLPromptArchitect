@@ -1,7 +1,24 @@
+/**
+ * @file DataStoreViewer.tsx
+ * @description This component provides a read-only, collapsible JSON viewer for inspecting the state of the workflow's Data Store.
+ * It includes a button to copy the entire Data Store content as a JSON string.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ../icons/ClipboardIcon
+ */
+
 import React, { useState } from 'react';
 import { DataStore } from '../../types';
 import ClipboardIcon from '../icons/ClipboardIcon';
 
+/**
+ * A recursive component to render a collapsible JSON tree.
+ * @param {object} props - The component props.
+ * @param {any} props.data - The JSON data to render.
+ * @param {number} [props.level=0] - The current nesting level, used for indentation.
+ * @returns {JSX.Element} A styled, interactive JSON tree view.
+ */
 const JsonViewer: React.FC<{ data: any; level?: number }> = ({ data, level = 0 }) => {
     const [isCollapsed, setIsCollapsed] = useState(level > 0);
 
@@ -38,10 +55,20 @@ const JsonViewer: React.FC<{ data: any; level?: number }> = ({ data, level = 0 }
     );
 };
 
-
+/**
+ * A component that displays the entire Data Store of a workflow run.
+ * It uses the `JsonViewer` to render the data and provides a copy-to-clipboard functionality.
+ *
+ * @param {object} props - The component props.
+ * @param {DataStore} props.dataStore - The Data Store object to display.
+ * @returns {JSX.Element} The rendered Data Store viewer component.
+ */
 const DataStoreViewer: React.FC<{ dataStore: DataStore }> = ({ dataStore }) => {
     const [copied, setCopied] = useState(false);
 
+    /**
+     * Copies the Data Store content to the clipboard as a formatted JSON string.
+     */
     const handleCopy = () => {
         navigator.clipboard.writeText(JSON.stringify(dataStore, null, 2));
         setCopied(true);

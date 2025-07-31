@@ -1,3 +1,9 @@
+/**
+ * @file EyeIcon.tsx
+ * @description EyeIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

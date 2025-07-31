@@ -1,3 +1,10 @@
+/**
+ * @file WorkflowIcon.tsx
+ * @description WorkflowIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const WorkflowIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

@@ -1,11 +1,38 @@
-import React, { useState, useCallback } from 'react';
+/**
+ * @file UserInputArea.tsx
+ * @description This component provides a tabbed interface for users to input text, upload an image, or upload a text file.
+ * The provided input is then "staged" to be used as the initial data for a workflow run.
+ *
+ * @requires react
+ * @requires ../../types
+ * @requires ../icons/PaperClipIcon
+ * @requires ../icons/DocumentTextIcon
+ */
+
+import React, { useState } from 'react';
 import { StagedUserInput } from '../../types';
 import PaperClipIcon from '../icons/PaperClipIcon';
 import DocumentTextIcon from '../icons/DocumentTextIcon';
 
 type Tab = 'text' | 'image' | 'file';
 
-const UserInputArea: React.FC<{ onStageInput: (input: StagedUserInput) => void }> = ({ onStageInput }) => {
+/**
+ * @interface UserInputAreaProps
+ * @description Defines the props for the UserInputArea component.
+ * @property {(input: StagedUserInput) => void} onStageInput - Callback function to stage the user's input for the workflow.
+ */
+interface UserInputAreaProps {
+    onStageInput: (input: StagedUserInput) => void;
+}
+
+/**
+ * A component that allows users to provide various types of input for a workflow.
+ * It features tabs for text, image, and file inputs and a button to stage the data.
+ *
+ * @param {UserInputAreaProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered user input area.
+ */
+const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput }) => {
     const [activeTab, setActiveTab] = useState<Tab>('text');
     const [text, setText] = useState('');
     const [image, setImage] = useState<{ name: string; type: string; base64: string, preview: string } | null>(null);

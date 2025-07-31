@@ -1,3 +1,9 @@
+/**
+ * @file LinkIcon.tsx
+ * @description LinkIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

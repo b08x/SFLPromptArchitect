@@ -1,53 +1,71 @@
+/**
+ * @file constants.ts
+ * @description This file exports constant values used throughout the frontend application.
+ * This includes predefined lists for SFL parameters, initial state objects for prompts and workflows,
+ * and other shared constants to ensure consistency.
+ */
+
 import { SFLField, SFLTenor, SFLMode, PromptSFL, Workflow, TaskType } from './types';
 
+/** Predefined task types for SFL prompts. */
 export const TASK_TYPES = [
   "Explanation", "Summarization", "Code Generation", "Creative Writing", 
   "Translation", "Brainstorming", "Question Answering", "Data Analysis", 
   "Comparison", "Instruction", "Dialogue Generation", "Outline Creation"
 ];
 
+/** Predefined AI personas for SFL prompts. */
 export const AI_PERSONAS = [
   "Expert", "Friendly Assistant", "Sarcastic Bot", "Neutral Reporter", 
   "Creative Muse", "Teacher/Tutor", "Devil's Advocate", "Philosopher", "Historian"
 ];
 
+/** Predefined target audiences for SFL prompts. */
 export const TARGET_AUDIENCES = [
   "General Public", "Beginners", "Intermediates", "Experts", "Children (5-7 years)", 
   "Teenagers (13-17 years)", "Software Developers", "Academic Researchers", 
   "Business Professionals", "Policy Makers"
 ];
 
+/** Predefined desired tones for SFL prompts. */
 export const DESIRED_TONES = [
   "Formal", "Informal", "Humorous", "Serious", "Empathetic", "Concise", 
   "Detailed", "Persuasive", "Objective", "Enthusiastic", "Critical", "Neutral"
 ];
 
+/** Predefined output formats for SFL prompts. */
 export const OUTPUT_FORMATS = [
   "Plain Text", "Markdown", "JSON", "XML", "Python Code", "JavaScript Code", 
   "HTML", "Bullet Points", "Numbered List", "Poem", "Short Story", "Email", 
   "Report", "Spreadsheet (CSV-like)", "Slide Presentation Outline"
 ];
 
+/** Predefined length constraints for SFL prompts. */
 export const LENGTH_CONSTRAINTS = [
   "Single Sentence", "Short Paragraph (~50 words)", "Medium Paragraph (~150 words)", 
   "Long Paragraph (~300 words)", "Multiple Paragraphs (~500+ words)", 
   "Concise (as needed)", "Detailed (as needed)", "No Specific Limit"
 ];
 
+/** Popular tags for quick filtering. */
 export const POPULAR_TAGS = ["#summarization", "#expert-persona", "#python-code", "#formal-tone", "#technical", "#json"];
 
+/** An empty SFL Field object. */
 export const SFL_EMPTY_FIELD: SFLField = {
   topic: "", taskType: TASK_TYPES[0] || "", domainSpecifics: "", keywords: ""
 };
+/** An empty SFL Tenor object. */
 export const SFL_EMPTY_TENOR: SFLTenor = {
   aiPersona: AI_PERSONAS[0] || "", targetAudience: [], 
   desiredTone: DESIRED_TONES[0] || "", interpersonalStance: ""
 };
+/** An empty SFL Mode object. */
 export const SFL_EMPTY_MODE: SFLMode = {
   outputFormat: OUTPUT_FORMATS[0] || "", rhetoricalStructure: "", 
   lengthConstraint: LENGTH_CONSTRAINTS[0] || "", textualDirectives: ""
 };
 
+/** The initial state for a new SFL prompt. */
 export const INITIAL_PROMPT_SFL: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'> = {
   title: "",
   promptText: "",
@@ -59,8 +77,7 @@ export const INITIAL_PROMPT_SFL: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt
   sourceDocument: undefined,
 };
 
-// --- PROMPT LAB CONSTANTS ---
-
+/** A list of default workflows provided with the application. */
 export const DEFAULT_WORKFLOWS: Workflow[] = [
   {
     id: "wf-default-1",
@@ -108,7 +125,7 @@ export const DEFAULT_WORKFLOWS: Workflow[] = [
         dependencies: ["task-2", "task-3"],
         inputKeys: ["summary", "sentiment"],
         outputKey: "finalReport",
-        functionBody: "return `Sentiment: ${inputs.sentiment}\\n\\nSummary:\\n${inputs.summary}`"
+        functionBody: "return `Sentiment: ${inputs.sentiment}\n\nSummary:\n${inputs.summary}`"
       }
     ]
   },

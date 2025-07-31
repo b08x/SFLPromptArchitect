@@ -1,3 +1,9 @@
+/**
+ * @file ArrowUpTrayIcon.tsx
+ * @description ArrowUpTrayIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

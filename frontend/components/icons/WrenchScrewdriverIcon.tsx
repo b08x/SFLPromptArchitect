@@ -1,3 +1,10 @@
+/**
+ * @file WrenchScrewdriverIcon.tsx
+ * @description WrenchScrewdriverIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const WrenchScrewdriverIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

@@ -1,3 +1,10 @@
+/**
+ * @file ClockIcon.tsx
+ * @description ClockIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const ClockIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

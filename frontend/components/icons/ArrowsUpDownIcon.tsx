@@ -1,3 +1,10 @@
+/**
+ * @file ArrowsUpDownIcon.tsx
+ * @description ArrowsUpDownIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const ArrowsUpDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

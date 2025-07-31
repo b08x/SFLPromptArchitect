@@ -1,4 +1,18 @@
-
+/**
+ * @file TaskNode.tsx
+ * @description This component renders a single node within the workflow canvas, representing a task.
+ * It displays the task's name, description, inputs, and outputs. The appearance of the node
+ * changes based on its current execution status (e.g., pending, running, completed, failed).
+ *
+ * @requires react
+ * @requires ../../types
+ * @requires ../icons/CodeBracketIcon
+ * @requires ../icons/SparklesIcon
+ * @requires ../icons/DocumentTextIcon
+ * @requires ../icons/PresentationChartLineIcon
+ * @requires ../icons/EyeIcon
+ * @requires ../icons/LinkIcon
+ */
 
 import React from 'react';
 import { Task, TaskState, TaskStatus, TaskType } from '../../types';
@@ -9,6 +23,12 @@ import PresentationChartLineIcon from '../icons/PresentationChartLineIcon';
 import EyeIcon from '../icons/EyeIcon';
 import LinkIcon from '../icons/LinkIcon';
 
+/**
+ * A component that returns an appropriate icon for a given task type.
+ * @param {object} props - The component props.
+ * @param {TaskType} props.type - The type of the task.
+ * @returns {JSX.Element} A styled icon component.
+ */
 const TaskIcon: React.FC<{ type: TaskType }> = ({ type }) => {
     const commonClasses = "w-5 h-5";
     switch (type) {
@@ -22,6 +42,9 @@ const TaskIcon: React.FC<{ type: TaskType }> = ({ type }) => {
     }
 };
 
+/**
+ * A configuration object that maps task statuses to specific CSS classes for styling.
+ */
 const statusConfig = {
     [TaskStatus.PENDING]: { bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-500', iconBg: 'bg-gray-200' },
     [TaskStatus.RUNNING]: { bg: 'bg-blue-50', border: 'border-blue-400 ring-2 ring-blue-200', text: 'text-blue-700', iconBg: 'bg-blue-200' },
@@ -30,12 +53,26 @@ const statusConfig = {
     [TaskStatus.SKIPPED]: { bg: 'bg-yellow-50', border: 'border-yellow-400', text: 'text-yellow-700', iconBg: 'bg-yellow-200' },
 };
 
+/**
+ * @interface TaskNodeProps
+ * @description Defines the props for the TaskNode component.
+ * @property {Task} task - The task object to render.
+ * @property {TaskState} state - The current execution state of the task.
+ * @property {() => void} onClick - Callback function to be invoked when the node is clicked.
+ */
 interface TaskNodeProps {
     task: Task;
     state: TaskState;
     onClick: () => void;
 }
 
+/**
+ * A component that renders a visual representation of a workflow task.
+ * It displays the task's details and dynamically changes its style based on the execution status.
+ *
+ * @param {TaskNodeProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered task node.
+ */
 const TaskNode: React.FC<TaskNodeProps> = ({ task, state, onClick }) => {
     const config = statusConfig[state.status];
 

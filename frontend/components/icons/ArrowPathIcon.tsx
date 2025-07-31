@@ -1,3 +1,10 @@
+/**
+ * @file ArrowPathIcon.tsx
+ * @description ArrowPathIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const ArrowPathIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

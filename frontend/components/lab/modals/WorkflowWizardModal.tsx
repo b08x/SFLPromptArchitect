@@ -1,9 +1,30 @@
+/**
+ * @file WorkflowWizardModal.tsx
+ * @description This component provides a user-friendly wizard for creating a new workflow from a high-level goal.
+ * It takes a natural language description from the user, uses an AI service to generate a structured workflow,
+ * and then presents the generated workflow in an editor for refinement before saving.
+ *
+ * @requires react
+ * @requires ../../../types
+ * @requires ../../../services/geminiService
+ * @requires ../../ModalShell
+ * @requires ./WorkflowEditorModal
+ */
+
 import React, { useState } from 'react';
 import { Workflow, PromptSFL } from '../../../types';
 import { generateWorkflowFromGoal } from '../../../services/geminiService';
 import ModalShell from '../../ModalShell';
 import WorkflowEditorModal from './WorkflowEditorModal';
 
+/**
+ * @interface WorkflowWizardModalProps
+ * @description Defines the props for the WorkflowWizardModal component.
+ * @property {boolean} isOpen - Whether the modal is currently open.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {(workflow: Workflow) => void} onSave - Callback function to save the created workflow.
+ * @property {PromptSFL[]} prompts - The library of available SFL prompts, passed to the editor.
+ */
 interface WorkflowWizardModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -13,6 +34,12 @@ interface WorkflowWizardModalProps {
 
 type WizardStep = 'input' | 'loading' | 'refinement' | 'error';
 
+/**
+ * A modal wizard for creating workflows from a natural language goal.
+ *
+ * @param {WorkflowWizardModalProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered wizard modal.
+ */
 const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClose, onSave, prompts }) => {
     const [step, setStep] = useState<WizardStep>('input');
     const [goal, setGoal] = useState('');
@@ -72,7 +99,6 @@ const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClo
                     </div>
                 );
             case 'refinement':
-                // Piggyback on the existing editor modal for the refinement step
                 return (
                     <WorkflowEditorModal
                         isOpen={true}
@@ -93,7 +119,6 @@ const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClo
         }
     };
 
-    // Use a different modal shell unless we are in refinement step
     if (step === 'refinement') {
         return renderContent();
     }

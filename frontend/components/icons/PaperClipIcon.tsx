@@ -1,3 +1,9 @@
+/**
+ * @file PaperClipIcon.tsx
+ * @description PaperClipIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

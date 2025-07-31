@@ -1,3 +1,9 @@
+/**
+ * @file ClipboardIcon.tsx
+ * @description ClipboardIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

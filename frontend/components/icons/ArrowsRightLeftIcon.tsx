@@ -1,3 +1,10 @@
+/**
+ * @file ArrowsRightLeftIcon.tsx
+ * @description ArrowsRightLeftIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const ArrowsRightLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

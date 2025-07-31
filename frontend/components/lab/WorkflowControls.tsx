@@ -1,3 +1,18 @@
+/**
+ * @file WorkflowControls.tsx
+ * @description This component provides the main controls for managing workflows, including selecting,
+ * creating, editing, deleting, importing, and exporting workflows.
+ *
+ * @requires react
+ * @requires ../../types
+ * @requires ../icons/PlusIcon
+ * @requires ../icons/MagicWandIcon
+ * @requires ../icons/PencilIcon
+ * @requires ../icons/TrashIcon
+ * @requires ../icons/ArrowUpTrayIcon
+ * @requires ../icons/ArrowDownTrayIcon
+ */
+
 import React, { useRef } from 'react';
 import { Workflow } from '../../types';
 import PlusIcon from '../icons/PlusIcon';
@@ -7,6 +22,17 @@ import TrashIcon from '../icons/TrashIcon';
 import ArrowUpTrayIcon from '../icons/ArrowUpTrayIcon';
 import ArrowDownTrayIcon from '../icons/ArrowDownTrayIcon';
 
+/**
+ * @interface WorkflowControlsProps
+ * @description Defines the props for the WorkflowControls component.
+ * @property {Workflow[]} workflows - The list of all available workflows.
+ * @property {Workflow | null} activeWorkflow - The currently selected workflow.
+ * @property {(id: string) => void} onSelectWorkflow - Callback to select a workflow.
+ * @property {() => void} onOpenEditor - Callback to open the workflow editor modal.
+ * @property {() => void} onOpenWizard - Callback to open the workflow creation wizard.
+ * @property {(id: string) => void} onDeleteWorkflow - Callback to delete a workflow.
+ * @property {(workflows: Workflow[]) => void} onImportWorkflows - Callback to handle importing workflows from a file.
+ */
 interface WorkflowControlsProps {
     workflows: Workflow[];
     activeWorkflow: Workflow | null;
@@ -17,6 +43,13 @@ interface WorkflowControlsProps {
     onImportWorkflows: (workflows: Workflow[]) => void;
 }
 
+/**
+ * A component that provides UI controls for managing workflows.
+ * It allows users to switch between workflows, create new ones, and perform other management tasks.
+ *
+ * @param {WorkflowControlsProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered workflow controls panel.
+ */
 const WorkflowControls: React.FC<WorkflowControlsProps> = ({
     workflows,
     activeWorkflow,

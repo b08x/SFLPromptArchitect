@@ -1,8 +1,31 @@
+/**
+ * @file useWorkflowRunner.ts
+ * @description This custom hook encapsulates the logic for running a workflow.
+ * It manages the state of the workflow execution, including the data store, the status of each task,
+ * and whether the workflow is currently running. It provides functions to run and reset the workflow.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ../services/workflowEngine
+ */
 
 import { useState, useCallback } from 'react';
 import { Workflow, DataStore, TaskStateMap, TaskStatus, Task, PromptSFL } from '../types';
 import { topologicalSort, executeTask } from '../services/workflowEngine';
 
+/**
+ * A custom hook to manage the execution of a workflow.
+ *
+ * @param {Workflow | null} workflow - The workflow to be executed.
+ * @param {PromptSFL[]} prompts - The library of available SFL prompts.
+ * @returns {object} An object containing the state of the workflow run and functions to control it.
+ * @property {DataStore} dataStore - The current state of the data store.
+ * @property {TaskStateMap} taskStates - A map of task IDs to their current execution state.
+ * @property {boolean} isRunning - A boolean indicating if the workflow is currently running.
+ * @property {(stagedUserInput?: Record<string, any>) => Promise<void>} run - Function to start the workflow execution.
+ * @property {() => void} reset - Function to reset the workflow to its initial state.
+ * @property {string[]} runFeedback - An array of feedback messages from the workflow execution (e.g., warnings).
+ */
 export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[]) => {
     const [dataStore, setDataStore] = useState<DataStore>({});
     const [taskStates, setTaskStates] = useState<TaskStateMap>({});
@@ -46,7 +69,6 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             return;
         }
         
-        // Initialize datastore with user input
         const initialDataStore: DataStore = { userInput: stagedUserInput };
         setDataStore(initialDataStore);
 
@@ -61,7 +83,6 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             setTaskStates(prev => ({...prev, [task.id]: { status: TaskStatus.RUNNING, startTime: Date.now() }}));
             
             try {
-                // Pass the most recent dataStore state to executeTask
                 const currentDataStore = await new Promise<DataStore>(resolve => setDataStore(current => { resolve(current); return current; }));
                 const result = await executeTask(task, currentDataStore, prompts);
 

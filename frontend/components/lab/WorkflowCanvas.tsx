@@ -1,3 +1,18 @@
+/**
+ * @file WorkflowCanvas.tsx
+ * @description This component serves as the main interactive area for a selected workflow.
+ * It displays all the tasks as nodes, provides controls to run or reset the workflow,
+ * and shows the live state of the Data Store as the workflow executes.
+ *
+ * @requires react
+ * @requires ../../types
+ * @requires ../../hooks/useWorkflowRunner
+ * @requires ./TaskNode
+ * @requires ./DataStoreViewer
+ * @requires ../icons/PlayIcon
+ * @requires ../icons/ArrowPathIcon
+ * @requires ./modals/TaskDetailModal
+ */
 
 import React, { useState } from 'react';
 import { Workflow, StagedUserInput, TaskStatus, PromptSFL } from '../../types';
@@ -8,12 +23,26 @@ import PlayIcon from '../icons/PlayIcon';
 import ArrowPathIcon from '../icons/ArrowPathIcon';
 import TaskDetailModal from './modals/TaskDetailModal';
 
+/**
+ * @interface WorkflowCanvasProps
+ * @description Defines the props for the WorkflowCanvas component.
+ * @property {Workflow} workflow - The workflow object to be displayed and executed.
+ * @property {StagedUserInput} stagedInput - The user input that has been staged for the workflow run.
+ * @property {PromptSFL[]} prompts - The library of available SFL prompts.
+ */
 interface WorkflowCanvasProps {
     workflow: Workflow;
     stagedInput: StagedUserInput;
     prompts: PromptSFL[];
 }
 
+/**
+ * The main canvas for visualizing and running a workflow.
+ * It uses the `useWorkflowRunner` hook to manage the execution logic and state.
+ *
+ * @param {WorkflowCanvasProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered workflow canvas.
+ */
 const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, prompts }) => {
     const { dataStore, taskStates, isRunning, run, reset, runFeedback } = useWorkflowRunner(workflow, prompts);
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<string | null>(null);

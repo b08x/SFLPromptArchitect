@@ -1,3 +1,10 @@
+/**
+ * @file PlayIcon.tsx
+ * @description PlayIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const PlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

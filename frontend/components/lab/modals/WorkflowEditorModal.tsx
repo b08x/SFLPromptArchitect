@@ -1,3 +1,16 @@
+/**
+ * @file WorkflowEditorModal.tsx
+ * @description This component provides a modal interface for creating and editing workflows.
+ * It allows users to define the workflow's name and description, and to add, configure, and remove individual tasks.
+ *
+ * @requires react
+ * @requires ../../../types
+ * @requires ../../../utils/generateId
+ * @requires ../../ModalShell
+ * @requires ../../icons/PlusIcon
+ * @requires ../../icons/TrashIcon
+ * @requires ../../icons/LinkIcon
+ */
 
 import React, { useState, useEffect } from 'react';
 import { Workflow, Task, TaskType, PromptSFL } from '../../../types';
@@ -7,6 +20,15 @@ import PlusIcon from '../../icons/PlusIcon';
 import TrashIcon from '../../icons/TrashIcon';
 import LinkIcon from '../../icons/LinkIcon';
 
+/**
+ * @interface WorkflowEditorModalProps
+ * @description Defines the props for the WorkflowEditorModal component.
+ * @property {boolean} isOpen - Whether the modal is currently open.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {(workflow: Workflow) => void} onSave - Callback function to save the workflow.
+ * @property {Workflow | null} workflowToEdit - The workflow to be edited. If null, a new workflow is created.
+ * @property {PromptSFL[]} prompts - The library of available SFL prompts for linking to tasks.
+ */
 interface WorkflowEditorModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -29,6 +51,11 @@ const emptyTask: Omit<Task, 'id'> = {
     dataKey: '',
 };
 
+/**
+ * A sub-component within the editor for configuring a single task.
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} A form section for editing a task.
+ */
 const TaskEditor: React.FC<{
     task: Task;
     updateTask: (updatedTask: Task) => void;
@@ -43,10 +70,6 @@ const TaskEditor: React.FC<{
         updateTask({ ...task, [field]: value });
     };
 
-    const handleAgentConfigChange = (field: string, value: any) => {
-        updateTask({ ...task, agentConfig: { ...task.agentConfig, [field]: value } });
-    }
-
     const handleDependencyChange = (depId: string) => {
         const newDeps = task.dependencies.includes(depId)
             ? task.dependencies.filter(d => d !== depId)
@@ -56,11 +79,7 @@ const TaskEditor: React.FC<{
 
     const handlePromptLinkChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const promptId = e.target.value;
-        if (promptId) {
-            handleChange('promptId', promptId);
-        } else {
-            handleChange('promptId', undefined);
-        }
+        handleChange('promptId', promptId || undefined);
     };
     
     const commonInputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2]";
@@ -79,7 +98,7 @@ const TaskEditor: React.FC<{
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className={labelClasses}>Name</label><input type="text" value={task.name} onChange={e => handleChange('name', e.target.value)} className={commonInputClasses} /></div>
                     <div><label className={labelClasses}>Type</label>
-                        <select value={task.type} onChange={e => handleChange('type', e.target.value)} className={commonInputClasses}>
+                        <select value={task.type} onChange={e => handleChange('type', e.target.value as TaskType)} className={commonInputClasses}>
                             {Object.values(TaskType).map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
@@ -129,9 +148,7 @@ const TaskEditor: React.FC<{
                                 <textarea
                                     value={task.agentConfig ? JSON.stringify(task.agentConfig, null, 2) : ''}
                                     onChange={e => {
-                                        try {
-                                            handleChange('agentConfig', JSON.parse(e.target.value))
-                                        } catch { /* Ignore parse errors while typing */ }
+                                        try { handleChange('agentConfig', JSON.parse(e.target.value)) } catch {}
                                     }}
                                     rows={4}
                                     className={`${commonInputClasses} font-mono text-sm`}
@@ -142,9 +159,9 @@ const TaskEditor: React.FC<{
                     </div>
                 )}
                 
-                {task.type === TaskType.GEMINI_GROUNDED || task.type === TaskType.IMAGE_ANALYSIS ? (
+                {(task.type === TaskType.GEMINI_GROUNDED || task.type === TaskType.IMAGE_ANALYSIS) && (
                     <div><label className={labelClasses}>Prompt Template</label><textarea value={task.promptTemplate} onChange={e => handleChange('promptTemplate', e.target.value)} rows={4} className={`${commonInputClasses} font-mono text-sm`}></textarea></div>
-                ) : null}
+                )}
                 
                 {task.type === TaskType.TEXT_MANIPULATION && (
                      <div><label className={labelClasses}>Function Body</label><textarea value={task.functionBody} onChange={e => handleChange('functionBody', e.target.value)} rows={4} className={`${commonInputClasses} font-mono text-sm`} placeholder="e.g., return `Hello, ${inputs.name}`"></textarea></div>
@@ -162,13 +179,17 @@ const TaskEditor: React.FC<{
     );
 };
 
-
+/**
+ * A modal for creating a new workflow or editing an existing one.
+ *
+ * @param {WorkflowEditorModalProps} props - The props for the component.
+ * @returns {JSX.Element | null} The rendered modal editor or null if not open.
+ */
 const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClose, onSave, workflowToEdit, prompts }) => {
     const [workflow, setWorkflow] = useState<Workflow | null>(null);
 
     useEffect(() => {
         if (workflowToEdit) {
-            // If editing a default, it's a "clone" operation, so create a new ID
             if(workflowToEdit.isDefault) {
                 setWorkflow({
                     ...workflowToEdit,
@@ -207,7 +228,6 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
 
     const removeTask = (taskId: string) => {
         const newTasks = workflow.tasks.filter(t => t.id !== taskId);
-        // Also remove this task from any dependencies
         const cleanedTasks = newTasks.map(t => ({
             ...t,
             dependencies: t.dependencies.filter(d => d !== taskId)
@@ -221,7 +241,6 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
     
     const commonInputClasses = "w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2]";
     const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
-
 
     return (
         <ModalShell isOpen={isOpen} onClose={onClose} title={workflowToEdit && !workflowToEdit.isDefault ? 'Edit Workflow' : 'Create Workflow'} size="4xl">

@@ -1,3 +1,10 @@
+/**
+ * @file HomeIcon.tsx
+ * @description HomeIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const HomeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

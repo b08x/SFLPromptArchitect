@@ -1,3 +1,9 @@
+/**
+ * @file MagicWandIcon.tsx
+ * @description MagicWandIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

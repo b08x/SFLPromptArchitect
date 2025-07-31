@@ -1,3 +1,10 @@
+/**
+ * @file MagnifyingGlassIcon.tsx
+ * @description MagnifyingGlassIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const MagnifyingGlassIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

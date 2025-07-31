@@ -1,3 +1,10 @@
+/**
+ * @file BookOpenIcon.tsx
+ * @description BookOpenIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const BookOpenIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

@@ -1,21 +1,47 @@
+/**
+ * @file PromptLabPage.tsx
+ * @description This is the main component for the "Prompt Lab" page. It orchestrates the entire workflow management UI,
+ * including the workflow selection controls, user input area, and the main workflow canvas. It also manages the state
+ * for the active workflow and modals for editing or creating new workflows.
+ *
+ * @requires react
+ * @requires ../../types
+ * @requires ../../hooks/useWorkflowManager
+ * @requires ./WorkflowControls
+ * @requires ./UserInputArea
+ * @requires ./DataStoreViewer
+ * @requires ./WorkflowCanvas
+ * @requires ./modals/WorkflowEditorModal
+ * @requires ./modals/WorkflowWizardModal
+ */
 
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Workflow, ModalType, StagedUserInput, PromptSFL } from '../../types';
 import { useWorkflowManager } from '../../hooks/useWorkflowManager';
 import WorkflowControls from './WorkflowControls';
 import UserInputArea from './UserInputArea';
-import DataStoreViewer from './DataStoreViewer';
 import WorkflowCanvas from './WorkflowCanvas';
 import WorkflowEditorModal from './modals/WorkflowEditorModal';
 import WorkflowWizardModal from './modals/WorkflowWizardModal';
 
+/**
+ * @interface PromptLabPageProps
+ * @description Defines the props for the PromptLabPage component.
+ * @property {PromptSFL[]} prompts - An array of all available SFL prompts from the library.
+ */
 interface PromptLabPageProps {
     prompts: PromptSFL[];
 }
 
+/**
+ * The main page component for the Prompt Lab feature.
+ * It integrates all the necessary components to provide a complete workflow management experience.
+ *
+ * @param {PromptLabPageProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered Prompt Lab page.
+ */
 const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
-    const { workflows, saveWorkflow, deleteWorkflow, isLoading, setWorkflows, saveCustomWorkflows } = useWorkflowManager();
+    const { workflows, saveWorkflow, deleteWorkflow, isLoading, saveCustomWorkflows } = useWorkflowManager();
     const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(null);
     const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
     const [stagedInput, setStagedInput] = useState<StagedUserInput>({});
@@ -33,7 +59,7 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
 
     const handleSaveWorkflow = (workflow: Workflow) => {
         saveWorkflow(workflow);
-        setActiveWorkflowId(workflow.id); // Switch to the newly saved/edited workflow
+        setActiveWorkflowId(workflow.id);
         handleCloseModal();
     };
     
@@ -44,16 +70,15 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
         importedWorkflows.forEach(iw => {
             const index = merged.findIndex(cw => cw.id === iw.id);
             if (index !== -1) {
-                merged[index] = iw; // Overwrite
+                merged[index] = iw;
             } else {
-                merged.push(iw); // Add new
+                merged.push(iw);
             }
         });
         
         saveCustomWorkflows(merged);
         alert(`Import successful. ${importedWorkflows.length} workflows imported/updated.`);
     };
-
 
     if (isLoading) {
         return <div className="flex items-center justify-center h-full"><div className="spinner"></div></div>;
@@ -77,7 +102,7 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
             <main className="flex-1 flex flex-col overflow-hidden">
                  {activeWorkflow ? (
                     <WorkflowCanvas
-                        key={activeWorkflow.id} // Re-mounts the canvas when workflow changes, resetting state
+                        key={activeWorkflow.id}
                         workflow={activeWorkflow}
                         stagedInput={stagedInput}
                         prompts={prompts}

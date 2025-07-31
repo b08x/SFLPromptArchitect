@@ -1,9 +1,28 @@
+/**
+ * @file TaskDetailModal.tsx
+ * @description This component renders a modal dialog that displays the detailed configuration and execution state of a single workflow task.
+ * It shows all properties of the task, and if available, the execution status, timings, results, or errors.
+ * It also includes a chart renderer for tasks that output chartable data.
+ *
+ * @requires react
+ * @requires recharts
+ * @requires ../../../types
+ * @requires ../../ModalShell
+ */
 
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Task, TaskState, TaskType, PromptSFL } from '../../../types';
 import ModalShell from '../../ModalShell';
 
+/**
+ * A component to display a single key-value detail item.
+ * @param {object} props - The component props.
+ * @param {string} props.label - The label for the detail.
+ * @param {any} [props.value] - The value to be displayed. Objects will be stringified.
+ * @param {boolean} [props.isCode=false] - If true, the value is rendered in a code block style.
+ * @returns {JSX.Element | null} The rendered detail item, or null if the value is empty.
+ */
 const DetailItem: React.FC<{ label: string; value?: any; isCode?: boolean }> = ({ label, value, isCode }) => {
     if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) return null;
 
@@ -24,11 +43,16 @@ const DetailItem: React.FC<{ label: string; value?: any; isCode?: boolean }> = (
     );
 };
 
+/**
+ * A component to render a bar chart for task results.
+ * @param {object} props - The component props.
+ * @param {any[]} props.data - The data array for the chart. Expected to have `name` and `value` properties.
+ * @returns {JSX.Element} A responsive bar chart or a message if data is invalid.
+ */
 const ChartRenderer: React.FC<{data: any[]}> = ({data}) => {
     if (!Array.isArray(data) || data.length === 0) {
         return <p className="text-sm text-gray-500">No data available for chart.</p>;
     }
-    // Basic validation for chart data structure
     const sample = data[0];
     if (typeof sample !== 'object' || !sample.name || !sample.value) {
          return <DetailItem label="Chart Data" value={data} isCode />;
@@ -50,6 +74,15 @@ const ChartRenderer: React.FC<{data: any[]}> = ({data}) => {
     )
 }
 
+/**
+ * @interface TaskDetailModalProps
+ * @description Defines the props for the TaskDetailModal component.
+ * @property {boolean} isOpen - Whether the modal is currently open.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {Task} task - The task object whose details are to be displayed.
+ * @property {TaskState} [taskState] - The current execution state of the task.
+ * @property {PromptSFL[]} prompts - The library of available SFL prompts to find linked prompt details.
+ */
 interface TaskDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -58,6 +91,12 @@ interface TaskDetailModalProps {
     prompts: PromptSFL[];
 }
 
+/**
+ * A modal that displays comprehensive details about a specific workflow task.
+ *
+ * @param {TaskDetailModalProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered task detail modal.
+ */
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task, taskState, prompts }) => {
     const linkedPrompt = task.promptId ? prompts.find(p => p.id === task.promptId) : null;
     

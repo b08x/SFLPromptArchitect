@@ -1,3 +1,10 @@
+/**
+ * @file FunnelIcon.tsx
+ * @description FunnelIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const FunnelIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

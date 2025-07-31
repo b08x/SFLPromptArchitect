@@ -1,3 +1,10 @@
+/**
+ * @file BeakerIcon.tsx
+ * @description BeakerIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const BeakerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

@@ -1,3 +1,10 @@
+/**
+ * @file CogIcon.tsx
+ * @description CogIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const CogIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

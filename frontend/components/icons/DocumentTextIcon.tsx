@@ -1,3 +1,9 @@
+/**
+ * @file DocumentTextIcon.tsx
+ * @description DocumentTextIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
 
 import React from 'react';
 

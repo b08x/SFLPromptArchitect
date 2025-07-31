@@ -1,3 +1,27 @@
+/**
+ * @file App.tsx
+ * @description This is the root component of the SFL Prompt Architect application.
+ * It manages the main state of the application, including the list of prompts, active modals,
+ * filters, and the current page. It orchestrates all the main components like the Sidebar,
+ * TopBar, and the main content area.
+ *
+ * @requires react
+ * @requires ./types
+ * @requires ./components/Sidebar
+ * @requires ./components/TopBar
+ * @requires ./components/Stats
+ * @requires ./components/PromptList
+ * @requires ./components/PromptFormModal
+ * @requires ./components/PromptDetailModal
+ * @requires ./components/PromptWizardModal
+ * @requires ./components/HelpModal
+ * @requires ./components/Documentation
+ * @requires ./components/lab/PromptLabPage
+ * @requires ./services/geminiService
+ * @requires ./services/promptApiService
+ * @requires ./constants
+ */
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PromptSFL, Filters, ModalType } from './types';
 import Sidebar from './components/Sidebar';
@@ -14,7 +38,6 @@ import { testPromptWithGemini } from './services/geminiService';
 import { getPrompts, savePrompt, deletePrompt as apiDeletePrompt } from './services/promptApiService';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
 
-
 const initialFilters: Filters = {
   searchTerm: '',
   topic: '',
@@ -23,6 +46,11 @@ const initialFilters: Filters = {
   outputFormat: '',
 };
 
+/**
+ * Converts a PromptSFL object into a Markdown string.
+ * @param {PromptSFL} prompt - The prompt to convert.
+ * @returns {string} The Markdown representation of the prompt.
+ */
 const promptToMarkdown = (prompt: PromptSFL): string => {
     const { 
         title, updatedAt, promptText, sflField, sflTenor, sflMode, exampleOutput, notes, sourceDocument
@@ -102,6 +130,10 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
 
 type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 
+/**
+ * The main App component.
+ * @returns {JSX.Element} The rendered application.
+ */
 const App: React.FC = () => {
   const [prompts, setPrompts] = useState<PromptSFL[]>([]);
   const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
@@ -127,7 +159,6 @@ const App: React.FC = () => {
         setPrompts(fetchedPrompts);
       } catch (error) {
         console.error("Failed to fetch prompts:", error);
-        // Optionally, set an error state to show in the UI
       }
     };
     fetchPrompts();
@@ -196,10 +227,9 @@ const App: React.FC = () => {
         }
         return [saved, ...prevPrompts].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       });
-      // Don't close modal here - let the form component handle it on success
     } catch (error) {
       console.error("Failed to save prompt:", error);
-      throw error; // Re-throw to let form component handle error display
+      throw error;
     }
   };
 
@@ -260,10 +290,9 @@ const App: React.FC = () => {
     
     let finalPromptText = promptToTest.promptText;
     Object.keys(variables).forEach(key => {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      const regex = new RegExp(`{{\s*${key}\s*}}`, 'g');
       finalPromptText = finalPromptText.replace(regex, variables[key] || '');
     });
-
 
     try {
       const responseText = await testPromptWithGemini(finalPromptText);
@@ -283,7 +312,6 @@ const App: React.FC = () => {
       return;
     }
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { isTesting, geminiResponse, geminiTestError, ...exportablePrompt } = promptToExport;
       const jsonData = JSON.stringify(exportablePrompt, null, 2);
       const blob = new Blob([jsonData], { type: 'application/json' });
@@ -335,7 +363,6 @@ const App: React.FC = () => {
     }
     try {
       const exportablePrompts = prompts.map(p => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { isTesting, geminiResponse, geminiTestError, ...rest } = p;
         return rest;
       });
@@ -434,7 +461,7 @@ const App: React.FC = () => {
           } catch (error: any) {
               console.error("Error importing prompts:", error);
               alert(`Import failed: ${error.message}`);
-          } finally {
+          finally {
               if (event.target) {
                   event.target.value = '';
               }
@@ -442,7 +469,6 @@ const App: React.FC = () => {
       };
       reader.readAsText(file);
   };
-
 
   const renderMainContent = () => {
     switch(activePage) {
@@ -475,9 +501,8 @@ const App: React.FC = () => {
     }
   }
 
-
   return (
-    <div className="flex h-screen bg-[#F7F8FC] font-sans">
+    <div className="flex h-screen bg-[#F7FF8FC] font-sans">
       <Sidebar 
         filters={filters}
         onFilterChange={handleFilterChange}

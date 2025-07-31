@@ -1,3 +1,10 @@
+/**
+ * @file ClipboardDocumentListIcon.tsx
+ * @description ClipboardDocumentListIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const ClipboardDocumentListIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

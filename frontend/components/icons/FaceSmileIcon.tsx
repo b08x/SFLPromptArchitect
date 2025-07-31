@@ -1,3 +1,10 @@
+/**
+ * @file FaceSmileIcon.tsx
+ * @description FaceSmileIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const FaceSmileIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

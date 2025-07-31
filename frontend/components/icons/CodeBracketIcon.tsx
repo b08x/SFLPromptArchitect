@@ -1,3 +1,10 @@
+/**
+ * @file CodeBracketIcon.tsx
+ * @description CodeBracketIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const CodeBracketIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

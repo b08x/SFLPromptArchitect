@@ -1,3 +1,10 @@
+/**
+ * @file EllipsisVerticalIcon.tsx
+ * @description EllipsisVerticalIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const EllipsisVerticalIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

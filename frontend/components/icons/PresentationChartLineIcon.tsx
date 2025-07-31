@@ -1,3 +1,10 @@
+/**
+ * @file PresentationChartLineIcon.tsx
+ * @description PresentationChartLineIcon component.
+ * @author Stephen Kaplan
+ * @see {@link https://heroicons.com/|Heroicons}
+ */
+
 import React from 'react';
 
 const PresentationChartLineIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
