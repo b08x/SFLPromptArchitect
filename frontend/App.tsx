@@ -42,7 +42,8 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         sections.push(
             '---',
             '## Source Document',
-            `**Filename:** `${sourceDocument.name}``,
+            `**Filename:** `${sourceDocument.name}`
+`,
             '> This document was used as a stylistic reference during prompt generation.',
             '',
             '<details>',

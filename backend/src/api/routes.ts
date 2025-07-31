@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import PromptController from './controllers/promptController';
 import WorkflowController from './controllers/workflowController';
+import ModelController from './controllers/modelController';
 
 const router = Router();
 
@@ -17,5 +18,8 @@ router.get('/workflows', WorkflowController.getWorkflows);
 router.get('/workflows/:id', WorkflowController.getWorkflowById);
 router.put('/workflows/:id', WorkflowController.updateWorkflow);
 router.delete('/workflows/:id', WorkflowController.deleteWorkflow);
+
+// Model routes
+router.get('/models', ModelController.getModels);
 
 export default router;
