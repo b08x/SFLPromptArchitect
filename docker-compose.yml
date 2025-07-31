@@ -11,6 +11,7 @@ services:
     volumes:
       - ./backend:/app # Mount for live-reloading in dev
       - /app/node_modules # Avoids overwriting container node_modules
+    command: npm run dev
     depends_on:
       - db
       - cache
