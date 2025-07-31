@@ -42,8 +42,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         sections.push(
             '---',
             '## Source Document',
-            `**Filename:** `${sourceDocument.name}`
-`,
+            `**Filename:** \`${sourceDocument.name}\``,
             '> This document was used as a stylistic reference during prompt generation.',
             '',
             '<details>',
@@ -63,7 +62,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         `- **Topic:** ${sflField.topic || 'N/A'}`,
         `- **Task Type:** ${sflField.taskType || 'N/A'}`,
         `- **Domain Specifics:** ${sflField.domainSpecifics || 'N/A'}`,
-        `- **Keywords:** ${sflField.keywords ? ``${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}`` : 'N/A'}``,
+        `- **Keywords:** ${sflField.keywords ? `\`${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}\`` : 'N/A'}``,
         '',
         '### Tenor (Who is taking part?)',
         `- **AI Persona:** ${sflTenor.aiPersona || 'N/A'}`,
