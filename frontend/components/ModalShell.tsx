@@ -1,5 +1,23 @@
+/**
+ * @file ModalShell.tsx
+ * @description This component provides a reusable, styled wrapper for all modal dialogs in the application.
+ * It handles the modal's open/close state, provides a background overlay, and includes a consistent header with a title and close button.
+ * The size of the modal can be customized via props.
+ *
+ * @requires react
+ */
+
 import React from 'react';
 
+/**
+ * @interface ModalShellProps
+ * @description Defines the props for the ModalShell component.
+ * @property {boolean} isOpen - Determines if the modal is visible.
+ * @property {() => void} onClose - Callback function to be invoked when the modal should be closed (e.g., by clicking the close button or overlay).
+ * @property {string} title - The title to be displayed in the modal's header.
+ * @property {React.ReactNode} children - The content to be rendered inside the modal body.
+ * @property {'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl'} [size='xl'] - The maximum width of the modal. Defaults to 'xl'.
+ */
 interface ModalShellProps {
   isOpen: boolean;
   onClose: () => void;
@@ -8,6 +26,15 @@ interface ModalShellProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 }
 
+/**
+ * A reusable shell component for creating modal dialogs.
+ * It provides the basic structure, styling, and behavior for a modal,
+ * including an overlay, a container, a header with a title and close button,
+ * and a scrollable content area.
+ *
+ * @param {ModalShellProps} props - The props for the component.
+ * @returns {JSX.Element | null} The rendered modal component, or null if `isOpen` is false.
+ */
 const ModalShell: React.FC<ModalShellProps> = ({ isOpen, onClose, title, children, size = 'xl' }) => {
   if (!isOpen) return null;
 

@@ -1,3 +1,21 @@
+/**
+ * @file PromptCard.tsx
+ * @description This component renders a single card representing an SFL prompt.
+ * It displays key information such as the title, task type, persona, and format.
+ * It also includes a dropdown menu with actions like View, Edit, and Delete.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ./icons/EllipsisVerticalIcon
+ * @requires ./icons/CodeBracketIcon
+ * @requires ./icons/ChatBubbleLeftRightIcon
+ * @requires ./icons/DocumentTextIcon
+ * @requires ./icons/ArrowsRightLeftIcon
+ * @requires ./icons/GlobeAltIcon
+ * @requires ./icons/WrenchScrewdriverIcon
+ * @requires ./icons/AcademicCapIcon
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { PromptSFL } from '../types';
 import EllipsisVerticalIcon from './icons/EllipsisVerticalIcon';
@@ -9,7 +27,14 @@ import GlobeAltIcon from './icons/GlobeAltIcon';
 import WrenchScrewdriverIcon from './icons/WrenchScrewdriverIcon';
 import AcademicCapIcon from './icons/AcademicCapIcon';
 
-
+/**
+ * @interface PromptCardProps
+ * @description Defines the props for the PromptCard component.
+ * @property {PromptSFL} prompt - The SFL prompt object to display.
+ * @property {(prompt: PromptSFL) => void} onView - Callback function when the "View" action is selected.
+ * @property {(prompt: PromptSFL) => void} onEdit - Callback function when the "Edit" action is selected.
+ * @property {(promptId: string) => void} onDelete - Callback function when the "Delete" action is selected.
+ */
 interface PromptCardProps {
   prompt: PromptSFL;
   onView: (prompt: PromptSFL) => void;
@@ -17,7 +42,12 @@ interface PromptCardProps {
   onDelete: (promptId: string) => void;
 }
 
-const getTaskIcon = (taskType: string) => {
+/**
+ * Returns a specific icon component based on the task type string.
+ * @param {string} taskType - The task type from the prompt's SFL Field.
+ * @returns {JSX.Element} A React icon component.
+ */
+const getTaskIcon = (taskType: string): JSX.Element => {
     const iconProps = { className: "w-5 h-5" };
     switch (taskType) {
         case 'Explanation': return <ChatBubbleLeftRightIcon {...iconProps} />;
@@ -31,6 +61,14 @@ const getTaskIcon = (taskType: string) => {
     }
 }
 
+/**
+ * A card component that displays a summary of an SFL prompt and provides actions.
+ * It shows the prompt's title, text snippet, key SFL parameters, and keywords.
+ * An options menu allows the user to view, edit, or delete the prompt.
+ *
+ * @param {PromptCardProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered prompt card.
+ */
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelete }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);

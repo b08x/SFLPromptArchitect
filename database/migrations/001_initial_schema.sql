@@ -1,3 +1,24 @@
+/**
+ * @file This file contains the initial database schema for the application.
+ * It creates the necessary tables for users, prompts, workflows, and documents,
+ * and also enables the "uuid-ossp" and "vector" extensions for PostgreSQL.
+ *
+ * @author Your Name
+ *
+ * @description
+ * This migration sets up the following tables:
+ * - `users`: Stores user information, including email and hashed password.
+ * - `prompts`: Stores SFL prompts created by users.
+ * - `workflows`: Stores user-defined workflows with their graph data.
+ * - `documents`: Stores metadata about uploaded documents.
+ * - `document_chunks`: Stores text chunks and their vector embeddings for uploaded documents.
+ *
+ * The "uuid-ossp" extension is used to generate UUIDs for primary keys.
+ * The "vector" extension is used to store and query vector embeddings for semantic search.
+ *
+ * The down migration drops all the created tables and extensions in the reverse order of their creation.
+ */
+
 -- Up Migration
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";

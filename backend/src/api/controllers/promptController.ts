@@ -1,7 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import PromptService from '../../services/promptService';
 
+/**
+ * @class PromptController
+ * @description Controller for handling prompt-related requests.
+ */
 class PromptController {
+  /**
+   * @method createPrompt
+   * @description Creates a new prompt.
+   * @param {Request} req - The Express request object, containing the prompt data in the body.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   */
   async createPrompt(req: Request, res: Response, next: NextFunction) {
     try {
       // Validate required fields
@@ -24,6 +36,14 @@ class PromptController {
     }
   }
 
+  /**
+   * @method getPrompts
+   * @description Retrieves a list of prompts, with optional filtering.
+   * @param {Request} req - The Express request object, containing query parameters for filtering.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   */
   async getPrompts(req: Request, res: Response, next: NextFunction) {
     try {
       const prompts = await PromptService.getPrompts(req.query);
@@ -33,6 +53,14 @@ class PromptController {
     }
   }
 
+  /**
+   * @method getPromptById
+   * @description Retrieves a single prompt by its ID.
+   * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   */
   async getPromptById(req: Request, res: Response, next: NextFunction) {
     try {
       const prompt = await PromptService.getPromptById(req.params.id);
@@ -45,6 +73,14 @@ class PromptController {
     }
   }
 
+  /**
+   * @method updatePrompt
+   * @description Updates an existing prompt.
+   * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter and the update data in the body.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   */
   async updatePrompt(req: Request, res: Response, next: NextFunction) {
     try {
       const prompt = await PromptService.updatePrompt(req.params.id, req.body);
@@ -62,6 +98,14 @@ class PromptController {
     }
   }
 
+  /**
+   * @method deletePrompt
+   * @description Deletes a prompt by its ID.
+   * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   */
   async deletePrompt(req: Request, res: Response, next: NextFunction) {
     try {
       const success = await PromptService.deletePrompt(req.params.id);

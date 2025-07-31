@@ -1,14 +1,38 @@
+/**
+ * @file PromptWizardModal.tsx
+ * @description This component provides a step-by-step wizard in a modal for creating a new SFL prompt.
+ * It guides the user through providing a high-level goal, generates an initial SFL structure using an AI service,
+ * and then allows the user to refine the generated prompt before saving.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ../services/geminiService
+ * @requires ../constants
+ * @requires ../utils/generateId
+ * @requires ./ModalShell
+ * @requires ./icons/SparklesIcon
+ * @requires ./icons/PaperClipIcon
+ * @requires ./icons/XCircleIcon
+ */
 
 import React, { useState, useRef } from 'react';
 import { PromptSFL } from '../types';
 import { generateSFLFromGoal, regenerateSFLFromSuggestion } from '../services/geminiService';
 import { INITIAL_PROMPT_SFL } from '../constants';
-import { generateId } from '../utils/generateId';
 import ModalShell from './ModalShell';
 import SparklesIcon from './icons/SparklesIcon';
 import PaperClipIcon from './icons/PaperClipIcon';
 import XCircleIcon from './icons/XCircleIcon';
 
+/**
+ * @interface PromptWizardModalProps
+ * @description Defines the props for the PromptWizardModal component.
+ * @property {boolean} isOpen - Whether the modal is currently open.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {(prompt: PromptSFL) => void} onSave - Callback function to save the newly created prompt.
+ * @property {object} appConstants - An object containing arrays of predefined options for SFL fields.
+ * @property {(key: keyof PromptWizardModalProps['appConstants'], value: string) => void} onAddConstant - Callback to add a new option to the app's constants.
+ */
 interface PromptWizardModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -24,8 +48,19 @@ interface PromptWizardModalProps {
     onAddConstant: (key: keyof PromptWizardModalProps['appConstants'], value: string) => void;
 }
 
+/**
+ * @typedef {'input' | 'loading' | 'refinement' | 'error'} WizardStep
+ * @description Represents the current step of the wizard workflow.
+ */
 type WizardStep = 'input' | 'loading' | 'refinement' | 'error';
 
+/**
+ * A modal wizard that guides users through creating a new SFL prompt.
+ * It handles state for each step of the process, from initial goal input to AI-powered generation and final refinement.
+ *
+ * @param {PromptWizardModalProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered wizard modal.
+ */
 const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, onSave, appConstants, onAddConstant }) => {
     const [step, setStep] = useState<WizardStep>('input');
     const [goal, setGoal] = useState('');
@@ -68,10 +103,8 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
     };
 
     const handleSave = async () => {
-        // Clear previous errors
         setSaveState({ saving: true, error: '' });
         
-        // Client-side validation
         if (!formData.title?.trim()) {
             setSaveState({ saving: false, error: 'Title is required' });
             return;
@@ -126,7 +159,7 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
 
     const handleSFLChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        const [sflType, field] = name.split('.'); // e.g., name="sflField.topic"
+        const [sflType, field] = name.split('.');
         setFormData(prev => ({
             ...prev,
             [sflType]: {
@@ -196,7 +229,6 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
             </div>
         </div>
     );
-
 
     const renderRefinementForm = () => (
         <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>

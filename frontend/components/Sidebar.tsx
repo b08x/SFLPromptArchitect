@@ -1,4 +1,25 @@
-
+/**
+ * @file Sidebar.tsx
+ * @description This component renders the main sidebar for the application.
+ * It includes primary navigation links, quick filters for task types and AI personas,
+ * and a section for popular tags. It also displays the status of the connected AI model.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ./icons/BrainCircuitIcon
+ * @requires ./icons/HomeIcon
+ * @requires ./icons/FlaskIcon
+ * @requires ./icons/BookOpenIcon
+ * @requires ./icons/CogIcon
+ * @requires ./icons/ChatBubbleLeftRightIcon
+ * @requires ./icons/CodeBracketIcon
+ * @requires ./icons/DocumentTextIcon
+ * @requires ./icons/LanguageIcon
+ * @requires ./icons/UserCircleIcon
+ * @requires ./icons/FaceSmileIcon
+ * @requires ./icons/BeakerIcon
+ * @requires ./icons/PlusIcon
+ */
 
 import React from 'react';
 import { Filters } from '../types';
@@ -18,6 +39,15 @@ import PlusIcon from './icons/PlusIcon';
 
 type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 
+/**
+ * @interface SidebarProps
+ * @description Defines the props for the Sidebar component.
+ * @property {Filters} filters - The current state of the filters.
+ * @property {(key: K, value: Filters[K]) => void} onFilterChange - Callback to update a filter.
+ * @property {string[]} popularTags - An array of popular tags to display as quick filters.
+ * @property {Page} activePage - The currently active page.
+ * @property {(page: Page) => void} onNavigate - Callback to handle navigation to a different page.
+ */
 interface SidebarProps {
   filters: Filters;
   onFilterChange: <K extends keyof Filters>(key: K, value: Filters[K]) => void;
@@ -26,6 +56,11 @@ interface SidebarProps {
   onNavigate: (page: Page) => void;
 }
 
+/**
+ * A reusable navigation item component for the sidebar.
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} A styled button for navigation.
+ */
 const NavItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; active?: boolean, onClick: () => void; }> = ({ icon: Icon, label, active, onClick }) => (
   <button onClick={onClick} className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
       active ? 'bg-[#4A69E2] text-white' : 'text-[#A6B0C3] hover:bg-white/10'
@@ -36,6 +71,11 @@ const NavItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; lab
   </button>
 );
 
+/**
+ * A reusable filter item component for the sidebar.
+ * @param {object} props - The component props.
+ * @returns {JSX.Element} A styled button for applying a filter.
+ */
 const FilterItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; selected: boolean }> = ({ icon: Icon, label, onClick, selected }) => (
     <button onClick={onClick} className={`flex w-full items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
         selected ? 'text-white bg-white/20' : 'text-[#A6B0C3] hover:bg-white/10'
@@ -46,6 +86,13 @@ const FilterItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; 
     </button>
 );
 
+/**
+ * The main sidebar component.
+ * It provides navigation, filtering capabilities, and status information.
+ *
+ * @param {SidebarProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered sidebar.
+ */
 const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags, activePage, onNavigate }) => {
     const taskTypes = ["Explanation", "Code Generation", "Summarization", "Translation"];
     const taskIcons: { [key: string]: React.ComponentType<{ className?: string }> } = {

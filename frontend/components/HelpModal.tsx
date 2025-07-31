@@ -1,6 +1,24 @@
+/**
+ * @file HelpModal.tsx
+ * @description This component renders a detailed help and guidance modal for SFL Prompt Engineering.
+ * It explains the three SFL metafunctions (Field, Tenor, Mode) and their constituent parameters,
+ * providing both a definition and an "algorithmic representation" of how each parameter influences the AI model's behavior.
+ *
+ * @requires react
+ * @requires ./ModalShell
+ */
+
 import React from 'react';
 import ModalShell from './ModalShell';
 
+/**
+ * A component to structure a major section within the help modal (e.g., Field, Tenor, Mode).
+ * @param {object} props - The component props.
+ * @param {string} props.title - The main title of the section.
+ * @param {string} props.subtitle - The guiding question for the section (e.g., "What is happening?").
+ * @param {React.ReactNode} props.children - The content of the section, typically a series of `DetailBlock` components.
+ * @returns {JSX.Element} A styled section element.
+ */
 const HelpSection: React.FC<{ title: string; subtitle: string; children: React.ReactNode }> = ({ title, subtitle, children }) => (
     <div className="mb-8">
         <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
@@ -11,6 +29,14 @@ const HelpSection: React.FC<{ title: string; subtitle: string; children: React.R
     </div>
 );
 
+/**
+ * A component to display the detailed explanation of a single SFL parameter.
+ * @param {object} props - The component props.
+ * @param {string} props.term - The name of the SFL parameter (e.g., "Topic").
+ * @param {string} props.definition - A user-friendly definition of the parameter.
+ * @param {string} props.algo - An "algorithmic representation" explaining how the parameter affects the AI model.
+ * @returns {JSX.Element} A styled block containing the detailed explanation.
+ */
 const DetailBlock: React.FC<{ term: string; definition: string; algo: string }> = ({ term, definition, algo }) => (
     <div>
         <h4 className="font-semibold text-gray-800 text-base">{term}</h4>
@@ -21,6 +47,16 @@ const DetailBlock: React.FC<{ term: string; definition: string; algo: string }> 
     </div>
 );
 
+/**
+ * The main modal component that provides a comprehensive guide to SFL prompt engineering.
+ * It uses `ModalShell` as its base and is composed of `HelpSection` and `DetailBlock` components
+ * to present the information in a structured and easy-to-digest format.
+ *
+ * @param {object} props - The component props.
+ * @param {boolean} props.isOpen - Whether the modal is currently open.
+ * @param {() => void} props.onClose - Callback function to close the modal.
+ * @returns {JSX.Element | null} The rendered modal or `null` if `isOpen` is false.
+ */
 const HelpModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
     return (
         <ModalShell isOpen={isOpen} onClose={onClose} title="SFL Prompt Engineering Guide" size="4xl">

@@ -1,3 +1,17 @@
+/**
+ * @file Header.tsx
+ * @description This component renders the main application header.
+ * It includes the application title and a set of action buttons for creating, importing,
+ * exporting, and getting help with prompts.
+ *
+ * @requires react
+ * @requires ./icons/PlusIcon
+ * @requires ./icons/MagicWandIcon
+ * @requires ./icons/ArrowUpTrayIcon
+ * @requires ./icons/ArrowDownTrayIcon
+ * @requires ./icons/QuestionMarkCircleIcon
+ * @requires ./icons/DocumentTextIcon
+ */
 
 import React from 'react';
 import PlusIcon from './icons/PlusIcon';
@@ -7,6 +21,17 @@ import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
 import DocumentTextIcon from './icons/DocumentTextIcon';
 
+/**
+ * @interface HeaderProps
+ * @description Defines the props for the Header component.
+ * It consists of callback functions to be triggered by the header buttons.
+ * @property {() => void} onAddNewPrompt - Callback for the "New Prompt" button.
+ * @property {() => void} onOpenWizard - Callback for the "Prompt Wizard" button.
+ * @property {() => void} onImportPrompts - Callback for the "Import Prompts" button.
+ * @property {() => void} onExportAllPrompts - Callback for the "Export All as JSON" button.
+ * @property {() => void} onExportAllPromptsMarkdown - Callback for the "Export All as Markdown" button.
+ * @property {() => void} onOpenHelp - Callback for the "Help Guide" button.
+ */
 interface HeaderProps {
   onAddNewPrompt: () => void;
   onOpenWizard: () => void;
@@ -16,6 +41,13 @@ interface HeaderProps {
   onOpenHelp: () => void;
 }
 
+/**
+ * The main header component for the application.
+ * It displays the application title and provides primary action buttons.
+ *
+ * @param {HeaderProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered header element.
+ */
 const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts, onExportAllPromptsMarkdown, onOpenHelp }) => {
   return (
     <header className="mb-6 flex items-center justify-between">

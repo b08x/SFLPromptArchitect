@@ -3,6 +3,12 @@ import PromptController from './controllers/promptController';
 import WorkflowController from './controllers/workflowController';
 import ModelController from './controllers/modelController';
 
+/**
+ * @file defines the routes for the application's API
+ * @author Your Name
+ * @see {@link http://expressjs.com/en/guide/routing.html|Express Routing}
+ */
+
 const router = Router();
 
 // Prompt routes

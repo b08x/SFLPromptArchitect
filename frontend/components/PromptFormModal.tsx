@@ -1,7 +1,23 @@
+/**
+ * @file PromptFormModal.tsx
+ * @description This component provides a modal form for creating and editing SFL prompts.
+ * It includes fields for all SFL parameters, a title, notes, and the main prompt text.
+ * It also features an AI-powered regeneration capability and allows attaching a source document for stylistic reference.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ../constants
+ * @requires ../utils/generateId
+ * @requires ./ModalShell
+ * @requires ../services/geminiService
+ * @requires ./icons/SparklesIcon
+ * @requires ./icons/PaperClipIcon
+ * @requires ./icons/XCircleIcon
+ */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { PromptSFL, SFLField, SFLTenor, SFLMode } from '../types';
-import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, INITIAL_PROMPT_SFL } from '../constants';
+import { PromptSFL } from '../types';
+import { INITIAL_PROMPT_SFL } from '../constants';
 import { generateId } from '../utils/generateId';
 import ModalShell from './ModalShell';
 import { regenerateSFLFromSuggestion } from '../services/geminiService';
@@ -9,6 +25,16 @@ import SparklesIcon from './icons/SparklesIcon';
 import PaperClipIcon from './icons/PaperClipIcon';
 import XCircleIcon from './icons/XCircleIcon';
 
+/**
+ * @interface PromptFormModalProps
+ * @description Defines the props for the PromptFormModal component.
+ * @property {boolean} isOpen - Whether the modal is currently open.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {(prompt: PromptSFL) => void} onSave - Callback function to save the prompt.
+ * @property {PromptSFL | null} [promptToEdit] - The prompt object to edit. If null, the form is for creating a new prompt.
+ * @property {object} appConstants - An object containing arrays of predefined options for various SFL fields.
+ * @property {(key: keyof PromptFormModalProps['appConstants'], value: string) => void} onAddConstant - Callback to add a new option to the app's constants.
+ */
 interface PromptFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,6 +51,14 @@ interface PromptFormModalProps {
   onAddConstant: (key: keyof PromptFormModalProps['appConstants'], value: string) => void;
 }
 
+/**
+ * A modal form for creating and editing SFL prompts.
+ * It manages the form state, handles user input, and provides functionality for
+ * AI-powered regeneration and saving the prompt.
+ *
+ * @param {PromptFormModalProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered form modal.
+ */
 const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSave, promptToEdit, appConstants, onAddConstant }) => {
   const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
   const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
@@ -112,7 +146,6 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
       };
       reader.readAsText(file);
     }
-    // Reset file input value to allow re-uploading the same file
     if(event.target) event.target.value = '';
   };
 
@@ -120,14 +153,10 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     setFormData(prev => ({...prev, sourceDocument: undefined }));
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Clear previous errors
     setSaveState({ saving: true, error: '' });
     
-    // Client-side validation
     if (!formData.title?.trim()) {
       setSaveState({ saving: false, error: 'Title is required' });
       return;

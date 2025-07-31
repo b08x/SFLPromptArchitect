@@ -1,3 +1,19 @@
+/**
+ * @file PromptDetailModal.tsx
+ * @description This component displays the full details of a selected SFL prompt in a modal dialog.
+ * It provides a comprehensive view of all SFL parameters, the prompt text, and any associated metadata.
+ * It also includes controls for testing the prompt with Gemini, editing, deleting, and exporting.
+ *
+ * @requires react
+ * @requires ../types
+ * @requires ./ModalShell
+ * @requires ./icons/SparklesIcon
+ * @requires ./icons/PencilIcon
+ * @requires ./icons/TrashIcon
+ * @requires ./icons/ArrowDownTrayIcon
+ * @requires ./icons/DocumentTextIcon
+ * @requires ./icons/ClipboardIcon
+ */
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { PromptSFL } from '../types';
@@ -9,6 +25,18 @@ import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 import DocumentTextIcon from './icons/DocumentTextIcon';
 import ClipboardIcon from './icons/ClipboardIcon';
 
+/**
+ * @interface PromptDetailModalProps
+ * @description Defines the props for the PromptDetailModal component.
+ * @property {boolean} isOpen - Whether the modal is currently visible.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {PromptSFL | null} prompt - The prompt object to display. If null, the modal is not rendered.
+ * @property {(prompt: PromptSFL) => void} onEdit - Callback to trigger editing of the current prompt.
+ * @property {(promptId: string) => void} onDelete - Callback to trigger deletion of the current prompt.
+ * @property {(prompt: PromptSFL, variables: Record<string, string>) => void} onTestWithGemini - Callback to test the prompt with the Gemini API.
+ * @property {(prompt: PromptSFL) => void} onExportPrompt - Callback to export the prompt as JSON.
+ * @property {(prompt: PromptSFL) => void} onExportPromptMarkdown - Callback to export the prompt as Markdown.
+ */
 interface PromptDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +48,15 @@ interface PromptDetailModalProps {
   onExportPromptMarkdown: (prompt: PromptSFL) => void;
 }
 
+/**
+ * A small component to display a single piece of detail (label and value).
+ * @param {object} props - The component props.
+ * @param {string} props.label - The label for the detail item.
+ * @param {string | null} [props.value] - The value to display.
+ * @param {boolean} [props.isCode] - If true, formats the value as a code block.
+ * @param {boolean} [props.isEmpty] - If true, the component renders nothing.
+ * @returns {JSX.Element | null} The rendered detail item or null.
+ */
 const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: boolean; isEmpty?: boolean }> = ({ label, value, isCode, isEmpty }) => {
   if (isEmpty || !value) return null;
   return (
@@ -34,7 +71,15 @@ const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: bool
   );
 };
 
-
+/**
+ * A modal component that displays the complete details of an SFL prompt.
+ * It organizes all SFL parameters into Field, Tenor, and Mode sections.
+ * It also provides functionality for handling prompt variables, testing with Gemini,
+ * and viewing test results or errors.
+ *
+ * @param {PromptDetailModalProps} props - The props for the component.
+ * @returns {JSX.Element | null} The rendered modal or null if no prompt is provided.
+ */
 const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, prompt, onEdit, onDelete, onTestWithGemini, onExportPrompt, onExportPromptMarkdown }) => {
   if (!prompt) return null;
 
@@ -47,11 +92,9 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
     const regex = /{{\s*(\w+)\s*}}/g;
     const matches = prompt.promptText.match(regex);
     if (!matches) return [];
-    // Deduplicate and clean
     return [...new Set(matches.map(v => v.replace(/{{\s*|\s*}}/g, '')))];
   }, [prompt?.promptText]);
 
-  // Reset states when the prompt changes or modal opens
   useEffect(() => {
     if (isOpen && prompt) {
       const initialValues: Record<string, string> = {};
