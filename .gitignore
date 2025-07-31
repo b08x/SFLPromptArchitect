@@ -25,3 +25,4 @@ dist-ssr
 
 SFL-Prompt-Architect.code-workspace
 .env
+/node_modules/

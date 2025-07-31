@@ -5,7 +5,9 @@ import ModalShell from './ModalShell';
 import SparklesIcon from './icons/SparklesIcon';
 import PencilIcon from './icons/PencilIcon';
 import TrashIcon from './icons/TrashIcon';
-import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon'; // Added for export
+import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
+import DocumentTextIcon from './icons/DocumentTextIcon';
+import ClipboardIcon from './icons/ClipboardIcon';
 
 interface PromptDetailModalProps {
   isOpen: boolean;
@@ -14,7 +16,8 @@ interface PromptDetailModalProps {
   onEdit: (prompt: PromptSFL) => void;
   onDelete: (promptId: string) => void;
   onTestWithGemini: (prompt: PromptSFL, variables: Record<string, string>) => void;
-  onExportPrompt: (prompt: PromptSFL) => void; // Added prop for exporting
+  onExportPrompt: (prompt: PromptSFL) => void;
+  onExportPromptMarkdown: (prompt: PromptSFL) => void;
 }
 
 const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: boolean; isEmpty?: boolean }> = ({ label, value, isCode, isEmpty }) => {
@@ -32,10 +35,12 @@ const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: bool
 };
 
 
-const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, prompt, onEdit, onDelete, onTestWithGemini, onExportPrompt }) => {
+const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, prompt, onEdit, onDelete, onTestWithGemini, onExportPrompt, onExportPromptMarkdown }) => {
   if (!prompt) return null;
 
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [isDocVisible, setDocVisible] = useState(false);
+  const [docCopied, setDocCopied] = useState(false);
 
   const variables = useMemo(() => {
     if (!prompt?.promptText) return [];
@@ -46,7 +51,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
     return [...new Set(matches.map(v => v.replace(/{{\s*|\s*}}/g, '')))];
   }, [prompt?.promptText]);
 
-  // Reset variable values when the prompt changes or modal opens
+  // Reset states when the prompt changes or modal opens
   useEffect(() => {
     if (isOpen && prompt) {
       const initialValues: Record<string, string> = {};
@@ -54,17 +59,49 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
         initialValues[v] = '';
       });
       setVariableValues(initialValues);
+      setDocVisible(false);
+      setDocCopied(false);
     }
   }, [isOpen, prompt, variables]);
 
   const handleVariableChange = (variableName: string, value: string) => {
     setVariableValues(prev => ({ ...prev, [variableName]: value }));
   };
+  
+  const handleCopyDocContent = () => {
+    if (prompt?.sourceDocument?.content) {
+      navigator.clipboard.writeText(prompt.sourceDocument.content);
+      setDocCopied(true);
+      setTimeout(() => setDocCopied(false), 2000);
+    }
+  };
 
   return (
     <ModalShell isOpen={isOpen} onClose={onClose} title={prompt.title} size="4xl">
       <div className="space-y-6">
         <DetailItem label="Prompt Text" value={prompt.promptText} isCode />
+
+        {prompt.sourceDocument && (
+            <div className="mb-3">
+                <h4 className="text-sm font-semibold text-[#95aac0] mb-0.5">Source Document</h4>
+                <div className="flex items-center justify-between bg-[#212934] p-3 rounded-md text-sm text-gray-200">
+                    <span className="italic">{prompt.sourceDocument.name}</span>
+                    <button onClick={() => setDocVisible(!isDocVisible)} className="text-xs font-semibold text-[#e2a32d] hover:underline">
+                        {isDocVisible ? 'Hide Content' : 'View Content'}
+                    </button>
+                </div>
+                {isDocVisible && (
+                    <div className="relative mt-2">
+                        <pre className="bg-[#212934] p-3 rounded-md text-sm text-gray-200 whitespace-pre-wrap break-all max-h-48 overflow-y-auto border border-[#5c6f7e]">
+                           {prompt.sourceDocument.content}
+                        </pre>
+                        <button onClick={handleCopyDocContent} className="absolute top-2 right-2 p-1.5 bg-[#333e48] rounded-md text-[#95aac0] hover:text-white transition-colors">
+                           {docCopied ? <span className="text-xs">Copied!</span> : <ClipboardIcon className="w-4 h-4" />}
+                        </button>
+                    </div>
+                )}
+            </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <section className="border border-[#5c6f7e] p-4 rounded-lg bg-[#212934]/50">
@@ -146,9 +183,16 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
           <button
             onClick={() => onExportPrompt(prompt)}
             className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#5c6f7e] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#95aac0] focus:ring-offset-[#333e48] flex items-center"
-            aria-label="Export this prompt"
+            aria-label="Export this prompt as JSON"
           >
-            <ArrowDownTrayIcon className="w-5 h-5 mr-2"/> Export
+            <ArrowDownTrayIcon className="w-5 h-5 mr-2"/> Export JSON
+          </button>
+          <button
+            onClick={() => onExportPromptMarkdown(prompt)}
+            className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#5c6f7e] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#95aac0] focus:ring-offset-[#333e48] flex items-center"
+            aria-label="Export this prompt as Markdown"
+          >
+            <DocumentTextIcon className="w-5 h-5 mr-2"/> Export MD
           </button>
           <button
             onClick={() => onTestWithGemini(prompt, variableValues)}

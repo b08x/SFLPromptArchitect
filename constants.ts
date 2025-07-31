@@ -54,4 +54,5 @@ export const INITIAL_PROMPT_SFL: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt
   sflMode: { ...SFL_EMPTY_MODE },
   exampleOutput: "",
   notes: "",
+  sourceDocument: undefined,
 };

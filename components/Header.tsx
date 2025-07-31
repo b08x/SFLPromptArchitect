@@ -5,16 +5,18 @@ import MagicWandIcon from './icons/MagicWandIcon';
 import ArrowUpTrayIcon from './icons/ArrowUpTrayIcon';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
+import DocumentTextIcon from './icons/DocumentTextIcon';
 
 interface HeaderProps {
   onAddNewPrompt: () => void;
   onOpenWizard: () => void;
   onImportPrompts: () => void;
   onExportAllPrompts: () => void;
+  onExportAllPromptsMarkdown: () => void;
   onOpenHelp: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts, onOpenHelp }) => {
+const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts, onExportAllPromptsMarkdown, onOpenHelp }) => {
   return (
     <header className="mb-6 flex items-center justify-between">
       <h1 className="text-3xl font-bold text-[#e2a32d]">SFL Prompt Architect</h1>
@@ -39,10 +41,18 @@ const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportP
             <button
               onClick={onExportAllPrompts}
               className="bg-transparent border border-[#5c6f7e] hover:bg-[#5c6f7e] text-gray-200 font-semibold py-2 px-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 ease-in-out flex items-center focus:outline-none focus:ring-2 focus:ring-[#95aac0] focus:ring-offset-2 focus:ring-offset-[#212934]"
-              aria-label="Export all prompts"
-              title="Export All Prompts"
+              aria-label="Export all prompts as JSON"
+              title="Export All as JSON"
             >
               <ArrowDownTrayIcon className="w-5 h-5" />
+            </button>
+             <button
+              onClick={onExportAllPromptsMarkdown}
+              className="bg-transparent border border-[#5c6f7e] hover:bg-[#5c6f7e] text-gray-200 font-semibold py-2 px-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 ease-in-out flex items-center focus:outline-none focus:ring-2 focus:ring-[#95aac0] focus:ring-offset-2 focus:ring-offset-[#212934]"
+              aria-label="Export all prompts as Markdown"
+              title="Export All as Markdown"
+            >
+              <DocumentTextIcon className="w-5 h-5" />
             </button>
         </div>
         <button

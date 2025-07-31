@@ -44,6 +44,81 @@ const samplePrompts: PromptSFL[] = [
   }
 ];
 
+const promptToMarkdown = (prompt: PromptSFL): string => {
+    const { 
+        title, updatedAt, promptText, sflField, sflTenor, sflMode, exampleOutput, notes, sourceDocument
+    } = prompt;
+
+    const sections = [
+        `# ${title || 'Untitled Prompt'}`,
+        `**Last Updated:** ${new Date(updatedAt).toLocaleString()}`,
+        '---',
+        '## Prompt Text',
+        '```',
+        promptText || '',
+        '```',
+    ];
+
+    if (sourceDocument) {
+        sections.push(
+            '---',
+            '## Source Document',
+            `**Filename:** \`${sourceDocument.name}\``,
+            '> This document was used as a stylistic reference during prompt generation.',
+            '',
+            '<details>',
+            '<summary>View Content</summary>',
+            '',
+            '```',
+            sourceDocument.content,
+            '```',
+            '</details>'
+        );
+    }
+
+    sections.push(
+        '---',
+        '## SFL Metadata',
+        '### Field (What is happening?)',
+        `- **Topic:** ${sflField.topic || 'N/A'}`,
+        `- **Task Type:** ${sflField.taskType || 'N/A'}`,
+        `- **Domain Specifics:** ${sflField.domainSpecifics || 'N/A'}`,
+        `- **Keywords:** ${sflField.keywords ? `\`${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}\`` : 'N/A'}`,
+        '',
+        '### Tenor (Who is taking part?)',
+        `- **AI Persona:** ${sflTenor.aiPersona || 'N/A'}`,
+        `- **Target Audience:** ${sflTenor.targetAudience.join(', ') || 'N/A'}`,
+        `- **Desired Tone:** ${sflTenor.desiredTone || 'N/A'}`,
+        `- **Interpersonal Stance:** ${sflTenor.interpersonalStance || 'N/A'}`,
+        '',
+        '### Mode (What role is language playing?)',
+        `- **Output Format:** ${sflMode.outputFormat || 'N/A'}`,
+        `- **Rhetorical Structure:** ${sflMode.rhetoricalStructure || 'N/A'}`,
+        `- **Length Constraint:** ${sflMode.lengthConstraint || 'N/A'}`,
+        `- **Textual Directives:** ${sflMode.textualDirectives || 'N/A'}`,
+    );
+
+    if (exampleOutput) {
+        sections.push(
+            '---',
+            '## Example Output',
+            '```',
+            exampleOutput,
+            '```'
+        );
+    }
+
+    if (notes) {
+        sections.push(
+            '---',
+            '## Notes',
+            notes
+        );
+    }
+    
+    return sections.join('\n');
+};
+
 
 const App: React.FC = () => {
   const [prompts, setPrompts] = useState<PromptSFL[]>(() => {
@@ -203,6 +278,7 @@ const App: React.FC = () => {
       return;
     }
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { isTesting, geminiResponse, geminiTestError, ...exportablePrompt } = promptToExport;
       const jsonData = JSON.stringify(exportablePrompt, null, 2);
       const blob = new Blob([jsonData], { type: 'application/json' });
@@ -221,6 +297,31 @@ const App: React.FC = () => {
       alert("An error occurred while exporting the prompt. Please check the console for details.");
     }
   };
+
+  const handleExportSinglePromptMarkdown = (promptToExport: PromptSFL) => {
+    if (!promptToExport) {
+      alert("No prompt selected for export.");
+      return;
+    }
+    try {
+      const markdownData = promptToMarkdown(promptToExport);
+      const blob = new Blob([markdownData], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      const sanitizedTitle = sanitizeFilename(promptToExport.title || "untitled");
+      a.href = url;
+      a.download = `sfl-prompt_${sanitizedTitle}_${date}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting prompt as markdown:", error);
+      alert("An error occurred while exporting the prompt as markdown. Please check the console for details.");
+    }
+  };
+
 
   const handleExportAllPrompts = () => {
     if (prompts.length === 0) {
@@ -247,6 +348,32 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error exporting prompts:", error);
       alert("An error occurred while exporting prompts. Please check the console for details.");
+    }
+  };
+
+  const handleExportAllPromptsMarkdown = () => {
+    if (prompts.length === 0) {
+      alert("There are no prompts to export.");
+      return;
+    }
+    try {
+      const allPromptsMarkdown = prompts
+        .map(p => promptToMarkdown(p))
+        .join('\n\n---\n\n');
+        
+      const blob = new Blob([allPromptsMarkdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `sfl-prompt-library_${date}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting all prompts as markdown:", error);
+      alert("An error occurred while exporting prompts as markdown. Please check the console for details.");
     }
   };
 
@@ -323,6 +450,7 @@ const App: React.FC = () => {
           onOpenWizard={handleOpenWizard}
           onImportPrompts={handleImportPrompts}
           onExportAllPrompts={handleExportAllPrompts}
+          onExportAllPromptsMarkdown={handleExportAllPromptsMarkdown}
           onOpenHelp={handleOpenHelpModal}
         />
          <input
@@ -360,6 +488,7 @@ const App: React.FC = () => {
           onDelete={handleDeletePrompt}
           onTestWithGemini={handleTestWithGemini}
           onExportPrompt={handleExportSinglePrompt}
+          onExportPromptMarkdown={handleExportSinglePromptMarkdown}
         />
       )}
 

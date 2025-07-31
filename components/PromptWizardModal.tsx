@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { PromptSFL } from '../types';
 import { generateSFLFromGoal, regenerateSFLFromSuggestion } from '../services/geminiService';
 import { INITIAL_PROMPT_SFL } from '../constants';
 import ModalShell from './ModalShell';
 import SparklesIcon from './icons/SparklesIcon';
+import PaperClipIcon from './icons/PaperClipIcon';
+import XCircleIcon from './icons/XCircleIcon';
 
 interface PromptWizardModalProps {
     isOpen: boolean;
@@ -30,7 +32,8 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
     const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
     const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
     const [regenState, setRegenState] = useState({ shown: false, suggestion: '', loading: false });
-
+    const [sourceDoc, setSourceDoc] = useState<{name: string, content: string} | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleGenerate = async () => {
         if (!goal.trim()) {
@@ -43,8 +46,8 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         setErrorMessage('');
 
         try {
-            const generatedData = await generateSFLFromGoal(goal);
-            setFormData(generatedData);
+            const generatedData = await generateSFLFromGoal(goal, sourceDoc?.content);
+            setFormData({...generatedData, sourceDocument: sourceDoc || undefined });
             setStep('refinement');
         } catch (error: any) {
             setErrorMessage(error.message || 'An unknown error occurred.');
@@ -58,6 +61,7 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         setErrorMessage('');
         setStep('input');
         setRegenState({ shown: false, suggestion: '', loading: false });
+        setSourceDoc(null);
     };
 
     const handleSave = () => {
@@ -76,6 +80,19 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
     const handleCloseAndReset = () => {
         handleReset();
         onClose();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result as string;
+                setSourceDoc({ name: file.name, content });
+            };
+            reader.readAsText(file);
+        }
+        if(event.target) event.target.value = '';
     };
     
     const commonInputClasses = "w-full px-3 py-2 bg-[#212934] border border-[#5c6f7e] text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#e2a32d] focus:border-[#e2a32d] transition-colors placeholder-[#95aac0]";
@@ -173,6 +190,18 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                 <textarea id="promptText" name="promptText" value={formData.promptText} onChange={handleFormChange} rows={5} className={commonInputClasses} />
             </div>
             
+             {formData.sourceDocument && (
+                <div>
+                    <label className={labelClasses}>Source Document</label>
+                     <div className="flex items-center justify-between bg-[#212934] p-2 rounded-md border border-[#5c6f7e]">
+                        <span className="text-sm text-gray-200 truncate pr-2">{formData.sourceDocument.name}</span>
+                        <button type="button" onClick={() => setFormData(prev => ({...prev, sourceDocument: undefined}))} className="text-red-400 hover:text-red-300 shrink-0" aria-label="Remove source document">
+                            <XCircleIcon className="w-5 h-5"/>
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="my-2 text-right">
                 <button type="button" onClick={() => setRegenState(prev => ({...prev, shown: !prev.shown, suggestion: ''}))} className="text-sm text-[#e2a32d] hover:text-yellow-300 flex items-center justify-end">
                     <SparklesIcon className="w-5 h-5 mr-1"/> Refine Prompt with AI
@@ -261,16 +290,40 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
             case 'input':
                 return (
                     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleGenerate(); }}>
-                        <label htmlFor="goal" className="block text-lg text-[#95aac0] mb-2">Describe your prompt's goal</label>
-                        <textarea
-                            id="goal"
-                            value={goal}
-                            onChange={(e) => setGoal(e.target.value)}
-                            placeholder="e.g., I want a short, funny poem about a cat who is a senior software engineer."
-                            rows={6}
-                            className={commonInputClasses}
-                            aria-label="Your prompt goal"
-                        />
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt,.md,.text"/>
+                        <div>
+                            <label htmlFor="goal" className="block text-lg text-[#95aac0] mb-2">Describe your prompt's goal</label>
+                            <textarea
+                                id="goal"
+                                value={goal}
+                                onChange={(e) => setGoal(e.target.value)}
+                                placeholder="e.g., I want a short, funny poem about a cat who is a senior software engineer."
+                                rows={6}
+                                className={commonInputClasses}
+                                aria-label="Your prompt goal"
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Source Document (Optional)</label>
+                            <p className="text-xs text-[#95aac0] mb-2">Attach a text file for stylistic reference. The AI will analyze its style to generate the prompt.</p>
+                            {sourceDoc ? (
+                                <div className="flex items-center justify-between bg-[#212934] p-2 rounded-md border border-[#5c6f7e]">
+                                <span className="text-sm text-gray-200 truncate pr-2">{sourceDoc.name}</span>
+                                <button type="button" onClick={() => setSourceDoc(null)} className="text-red-400 hover:text-red-300 shrink-0" aria-label="Remove source document">
+                                    <XCircleIcon className="w-5 h-5"/>
+                                </button>
+                                </div>
+                            ) : (
+                                <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full flex items-center justify-center px-3 py-2 bg-[#212934] border-2 border-dashed border-[#5c6f7e] text-[#95aac0] rounded-md hover:bg-[#333e48] hover:border-[#95aac0] transition-colors"
+                                >
+                                <PaperClipIcon className="w-5 h-5 mr-2" />
+                                Attach Document
+                                </button>
+                            )}
+                        </div>
                          <div className="flex justify-end space-x-3 pt-4">
                             <button type="button" onClick={handleCloseAndReset} className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#5c6f7e] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#95aac0] focus:ring-offset-[#333e48]">Cancel</button>
                             <button type="submit" className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#c36e26] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e2a32d] focus:ring-offset-[#333e48]">Generate SFL Prompt</button>

@@ -34,6 +34,10 @@ export interface PromptSFL {
   geminiResponse?: string;
   geminiTestError?: string;
   isTesting?: boolean;
+  sourceDocument?: {
+    name: string;
+    content: string;
+  };
 }
 
 export interface Filters {

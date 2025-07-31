@@ -1,10 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PromptSFL, SFLField, SFLTenor, SFLMode } from '../types';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, INITIAL_PROMPT_SFL } from '../constants';
 import ModalShell from './ModalShell';
 import { regenerateSFLFromSuggestion } from '../services/geminiService';
 import SparklesIcon from './icons/SparklesIcon';
+import PaperClipIcon from './icons/PaperClipIcon';
+import XCircleIcon from './icons/XCircleIcon';
 
 interface PromptFormModalProps {
   isOpen: boolean;
@@ -26,6 +28,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
   const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
   const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
   const [regenState, setRegenState] = useState({ shown: false, suggestion: '', loading: false });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (promptToEdit) {
@@ -94,6 +97,24 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
       alert('Failed to regenerate prompt: ' + (error instanceof Error ? error.message : String(error)));
       setRegenState(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setFormData(prev => ({ ...prev, sourceDocument: { name: file.name, content } }));
+      };
+      reader.readAsText(file);
+    }
+    // Reset file input value to allow re-uploading the same file
+    if(event.target) event.target.value = '';
+  };
+
+  const handleRemoveFile = () => {
+    setFormData(prev => ({...prev, sourceDocument: undefined }));
   };
 
 
@@ -216,6 +237,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
   return (
     <ModalShell isOpen={isOpen} onClose={onClose} title={promptToEdit ? "Edit Prompt" : "Create New Prompt"} size="3xl">
       <form onSubmit={handleSubmit} className="space-y-6">
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt,.md,.text" />
         {renderTextField('Title', 'title', 'Enter a concise title for the prompt')}
         
         <div>
@@ -229,6 +251,28 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
               rows={4}
               className={commonInputClasses}
             />
+        </div>
+
+         <div>
+          <label className={labelClasses}>Source Document (Optional)</label>
+          <p className="text-xs text-[#95aac0] mb-2">Attach a text file for stylistic reference. Its style will be analyzed when using the AI regeneration feature.</p>
+          {formData.sourceDocument ? (
+            <div className="flex items-center justify-between bg-[#212934] p-2 rounded-md border border-[#5c6f7e]">
+              <span className="text-sm text-gray-200 truncate pr-2">{formData.sourceDocument.name}</span>
+              <button type="button" onClick={handleRemoveFile} className="text-red-400 hover:text-red-300 shrink-0" aria-label="Remove source document">
+                <XCircleIcon className="w-5 h-5"/>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center px-3 py-2 bg-[#212934] border-2 border-dashed border-[#5c6f7e] text-[#95aac0] rounded-md hover:bg-[#333e48] hover:border-[#95aac0] transition-colors"
+            >
+              <PaperClipIcon className="w-5 h-5 mr-2" />
+              Attach Document
+            </button>
+          )}
         </div>
 
         <div className="my-2 text-right">

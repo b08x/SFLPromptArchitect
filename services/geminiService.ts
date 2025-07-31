@@ -49,12 +49,13 @@ export const testPromptWithGemini = async (promptText: string): Promise<string> 
   }
 };
 
-export const generateSFLFromGoal = async (goal: string): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> => {
+export const generateSFLFromGoal = async (goal: string, sourceDocContent?: string): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> => {
     if (!API_KEY) {
         throw new Error("Gemini API Key is not configured.");
     }
     
     const systemInstruction = `You are an expert in Systemic Functional Linguistics (SFL) and AI prompt engineering. Your task is to analyze a user's goal and structure it into a detailed SFL-based prompt.
+    If a source document is provided for stylistic reference, you MUST analyze its style (e.g., tone, complexity, vocabulary, sentence structure) and incorporate those stylistic qualities into the SFL fields and the final promptText. For example, update the 'desiredTone', 'aiPersona', and 'textualDirectives' to match the source. The generated 'promptText' should be a complete, standalone prompt that implicitly carries the desired style.
     The output MUST be a single, valid JSON object. Do not include any text, notes, or explanations outside of the JSON object.
     The JSON object should have the following structure: { "title": string, "promptText": string, "sflField": { "topic": string, "taskType": string, "domainSpecifics": string, "keywords": string }, "sflTenor": { "aiPersona": string, "targetAudience": string[], "desiredTone": string, "interpersonalStance": string }, "sflMode": { "outputFormat": string, "rhetoricalStructure": string, "lengthConstraint": string, "textualDirectives": string }, "exampleOutput": string, "notes": string }.
     
@@ -67,11 +68,15 @@ export const generateSFLFromGoal = async (goal: string): Promise<Omit<PromptSFL,
     - notes: Add any relevant notes or suggestions for the user.
     - All fields in the JSON must be filled with a string (or array of strings for targetAudience). If no information can be derived for a field, provide an empty string "" or a sensible default.
     `;
+    
+    const userContent = sourceDocContent
+      ? `Source document for style reference:\n\n---\n\n${sourceDocContent}\n\n---\n\nUser's goal: "${goal}"`
+      : `Here is the user's goal: "${goal}"`;
 
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: `Here is the user's goal: "${goal}"`,
+            contents: userContent,
             config: {
                 systemInstruction: systemInstruction,
                 responseMimeType: "application/json",
@@ -81,14 +86,12 @@ export const generateSFLFromGoal = async (goal: string): Promise<Omit<PromptSFL,
         const text = response.text;
         const jsonData = parseJsonFromText(text);
         
-        // Ensure targetAudience is an array
         if (jsonData.sflTenor && typeof jsonData.sflTenor.targetAudience === 'string') {
             jsonData.sflTenor.targetAudience = [jsonData.sflTenor.targetAudience];
         }
         if (jsonData.sflTenor && !jsonData.sflTenor.targetAudience) {
             jsonData.sflTenor.targetAudience = [];
         }
-
 
         return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -111,21 +114,29 @@ export const regenerateSFLFromSuggestion = async (
     
     const systemInstruction = `You are an expert in Systemic Functional Linguistics (SFL) and AI prompt engineering. Your task is to revise an existing SFL prompt based on a user's suggestion.
     The user will provide a JSON object representing the current prompt and a text string with their requested change.
+    If a source document is provided (as part of the prompt object or separately), its style should be analyzed and take precedence, influencing the revision.
     You MUST return a single, valid JSON object that represents the *revised* prompt. Do not include any text, notes, or explanations outside of the JSON object.
-    The output JSON object must have the exact same structure as the input, containing all the original fields, but with values updated according to the suggestion.
-    The structure is: { "title": string, "promptText": string, "sflField": { "topic": string, "taskType": string, "domainSpecifics": string, "keywords": string }, "sflTenor": { "aiPersona": string, "targetAudience": string[], "desiredTone": string, "interpersonalStance": string }, "sflMode": { "outputFormat": string, "rhetoricalStructure": string, "lengthConstraint": string, "textualDirectives": string }, "exampleOutput": string, "notes": string }.
+    The output JSON object must have the exact same structure as the input, containing all the original fields, but with values updated according to the suggestion and stylistic source.
+    The structure is: { "title": string, "promptText": string, "sflField": { "topic": string, "taskType": string, "domainSpecifics": string, "keywords": string }, "sflTenor": { "aiPersona": string, "targetAudience": string[], "desiredTone": string, "interpersonalStance": string }, "sflMode": { "outputFormat": string, "rhetoricalStructure": string, "lengthConstraint": string, "textualDirectives": string }, "exampleOutput": string, "notes": string, "sourceDocument": { "name": string, "content": string } | undefined }.
     
     - Critically analyze the user's suggestion and apply it to all relevant fields in the prompt.
+    - If a 'sourceDocument' is present, ensure its style is reflected in the revised SFL fields and 'promptText'.
     - The 'promptText' field is the most important; it must be re-written to reflect the change.
     - Other SFL fields (Field, Tenor, Mode) should be updated logically to align with the new 'promptText' and the user's suggestion.
     - Even update the 'title', 'exampleOutput', and 'notes' if the suggestion implies it.
     - Ensure 'targetAudience' remains an array of strings.
+    - Preserve the 'sourceDocument' field in the output if it existed in the input.
     - All fields must be filled. If no information can be derived for a field, provide an empty string "" or a sensible default, but try to keep existing data if it's still relevant.
     `;
+    
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { sourceDocument, ...promptForPayload } = currentPrompt;
 
     const userContent = `
     Here is the current prompt JSON:
-    ${JSON.stringify(currentPrompt)}
+    ${JSON.stringify(promptForPayload)}
+    
+    ${sourceDocument ? `This prompt is associated with the following source document for stylistic reference:\n---\n${sourceDocument.content}\n---\n` : ''}
 
     Here is my suggestion for how to change it:
     "${suggestion}"
@@ -146,13 +157,15 @@ export const regenerateSFLFromSuggestion = async (
         const text = response.text;
         const jsonData = parseJsonFromText(text);
         
-        // Ensure targetAudience is an array
         if (jsonData.sflTenor && typeof jsonData.sflTenor.targetAudience === 'string') {
             jsonData.sflTenor.targetAudience = [jsonData.sflTenor.targetAudience];
         }
         if (jsonData.sflTenor && !jsonData.sflTenor.targetAudience) {
             jsonData.sflTenor.targetAudience = [];
         }
+        
+        // Preserve the source document from the original prompt
+        jsonData.sourceDocument = sourceDocument;
 
         return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
 
