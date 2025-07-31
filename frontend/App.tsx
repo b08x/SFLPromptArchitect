@@ -196,10 +196,10 @@ const App: React.FC = () => {
         }
         return [saved, ...prevPrompts].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       });
-      handleCloseModal();
+      // Don't close modal here - let the form component handle it on success
     } catch (error) {
       console.error("Failed to save prompt:", error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Could not save prompt'}`);
+      throw error; // Re-throw to let form component handle error display
     }
   };
 

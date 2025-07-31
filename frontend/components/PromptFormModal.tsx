@@ -28,6 +28,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
   const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
   const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
   const [regenState, setRegenState] = useState({ shown: false, suggestion: '', loading: false });
+  const [saveState, setSaveState] = useState({ saving: false, error: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
       setFormData(INITIAL_PROMPT_SFL);
     }
      setRegenState({ shown: false, suggestion: '', loading: false });
+     setSaveState({ saving: false, error: '' });
   }, [promptToEdit, isOpen]);
 
   const handleChange = <T extends keyof Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'sflField' | 'sflTenor' | 'sflMode' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>>(
@@ -118,20 +120,43 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
   };
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const now = new Date().toISOString();
-    const finalPrompt: PromptSFL = {
-      ...formData,
-      id: promptToEdit?.id || `prompt-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
-      createdAt: promptToEdit?.createdAt || now,
-      updatedAt: now,
-      geminiResponse: promptToEdit?.geminiResponse, 
-      geminiTestError: promptToEdit?.geminiTestError,
-      isTesting: promptToEdit?.isTesting ?? false,
-    };
-    onSave(finalPrompt);
-    onClose();
+    
+    // Clear previous errors
+    setSaveState({ saving: true, error: '' });
+    
+    // Client-side validation
+    if (!formData.title?.trim()) {
+      setSaveState({ saving: false, error: 'Title is required' });
+      return;
+    }
+    if (!formData.promptText?.trim()) {
+      setSaveState({ saving: false, error: 'Prompt text is required' });
+      return;
+    }
+
+    try {
+      const now = new Date().toISOString();
+      const finalPrompt: PromptSFL = {
+        ...formData,
+        id: promptToEdit?.id || `prompt-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+        createdAt: promptToEdit?.createdAt || now,
+        updatedAt: now,
+        geminiResponse: promptToEdit?.geminiResponse, 
+        geminiTestError: promptToEdit?.geminiTestError,
+        isTesting: promptToEdit?.isTesting ?? false,
+      };
+      
+      await onSave(finalPrompt);
+      setSaveState({ saving: false, error: '' });
+      onClose();
+    } catch (error) {
+      setSaveState({ 
+        saving: false, 
+        error: error instanceof Error ? error.message : 'Failed to save prompt' 
+      });
+    }
   };
 
   const commonInputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] transition-colors placeholder-gray-400";
@@ -361,19 +386,40 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
 
         {renderTextField('Notes (Optional)', 'notes', 'Your private notes about this prompt', true)}
 
+        {saveState.error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <XCircleIcon className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{saveState.error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={saveState.saving}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4A69E2]"
+            disabled={saveState.saving}
+            className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4A69E2] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
           >
-            {promptToEdit ? 'Save Changes' : 'Create Prompt'}
+            {saveState.saving && (
+              <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+            )}
+            {saveState.saving 
+              ? (promptToEdit ? 'Saving...' : 'Creating...') 
+              : (promptToEdit ? 'Save Changes' : 'Create Prompt')
+            }
           </button>
         </div>
       </form>

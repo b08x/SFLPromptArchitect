@@ -4,10 +4,23 @@ import PromptService from '../../services/promptService';
 class PromptController {
   async createPrompt(req: Request, res: Response, next: NextFunction) {
     try {
+      // Validate required fields
+      if (!req.body.title?.trim()) {
+        return res.status(400).json({ message: 'Title is required' });
+      }
+      if (!req.body.promptText?.trim()) {
+        return res.status(400).json({ message: 'Prompt text is required' });
+      }
+
       const prompt = await PromptService.createPrompt(req.body);
       res.status(201).json(prompt);
     } catch (error) {
-      next(error);
+      console.error('Create prompt error:', error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        next(error);
+      }
     }
   }
 
@@ -40,7 +53,12 @@ class PromptController {
       }
       res.status(200).json(prompt);
     } catch (error) {
-      next(error);
+      console.error('Update prompt error:', error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        next(error);
+      }
     }
   }
 

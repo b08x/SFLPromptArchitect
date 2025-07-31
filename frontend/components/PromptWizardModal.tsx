@@ -32,6 +32,7 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
     const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
     const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
     const [regenState, setRegenState] = useState({ shown: false, suggestion: '', loading: false });
+    const [saveState, setSaveState] = useState({ saving: false, error: '' });
     const [sourceDoc, setSourceDoc] = useState<{name: string, content: string} | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,20 +62,43 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         setErrorMessage('');
         setStep('input');
         setRegenState({ shown: false, suggestion: '', loading: false });
+        setSaveState({ saving: false, error: '' });
         setSourceDoc(null);
     };
 
-    const handleSave = () => {
-        const now = new Date().toISOString();
-        const finalPrompt: PromptSFL = {
-            ...formData,
-            id: crypto.randomUUID(),
-            createdAt: now,
-            updatedAt: now,
-            isTesting: false,
-        };
-        onSave(finalPrompt);
-        onClose();
+    const handleSave = async () => {
+        // Clear previous errors
+        setSaveState({ saving: true, error: '' });
+        
+        // Client-side validation
+        if (!formData.title?.trim()) {
+            setSaveState({ saving: false, error: 'Title is required' });
+            return;
+        }
+        if (!formData.promptText?.trim()) {
+            setSaveState({ saving: false, error: 'Prompt text is required' });
+            return;
+        }
+
+        try {
+            const now = new Date().toISOString();
+            const finalPrompt: PromptSFL = {
+                ...formData,
+                id: crypto.randomUUID(),
+                createdAt: now,
+                updatedAt: now,
+                isTesting: false,
+            };
+            
+            await onSave(finalPrompt);
+            setSaveState({ saving: false, error: '' });
+            onClose();
+        } catch (error) {
+            setSaveState({ 
+                saving: false, 
+                error: error instanceof Error ? error.message : 'Failed to save prompt' 
+            });
+        }
     };
     
     const handleCloseAndReset = () => {
@@ -280,6 +304,19 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                 <label htmlFor="notes" className={labelClasses}>Notes (Optional)</label>
                 <textarea id="notes" name="notes" value={formData.notes || ''} onChange={handleFormChange} rows={2} className={commonInputClasses} />
             </div>
+
+            {saveState.error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <XCircleIcon className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-sm text-red-800">{saveState.error}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </form>
     );
 
@@ -341,8 +378,25 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                    <div className="space-y-6">
                        {renderRefinementForm()}
                        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6">
-                            <button type="button" onClick={handleReset} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Start Over</button>
-                            <button type="button" onClick={handleSave} className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90">Save Prompt</button>
+                            <button 
+                                type="button" 
+                                onClick={handleReset} 
+                                disabled={saveState.saving}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Start Over
+                            </button>
+                            <button 
+                                type="button" 
+                                onClick={handleSave} 
+                                disabled={saveState.saving}
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                            >
+                                {saveState.saving && (
+                                    <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+                                )}
+                                {saveState.saving ? 'Saving...' : 'Save Prompt'}
+                            </button>
                        </div>
                    </div>
                 );
