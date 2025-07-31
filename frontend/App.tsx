@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PromptSFL, Filters, ModalType } from './types';
 import Sidebar from './components/Sidebar';
@@ -12,6 +11,7 @@ import HelpModal from './components/HelpModal';
 import Documentation from './components/Documentation';
 import PromptLabPage from './components/lab/PromptLabPage';
 import { testPromptWithGemini } from './services/geminiService';
+import { getPrompts, savePrompt, deletePrompt as apiDeletePrompt } from './services/promptApiService';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
 
 
@@ -22,73 +22,6 @@ const initialFilters: Filters = {
   aiPersona: '',
   outputFormat: '',
 };
-
-const samplePrompts: PromptSFL[] = [
-  {
-    id: "1",
-    title: "Python Code Explanation",
-    promptText: "Explain this Python code snippet in simple terms for beginners:\n\n```python\n{{code_snippet}}\n```",
-    sflField: { topic: "Programming", taskType: "Explanation", domainSpecifics: "Python", keywords: "python, beginner, education" },
-    sflTenor: { aiPersona: "Friendly Assistant", targetAudience: ["Beginners"], desiredTone: "Friendly", interpersonalStance: "Helpful tutor" },
-    sflMode: { outputFormat: "Markdown", rhetoricalStructure: "Code block followed by bullet points", lengthConstraint: "Medium Paragraph (~150 words)", textualDirectives: "Use simple language" },
-    createdAt: "2023-05-15T12:00:00Z",
-    updatedAt: "2023-05-15T12:00:00Z",
-    geminiResponse: "This is a test response."
-  },
-  {
-    id: "2",
-    title: "API Documentation Summary",
-    promptText: "Summarize this API documentation into key points for developers. Focus on endpoints, authentication, and request/response examples.\n\nAPI Documentation:\n{{api_docs}}",
-    sflField: { topic: "Software Development", taskType: "Summarization", domainSpecifics: "REST API", keywords: "technical, api, documentation" },
-    sflTenor: { aiPersona: "Expert", targetAudience: ["Software Developers"], desiredTone: "Concise", interpersonalStance: "Technical writer" },
-    sflMode: { outputFormat: "Bullet-Points", rhetoricalStructure: "Sections for endpoints, authentication, etc.", lengthConstraint: "Detailed (as needed)", textualDirectives: "Focus on practical usage" },
-    createdAt: "2023-05-10T12:00:00Z",
-    updatedAt: "2023-05-10T12:00:00Z",
-    geminiResponse: "This is a test response."
-  },
-  {
-    id: "3",
-    title: "JSON Data Transformation",
-    promptText: "Convert this JSON data from format A to format B with specific rules...",
-    sflField: { topic: "Data Processing", taskType: "Code Generation", domainSpecifics: "JSON", keywords: "json, data, transformation" },
-    sflTenor: { aiPersona: "Expert", targetAudience: ["Software Developers"], desiredTone: "Formal", interpersonalStance: "Data engineer" },
-    sflMode: { outputFormat: "Json", rhetoricalStructure: "JSON object", lengthConstraint: "Concise (as needed)", textualDirectives: "Adhere to the specified output schema" },
-    createdAt: "2023-05-18T12:00:00Z",
-    updatedAt: "2023-05-18T12:00:00Z",
-  },
-    {
-    id: "4",
-    title: "Technical Concept Explanation",
-    promptText: "Explain blockchain technology to a non-technical audience...",
-    sflField: { topic: "Technology", taskType: "Explanation", domainSpecifics: "Blockchain", keywords: "blockchain, education, simplified" },
-    sflTenor: { aiPersona: "Friendly Assistant", targetAudience: ["General Public"], desiredTone: "Friendly", interpersonalStance: "Patient teacher" },
-    sflMode: { outputFormat: "Paragraph", rhetoricalStructure: "Analogy followed by explanation", lengthConstraint: "Medium Paragraph (~150 words)", textualDirectives: "Avoid technical jargon" },
-    createdAt: "2023-05-12T12:00:00Z",
-    updatedAt: "2023-05-12T12:00:00Z",
-    geminiResponse: "This is a test response."
-  },
-  {
-    id: "5",
-    title: "Code Debugging Assistant",
-    promptText: "Help identify and fix bugs in this JavaScript code...",
-    sflField: { topic: "Programming", taskType: "Code Generation", domainSpecifics: "JavaScript", keywords: "javascript, debugging, error" },
-    sflTenor: { aiPersona: "Expert", targetAudience: ["Software Developers"], desiredTone: "Formal", interpersonalStance: "Senior developer" },
-    sflMode: { outputFormat: "Code", rhetoricalStructure: "Explanation of bug then corrected code", lengthConstraint: "Concise (as needed)", textualDirectives: "Provide clear fix descriptions" },
-    createdAt: "2023-05-20T12:00:00Z",
-    updatedAt: "2023-05-20T12:00:00Z",
-  },
-  {
-    id: "6",
-    title: "Article Translation",
-    promptText: "Translate this technical article from English to Spanish...",
-    sflField: { topic: "Languages", taskType: "Translation", domainSpecifics: "Technical article", keywords: "translation, spanish, technical" },
-    sflTenor: { aiPersona: "Expert", targetAudience: ["Business Professionals"], desiredTone: "Formal", interpersonalStance: "Professional translator" },
-    sflMode: { outputFormat: "Paragraph", rhetoricalStructure: "Maintain original structure", lengthConstraint: "As per original", textualDirectives: "Use formal Spanish" },
-    createdAt: "2023-05-17T12:00:00Z",
-    updatedAt: "2023-05-17T12:00:00Z",
-    geminiResponse: "This is a test response."
-  },
-];
 
 const promptToMarkdown = (prompt: PromptSFL): string => {
     const { 
@@ -109,7 +42,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         sections.push(
             '---',
             '## Source Document',
-            `**Filename:** \`${sourceDocument.name}\``,
+            `**Filename:** `${sourceDocument.name}``,
             '> This document was used as a stylistic reference during prompt generation.',
             '',
             '<details>',
@@ -129,7 +62,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         `- **Topic:** ${sflField.topic || 'N/A'}`,
         `- **Task Type:** ${sflField.taskType || 'N/A'}`,
         `- **Domain Specifics:** ${sflField.domainSpecifics || 'N/A'}`,
-        `- **Keywords:** ${sflField.keywords ? `\`${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}\`` : 'N/A'}`,
+        `- **Keywords:** ${sflField.keywords ? ``${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}`` : 'N/A'}``,
         '',
         '### Tenor (Who is taking part?)',
         `- **AI Persona:** ${sflTenor.aiPersona || 'N/A'}`,
@@ -168,16 +101,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
 type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 
 const App: React.FC = () => {
-  const [prompts, setPrompts] = useState<PromptSFL[]>(() => {
-    const savedPrompts = localStorage.getItem('sflPrompts');
-    try {
-        const parsed = savedPrompts ? JSON.parse(savedPrompts) : samplePrompts;
-        return Array.isArray(parsed) ? parsed : samplePrompts;
-    } catch (error) {
-        console.error("Failed to parse prompts from localStorage", error);
-        return samplePrompts;
-    }
-  });
+  const [prompts, setPrompts] = useState<PromptSFL[]>([]);
   const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
   const [selectedPrompt, setSelectedPrompt] = useState<PromptSFL | null>(null);
   const [filters, setFilters] = useState<Filters>(initialFilters);
@@ -193,6 +117,19 @@ const App: React.FC = () => {
     lengthConstraints: LENGTH_CONSTRAINTS,
     popularTags: POPULAR_TAGS,
   });
+
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      try {
+        const fetchedPrompts = await getPrompts();
+        setPrompts(fetchedPrompts);
+      } catch (error) {
+        console.error("Failed to fetch prompts:", error);
+        // Optionally, set an error state to show in the UI
+      }
+    };
+    fetchPrompts();
+  }, []);
 
   const handleNavigate = useCallback((page: Page) => {
     setActivePage(page);
@@ -217,11 +154,6 @@ const App: React.FC = () => {
         };
     });
   }, []);
-
-
-  useEffect(() => {
-    localStorage.setItem('sflPrompts', JSON.stringify(prompts));
-  }, [prompts]);
 
   const handleOpenCreateModal = () => {
     setSelectedPrompt(null);
@@ -250,25 +182,37 @@ const App: React.FC = () => {
     setActiveModal(ModalType.NONE);
   };
 
-  const handleSavePrompt = (prompt: PromptSFL) => {
-    setPrompts(prevPrompts => {
-      const existingIndex = prevPrompts.findIndex(p => p.id === prompt.id);
-      if (existingIndex > -1) {
-        const updatedPrompts = [...prevPrompts];
-        updatedPrompts[existingIndex] = prompt;
-        return updatedPrompts;
-      }
-      return [prompt, ...prevPrompts].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    });
-    handleCloseModal();
+  const handleSavePrompt = async (prompt: PromptSFL) => {
+    try {
+      const saved = await savePrompt(prompt);
+      setPrompts(prevPrompts => {
+        const existingIndex = prevPrompts.findIndex(p => p.id === saved.id);
+        if (existingIndex > -1) {
+          const updatedPrompts = [...prevPrompts];
+          updatedPrompts[existingIndex] = saved;
+          return updatedPrompts;
+        }
+        return [saved, ...prevPrompts].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      });
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to save prompt:", error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Could not save prompt'}`);
+    }
   };
 
-  const handleDeletePrompt = (promptId: string) => {
+  const handleDeletePrompt = async (promptId: string) => {
     if(window.confirm('Are you sure you want to delete this prompt?')){
-      setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== promptId));
-      if (selectedPrompt && selectedPrompt.id === promptId) {
-          setSelectedPrompt(null);
-          handleCloseModal();
+      try {
+        await apiDeletePrompt(promptId);
+        setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== promptId));
+        if (selectedPrompt && selectedPrompt.id === promptId) {
+            setSelectedPrompt(null);
+            handleCloseModal();
+        }
+      } catch (error) {
+        console.error("Failed to delete prompt:", error);
+        alert("Failed to delete prompt. Please try again.");
       }
     }
   };
@@ -293,7 +237,6 @@ const App: React.FC = () => {
         p.sflField.domainSpecifics,
         p.sflTenor.aiPersona,
         p.sflTenor.targetAudience.join(' '),
-        p.sflTenor.desiredTone,
         p.sflMode.outputFormat
       ];
 
@@ -315,7 +258,7 @@ const App: React.FC = () => {
     
     let finalPromptText = promptToTest.promptText;
     Object.keys(variables).forEach(key => {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      const regex = new RegExp(`{{\s*${key}\s*}}`, 'g');
       finalPromptText = finalPromptText.replace(regex, variables[key] || '');
     });
 
