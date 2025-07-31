@@ -23,13 +23,13 @@ const ModalShell: React.FC<ModalShellProps> = ({ isOpen, onClose, title, childre
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm p-4">
-      <div className={`bg-[#333e48] rounded-lg shadow-xl w-full ${sizeClasses[size]} flex flex-col max-h-[90vh]`}>
-        <div className="flex items-center justify-between p-4 border-b border-[#5c6f7e]">
-          <h3 className="text-xl font-semibold text-[#e2a32d]">{title}</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-60 backdrop-blur-sm p-4">
+      <div className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} flex flex-col max-h-[90vh]`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
           <button
             onClick={onClose}
-            className="text-[#95aac0] hover:text-gray-200 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Close modal"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">

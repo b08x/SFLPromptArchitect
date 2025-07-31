@@ -1,5 +1,5 @@
 {
-  "name": "sfl-prompt-architect",
+  "name": "sfl-prompt-architect-v2",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,8 @@
   "dependencies": {
     "react-dom": "^19.1.0",
     "react": "^19.1.0",
-    "@google/genai": "^1.5.1"
+    "@google/genai": "^1.5.1",
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

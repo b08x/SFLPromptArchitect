@@ -54,4 +54,84 @@ export enum ModalType {
   VIEW_PROMPT_DETAIL,
   WIZARD,
   HELP,
+  WORKFLOW_EDITOR,
+  WORKFLOW_WIZARD,
+  TASK_DETAIL,
+}
+
+// --- PROMPT LAB TYPES ---
+
+export enum TaskType {
+  DATA_INPUT = "DATA_INPUT",
+  GEMINI_PROMPT = "GEMINI_PROMPT",
+  IMAGE_ANALYSIS = "IMAGE_ANALYSIS",
+  TEXT_MANIPULATION = "TEXT_MANIPULATION",
+  SIMULATE_PROCESS = "SIMULATE_PROCESS",
+  DISPLAY_CHART = "DISPLAY_CHART",
+  GEMINI_GROUNDED = "GEMINI_GROUNDED",
+}
+
+export enum TaskStatus {
+  PENDING = "PENDING",
+  RUNNING = "RUNNING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  SKIPPED = "SKIPPED",
+}
+
+export interface AgentConfig {
+  model?: string;
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+  systemInstruction?: string;
+}
+
+export interface Task {
+  id: string;
+  name: string;
+  description: string;
+  type: TaskType;
+  dependencies: string[];
+  inputKeys: string[];
+  outputKey: string;
+  promptId?: string; // Link to a prompt in the SFL library
+  promptTemplate?: string;
+  agentConfig?: AgentConfig;
+  functionBody?: string; // For TEXT_MANIPULATION
+  staticValue?: any; // For DATA_INPUT
+  dataKey?: string; // For DISPLAY_CHART
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  tasks: Task[];
+  isDefault?: boolean; // To differentiate between default and user-created workflows
+}
+
+export type DataStore = Record<string, any>;
+
+export interface TaskState {
+  status: TaskStatus;
+  result?: any;
+  error?: string;
+  startTime?: number;
+  endTime?: number;
+}
+
+export type TaskStateMap = Record<string, TaskState>;
+
+export interface StagedUserInput {
+    text?: string;
+    image?: {
+        name: string;
+        type: string;
+        base64: string;
+    };
+    file?: {
+        name: string;
+        content: string;
+    }
 }

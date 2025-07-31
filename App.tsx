@@ -1,15 +1,18 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PromptSFL, Filters, ModalType } from './types';
-import Header from './components/Header';
-import FilterControls from './components/FilterControls';
+import Sidebar from './components/Sidebar';
+import TopBar from './components/TopBar';
+import Stats from './components/Stats';
 import PromptList from './components/PromptList';
 import PromptFormModal from './components/PromptFormModal';
 import PromptDetailModal from './components/PromptDetailModal';
 import PromptWizardModal from './components/PromptWizardModal';
 import HelpModal from './components/HelpModal';
+import Documentation from './components/Documentation';
+import PromptLabPage from './components/lab/PromptLabPage';
 import { testPromptWithGemini } from './services/geminiService';
-import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS } from './constants';
+import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
 
 
 const initialFilters: Filters = {
@@ -22,26 +25,69 @@ const initialFilters: Filters = {
 
 const samplePrompts: PromptSFL[] = [
   {
-    id: crypto.randomUUID(),
-    title: "Explain Black Holes to a Child",
-    promptText: "Explain what a black hole is in simple terms that a 5-year-old can understand. Use an analogy.",
-    sflField: { topic: "Astrophysics", taskType: "Explanation", domainSpecifics: "Simple analogy needed", keywords: "space, gravity, stars" },
-    sflTenor: { aiPersona: "Friendly Teacher", targetAudience: ["Children (5-7 years)"], desiredTone: "Simple, Engaging", interpersonalStance: "Patient explainer" },
-    sflMode: { outputFormat: "Plain Text", rhetoricalStructure: "Analogy first, then simple explanation", lengthConstraint: "Short Paragraph (~50 words)", textualDirectives: "Use short sentences, avoid jargon" },
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    exampleOutput: "Imagine a super-duper vacuum cleaner in space that's so strong it can suck up everything, even light! That's kind of like a black hole."
+    id: "1",
+    title: "Python Code Explanation",
+    promptText: "Explain this Python code snippet in simple terms for beginners:\n\n```python\n{{code_snippet}}\n```",
+    sflField: { topic: "Programming", taskType: "Explanation", domainSpecifics: "Python", keywords: "python, beginner, education" },
+    sflTenor: { aiPersona: "Friendly Assistant", targetAudience: ["Beginners"], desiredTone: "Friendly", interpersonalStance: "Helpful tutor" },
+    sflMode: { outputFormat: "Markdown", rhetoricalStructure: "Code block followed by bullet points", lengthConstraint: "Medium Paragraph (~150 words)", textualDirectives: "Use simple language" },
+    createdAt: "2023-05-15T12:00:00Z",
+    updatedAt: "2023-05-15T12:00:00Z",
+    geminiResponse: "This is a test response."
   },
   {
-    id: crypto.randomUUID(),
-    title: "Generate Python code for Fibonacci",
-    promptText: "Write a Python function to calculate the nth Fibonacci number using recursion.",
-    sflField: { topic: "Programming", taskType: "Code Generation", domainSpecifics: "Python, Recursion", keywords: "fibonacci, python, code, algorithm" },
-    sflTenor: { aiPersona: "Expert Coder", targetAudience: ["Software Developers"], desiredTone: "Concise, Technical", interpersonalStance: "Code provider" },
-    sflMode: { outputFormat: "Python Code", rhetoricalStructure: "Function definition with docstring", lengthConstraint: "Concise (as needed)", textualDirectives: "Include type hints if possible" },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
+    id: "2",
+    title: "API Documentation Summary",
+    promptText: "Summarize this API documentation into key points for developers. Focus on endpoints, authentication, and request/response examples.\n\nAPI Documentation:\n{{api_docs}}",
+    sflField: { topic: "Software Development", taskType: "Summarization", domainSpecifics: "REST API", keywords: "technical, api, documentation" },
+    sflTenor: { aiPersona: "Expert", targetAudience: ["Software Developers"], desiredTone: "Concise", interpersonalStance: "Technical writer" },
+    sflMode: { outputFormat: "Bullet-Points", rhetoricalStructure: "Sections for endpoints, authentication, etc.", lengthConstraint: "Detailed (as needed)", textualDirectives: "Focus on practical usage" },
+    createdAt: "2023-05-10T12:00:00Z",
+    updatedAt: "2023-05-10T12:00:00Z",
+    geminiResponse: "This is a test response."
+  },
+  {
+    id: "3",
+    title: "JSON Data Transformation",
+    promptText: "Convert this JSON data from format A to format B with specific rules...",
+    sflField: { topic: "Data Processing", taskType: "Code Generation", domainSpecifics: "JSON", keywords: "json, data, transformation" },
+    sflTenor: { aiPersona: "Expert", targetAudience: ["Software Developers"], desiredTone: "Formal", interpersonalStance: "Data engineer" },
+    sflMode: { outputFormat: "Json", rhetoricalStructure: "JSON object", lengthConstraint: "Concise (as needed)", textualDirectives: "Adhere to the specified output schema" },
+    createdAt: "2023-05-18T12:00:00Z",
+    updatedAt: "2023-05-18T12:00:00Z",
+  },
+    {
+    id: "4",
+    title: "Technical Concept Explanation",
+    promptText: "Explain blockchain technology to a non-technical audience...",
+    sflField: { topic: "Technology", taskType: "Explanation", domainSpecifics: "Blockchain", keywords: "blockchain, education, simplified" },
+    sflTenor: { aiPersona: "Friendly Assistant", targetAudience: ["General Public"], desiredTone: "Friendly", interpersonalStance: "Patient teacher" },
+    sflMode: { outputFormat: "Paragraph", rhetoricalStructure: "Analogy followed by explanation", lengthConstraint: "Medium Paragraph (~150 words)", textualDirectives: "Avoid technical jargon" },
+    createdAt: "2023-05-12T12:00:00Z",
+    updatedAt: "2023-05-12T12:00:00Z",
+    geminiResponse: "This is a test response."
+  },
+  {
+    id: "5",
+    title: "Code Debugging Assistant",
+    promptText: "Help identify and fix bugs in this JavaScript code...",
+    sflField: { topic: "Programming", taskType: "Code Generation", domainSpecifics: "JavaScript", keywords: "javascript, debugging, error" },
+    sflTenor: { aiPersona: "Expert", targetAudience: ["Software Developers"], desiredTone: "Formal", interpersonalStance: "Senior developer" },
+    sflMode: { outputFormat: "Code", rhetoricalStructure: "Explanation of bug then corrected code", lengthConstraint: "Concise (as needed)", textualDirectives: "Provide clear fix descriptions" },
+    createdAt: "2023-05-20T12:00:00Z",
+    updatedAt: "2023-05-20T12:00:00Z",
+  },
+  {
+    id: "6",
+    title: "Article Translation",
+    promptText: "Translate this technical article from English to Spanish...",
+    sflField: { topic: "Languages", taskType: "Translation", domainSpecifics: "Technical article", keywords: "translation, spanish, technical" },
+    sflTenor: { aiPersona: "Expert", targetAudience: ["Business Professionals"], desiredTone: "Formal", interpersonalStance: "Professional translator" },
+    sflMode: { outputFormat: "Paragraph", rhetoricalStructure: "Maintain original structure", lengthConstraint: "As per original", textualDirectives: "Use formal Spanish" },
+    createdAt: "2023-05-17T12:00:00Z",
+    updatedAt: "2023-05-17T12:00:00Z",
+    geminiResponse: "This is a test response."
+  },
 ];
 
 const promptToMarkdown = (prompt: PromptSFL): string => {
@@ -119,12 +165,14 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
     return sections.join('\n');
 };
 
+type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 
 const App: React.FC = () => {
   const [prompts, setPrompts] = useState<PromptSFL[]>(() => {
     const savedPrompts = localStorage.getItem('sflPrompts');
     try {
-        return savedPrompts ? JSON.parse(savedPrompts) : samplePrompts;
+        const parsed = savedPrompts ? JSON.parse(savedPrompts) : samplePrompts;
+        return Array.isArray(parsed) ? parsed : samplePrompts;
     } catch (error) {
         console.error("Failed to parse prompts from localStorage", error);
         return samplePrompts;
@@ -133,6 +181,7 @@ const App: React.FC = () => {
   const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
   const [selectedPrompt, setSelectedPrompt] = useState<PromptSFL | null>(null);
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [activePage, setActivePage] = useState<Page>('dashboard');
   const importFileRef = useRef<HTMLInputElement>(null);
 
   const [appConstants, setAppConstants] = useState({
@@ -142,20 +191,29 @@ const App: React.FC = () => {
     desiredTones: DESIRED_TONES,
     outputFormats: OUTPUT_FORMATS,
     lengthConstraints: LENGTH_CONSTRAINTS,
+    popularTags: POPULAR_TAGS,
   });
+
+  const handleNavigate = useCallback((page: Page) => {
+    setActivePage(page);
+  }, []);
 
   const handleAddConstant = useCallback((key: keyof typeof appConstants, value: string) => {
     if (!value || !value.trim()) return;
     const trimmedValue = value.trim();
     setAppConstants(prev => {
+        const currentValues = prev[key];
+        if (!Array.isArray(currentValues)) return prev;
+
         const lowerCaseValue = trimmedValue.toLowerCase();
-        const existingValues = prev[key].map(v => v.toLowerCase());
+        const existingValues = currentValues.map(v => String(v).toLowerCase());
+
         if (existingValues.includes(lowerCaseValue)) {
             return prev;
         }
         return {
             ...prev,
-            [key]: [...prev[key], trimmedValue]
+            [key]: [...currentValues, trimmedValue]
         };
     });
   }, []);
@@ -206,11 +264,13 @@ const App: React.FC = () => {
   };
 
   const handleDeletePrompt = (promptId: string) => {
-    setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== promptId));
-    if (selectedPrompt && selectedPrompt.id === promptId) {
-        setSelectedPrompt(null);
+    if(window.confirm('Are you sure you want to delete this prompt?')){
+      setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== promptId));
+      if (selectedPrompt && selectedPrompt.id === promptId) {
+          setSelectedPrompt(null);
+          handleCloseModal();
+      }
     }
-    handleCloseModal();
   };
 
   const handleFilterChange = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
@@ -224,24 +284,24 @@ const App: React.FC = () => {
   const filteredPrompts = useMemo(() => {
     return prompts.filter(p => {
       const searchTermLower = filters.searchTerm.toLowerCase();
-      const matchesSearchTerm =
-        filters.searchTerm === '' ||
-        p.title.toLowerCase().includes(searchTermLower) ||
-        p.promptText.toLowerCase().includes(searchTermLower) ||
-        (p.sflField.keywords && p.sflField.keywords.toLowerCase().includes(searchTermLower)) ||
-        (p.sflField.topic && p.sflField.topic.toLowerCase().includes(searchTermLower)) ||
-        (p.sflField.domainSpecifics && p.sflField.domainSpecifics.toLowerCase().includes(searchTermLower)) ||
-        (p.sflTenor.aiPersona && p.sflTenor.aiPersona.toLowerCase().includes(searchTermLower)) ||
-        (p.sflTenor.targetAudience && p.sflTenor.targetAudience.join(' ').toLowerCase().includes(searchTermLower)) ||
-        (p.sflTenor.desiredTone && p.sflTenor.desiredTone.toLowerCase().includes(searchTermLower)) ||
-        (p.sflMode.outputFormat && p.sflMode.outputFormat.toLowerCase().includes(searchTermLower));
+      
+      const searchFields = [
+        p.title,
+        p.promptText,
+        p.sflField.keywords,
+        p.sflField.topic,
+        p.sflField.domainSpecifics,
+        p.sflTenor.aiPersona,
+        p.sflTenor.targetAudience.join(' '),
+        p.sflTenor.desiredTone,
+        p.sflMode.outputFormat
+      ];
 
-      const matchesTopic = filters.topic === '' || (p.sflField.topic && p.sflField.topic.toLowerCase().includes(filters.topic.toLowerCase()));
+      const matchesSearchTerm = filters.searchTerm === '' || searchFields.some(field => field && field.toLowerCase().includes(searchTermLower));
       const matchesTaskType = filters.taskType === '' || p.sflField.taskType === filters.taskType;
       const matchesAiPersona = filters.aiPersona === '' || p.sflTenor.aiPersona === filters.aiPersona;
-      const matchesOutputFormat = filters.outputFormat === '' || p.sflMode.outputFormat === filters.outputFormat;
       
-      return matchesSearchTerm && matchesTopic && matchesTaskType && matchesAiPersona && matchesOutputFormat;
+      return matchesSearchTerm && matchesTaskType && matchesAiPersona;
     }).sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [prompts, filters]);
 
@@ -439,34 +499,66 @@ const App: React.FC = () => {
   };
 
 
+  const renderMainContent = () => {
+    switch(activePage) {
+        case 'dashboard':
+            return (
+                <>
+                    <Stats totalPrompts={prompts.length}/>
+                    <div className="mt-8">
+                        <PromptList 
+                            prompts={filteredPrompts} 
+                            onViewPrompt={handleOpenDetailModal}
+                            onEditPrompt={handleOpenEditModal}
+                            onDeletePrompt={handleDeletePrompt}
+                        />
+                    </div>
+                </>
+            );
+        case 'lab':
+            return <PromptLabPage prompts={prompts} />;
+        case 'documentation':
+            return <Documentation />;
+        case 'settings':
+        default:
+             return (
+                <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
+                    <h2 className="text-2xl font-bold text-gray-800">Coming Soon!</h2>
+                    <p className="text-gray-500 mt-2">This page is under construction.</p>
+                </div>
+            );
+    }
+  }
+
+
   return (
-    <div className="flex h-screen bg-[#212934] overflow-hidden">
-      <aside className="w-80 bg-[#333e48] p-5 shadow-2xl overflow-y-auto flex-shrink-0">
-        <FilterControls filters={filters} onFilterChange={handleFilterChange} onResetFilters={handleResetFilters} />
-      </aside>
-      <main className="flex-1 p-8 overflow-y-auto">
-        <Header 
-          onAddNewPrompt={handleOpenCreateModal} 
-          onOpenWizard={handleOpenWizard}
-          onImportPrompts={handleImportPrompts}
-          onExportAllPrompts={handleExportAllPrompts}
-          onExportAllPromptsMarkdown={handleExportAllPromptsMarkdown}
-          onOpenHelp={handleOpenHelpModal}
-        />
-         <input
+    <div className="flex h-screen bg-[#F7F8FC] font-sans">
+      <Sidebar 
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        popularTags={appConstants.popularTags}
+        activePage={activePage}
+        onNavigate={handleNavigate}
+      />
+       <input
             type="file"
             ref={importFileRef}
             onChange={onFileImport}
             className="hidden"
             accept="application/json"
         />
-        <PromptList 
-          prompts={filteredPrompts} 
-          onViewPrompt={handleOpenDetailModal}
-          onEditPrompt={handleOpenEditModal}
-          onDeletePrompt={handleDeletePrompt}
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar 
+          onAddNewPrompt={handleOpenCreateModal}
+          onOpenWizard={handleOpenWizard}
+          searchTerm={filters.searchTerm}
+          onSearchChange={(value) => handleFilterChange('searchTerm', value)}
         />
-      </main>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
+          {renderMainContent()}
+        </main>
+      </div>
 
       {activeModal === ModalType.CREATE_EDIT_PROMPT && (
         <PromptFormModal

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { PromptSFL } from '../types';
+import { PromptSFL, Workflow } from '../types';
 
 const API_KEY = process.env.API_KEY;
 
@@ -175,5 +175,88 @@ export const regenerateSFLFromSuggestion = async (
             throw new Error(`Gemini API Error: ${error.message}`);
         }
         throw new Error("An unknown error occurred while regenerating the SFL prompt.");
+    }
+};
+
+export const generateWorkflowFromGoal = async (goal: string): Promise<Workflow> => {
+    if (!API_KEY) {
+        throw new Error("Gemini API Key is not configured.");
+    }
+
+    const systemInstruction = `You are an expert AI workflow orchestrator. Your task is to analyze a user's goal and generate a complete, multi-task workflow as a valid JSON object.
+    
+The user goal will be provided. Based on this, create a workflow with a series of tasks. The output MUST be a single, valid JSON object representing the workflow. Do not include any text or explanations outside the JSON.
+
+The root JSON object must have 'name', 'description', and 'tasks' fields. Each task in the 'tasks' array must have the following fields:
+- id: A unique string identifier for the task (e.g., "task-1").
+- name: A short, descriptive name for the task.
+- description: A one-sentence explanation of what the task does.
+- type: One of "DATA_INPUT", "GEMINI_PROMPT", "IMAGE_ANALYSIS", "TEXT_MANIPULATION", "DISPLAY_CHART", "GEMINI_GROUNDED".
+- dependencies: An array of task IDs that this task depends on. Empty for initial tasks.
+- inputKeys: An array of strings representing keys from the Data Store needed for this task. Use dot notation for nested keys (e.g., "userInput.text").
+- outputKey: A string for the key where the task's result will be stored in the Data Store.
+
+Rules for specific task types:
+- GEMINI_PROMPT/IMAGE_ANALYSIS: Must include a 'promptTemplate' field. Use {{key}} for placeholders.
+- TEXT_MANIPULATION: Must include a 'functionBody' field containing a JavaScript function body as a string. E.g., "return \`Report: \${inputs.summary}\`".
+- DATA_INPUT: Must include a 'staticValue' field. Use "{{userInput.text}}", "{{userInput.image}}", or "{{userInput.file}}" to get data from the user input area.
+- DISPLAY_CHART: Must include a 'dataKey' field pointing to data in the Data Store suitable for charting.
+- GEMINI_GROUNDED: For tasks requiring up-to-date information. Should have a 'promptTemplate'.
+
+Example Goal: "Analyze a user-provided text for sentiment and then summarize it."
+Example Output:
+{
+  "name": "Sentiment Analysis and Summary",
+  "description": "Analyzes a piece of text for its sentiment and provides a summary.",
+  "tasks": [
+    {
+      "id": "task-1", "name": "Get User Text", "description": "Receives text from user input.", "type": "DATA_INPUT",
+      "dependencies": [], "inputKeys": ["userInput.text"], "outputKey": "articleText", "staticValue": "{{userInput.text}}"
+    },
+    {
+      "id": "task-2", "name": "Analyze Sentiment", "description": "Performs sentiment analysis.", "type": "GEMINI_PROMPT",
+      "dependencies": ["task-1"], "inputKeys": ["articleText"], "outputKey": "sentimentResult",
+      "promptTemplate": "What is the sentiment of this text? {{articleText}}"
+    },
+    {
+      "id": "task-3", "name": "Summarize Text", "description": "Summarizes the text.", "type": "GEMINI_PROMPT",
+      "dependencies": ["task-1"], "inputKeys": ["articleText"], "outputKey": "summaryResult",
+      "promptTemplate": "Summarize this: {{articleText}}"
+    }
+  ]
+}
+
+Now, generate the workflow for the user's goal.
+`;
+
+    try {
+        const response: GenerateContentResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `User's goal: "${goal}"`,
+            config: {
+                systemInstruction: systemInstruction,
+                responseMimeType: "application/json",
+            },
+        });
+
+        const text = response.text;
+        const jsonData = parseJsonFromText(text);
+        
+        // Basic validation
+        if (!jsonData.name || !jsonData.description || !Array.isArray(jsonData.tasks)) {
+            throw new Error("Generated workflow is missing required fields (name, description, tasks).");
+        }
+        
+        // Add a random ID to the workflow
+        jsonData.id = `wf-custom-${crypto.randomUUID().slice(0, 8)}`;
+
+        return jsonData as Workflow;
+
+    } catch (error: unknown) {
+        console.error("Error calling Gemini API for Workflow generation:", error);
+        if (error instanceof Error) {
+            throw new Error(`Gemini API Error: ${error.message}`);
+        }
+        throw new Error("An unknown error occurred while generating the workflow.");
     }
 };

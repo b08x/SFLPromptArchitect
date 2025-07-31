@@ -95,8 +95,8 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         if(event.target) event.target.value = '';
     };
     
-    const commonInputClasses = "w-full px-3 py-2 bg-[#212934] border border-[#5c6f7e] text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#e2a32d] focus:border-[#e2a32d] transition-colors placeholder-[#95aac0]";
-    const labelClasses = "block text-sm font-medium text-[#95aac0] mb-1";
+    const commonInputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] transition-colors placeholder-gray-400";
+    const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
     
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -158,8 +158,6 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
           setRegenState(prev => ({ ...prev, loading: false }));
         }
     };
-
-    const renderOption = (o: string) => <option key={o} value={o} className="bg-[#212934] text-gray-200">{o}</option>;
     
     const renderCreatableSelect = <
         K extends 'sflField' | 'sflTenor' | 'sflMode',
@@ -169,11 +167,11 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
             <label className={labelClasses}>{label}</label>
             <select name={name} value={value} onChange={onChange} className={commonInputClasses}>
                 <option value="">Select...</option>
-                {options.map(renderOption)}
+                {options.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
              <div className="flex items-center space-x-2 mt-2">
                 <input type="text" placeholder="Add new option..." value={newOptionValues[String(fieldKey)] || ''} onChange={e => setNewOptionValues(prev => ({...prev, [String(fieldKey)]: e.target.value}))} className={`${commonInputClasses} text-sm`} />
-                <button type="button" onClick={() => handleAddNewOption(constantsKey, sflKey, fieldKey)} className="px-3 py-2 text-sm bg-[#5c6f7e] hover:bg-opacity-90 rounded-md shrink-0">Add</button>
+                <button type="button" onClick={() => handleAddNewOption(constantsKey, sflKey, fieldKey)} className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md shrink-0 text-gray-800">Add</button>
             </div>
         </div>
     );
@@ -193,9 +191,9 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
              {formData.sourceDocument && (
                 <div>
                     <label className={labelClasses}>Source Document</label>
-                     <div className="flex items-center justify-between bg-[#212934] p-2 rounded-md border border-[#5c6f7e]">
-                        <span className="text-sm text-gray-200 truncate pr-2">{formData.sourceDocument.name}</span>
-                        <button type="button" onClick={() => setFormData(prev => ({...prev, sourceDocument: undefined}))} className="text-red-400 hover:text-red-300 shrink-0" aria-label="Remove source document">
+                     <div className="flex items-center justify-between bg-gray-100 p-2 rounded-md border border-gray-300">
+                        <span className="text-sm text-gray-800 truncate pr-2">{formData.sourceDocument.name}</span>
+                        <button type="button" onClick={() => setFormData(prev => ({...prev, sourceDocument: undefined}))} className="text-red-500 hover:text-red-700 shrink-0" aria-label="Remove source document">
                             <XCircleIcon className="w-5 h-5"/>
                         </button>
                     </div>
@@ -203,18 +201,18 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
             )}
 
             <div className="my-2 text-right">
-                <button type="button" onClick={() => setRegenState(prev => ({...prev, shown: !prev.shown, suggestion: ''}))} className="text-sm text-[#e2a32d] hover:text-yellow-300 flex items-center justify-end">
+                <button type="button" onClick={() => setRegenState(prev => ({...prev, shown: !prev.shown, suggestion: ''}))} className="text-sm text-[#4A69E2] hover:text-blue-700 flex items-center justify-end">
                     <SparklesIcon className="w-5 h-5 mr-1"/> Refine Prompt with AI
                 </button>
             </div>
             
             {regenState.shown && (
-                <div className="space-y-2 p-3 bg-[#212934] rounded-md border border-[#5c6f7e]">
-                    <label htmlFor="regenSuggestion-wiz" className={`${labelClasses} text-gray-200`}>How should this prompt be changed?</label>
+                <div className="space-y-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <label htmlFor="regenSuggestion-wiz" className={`${labelClasses} text-gray-800`}>How should this prompt be changed?</label>
                     <textarea id="regenSuggestion-wiz" value={regenState.suggestion} onChange={e => setRegenState(prev => ({...prev, suggestion: e.target.value}))} rows={2} placeholder="e.g., Make the tone more formal..." className={commonInputClasses} />
                     <div className="flex justify-end space-x-2">
-                        <button type="button" onClick={() => setRegenState({ shown: false, suggestion: '', loading: false })} className="px-3 py-1 text-xs bg-[#5c6f7e] rounded-md hover:bg-opacity-80">Cancel</button>
-                        <button type="button" onClick={handleRegeneratePrompt} disabled={regenState.loading || !regenState.suggestion.trim()} className="px-3 py-1 text-xs bg-[#c36e26] rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed flex items-center">
+                        <button type="button" onClick={() => setRegenState({ shown: false, suggestion: '', loading: false })} className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="button" onClick={handleRegeneratePrompt} disabled={regenState.loading || !regenState.suggestion.trim()} className="px-3 py-1 text-xs bg-[#4A69E2] text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed flex items-center">
                             {regenState.loading && <div className="w-3 h-3 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>}
                             {regenState.loading ? 'Refining...' : 'Refine'}
                         </button>
@@ -222,8 +220,8 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                 </div>
             )}
 
-            <fieldset className="border border-[#5c6f7e] p-4 rounded-md">
-              <legend className="text-lg font-medium text-gray-200 px-2">SFL: Field</legend>
+            <fieldset className="border border-gray-300 p-4 rounded-md">
+              <legend className="text-lg font-medium text-gray-800 px-2">SFL: Field</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div><label className={labelClasses}>Topic</label><input type="text" name="sflField.topic" value={formData.sflField.topic} onChange={handleSFLChange} className={commonInputClasses}/></div>
                 {renderCreatableSelect('Task Type', 'sflField.taskType', formData.sflField.taskType, handleSFLChange, appConstants.taskTypes, 'taskTypes', 'sflField', 'taskType')}
@@ -232,18 +230,18 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
               </div>
             </fieldset>
             
-            <fieldset className="border border-[#5c6f7e] p-4 rounded-md">
-              <legend className="text-lg font-medium text-gray-200 px-2">SFL: Tenor</legend>
+            <fieldset className="border border-gray-300 p-4 rounded-md">
+              <legend className="text-lg font-medium text-gray-800 px-2">SFL: Tenor</legend>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 {renderCreatableSelect('AI Persona', 'sflTenor.aiPersona', formData.sflTenor.aiPersona, handleSFLChange, appConstants.aiPersonas, 'aiPersonas', 'sflTenor', 'aiPersona')}
                 {renderCreatableSelect('Desired Tone', 'sflTenor.desiredTone', formData.sflTenor.desiredTone, handleSFLChange, appConstants.desiredTones, 'desiredTones', 'sflTenor', 'desiredTone')}
                 <div className="md:col-span-2">
                      <label className={labelClasses}>Target Audience</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1 max-h-40 overflow-y-auto p-2 border border-[#5c6f7e] rounded-md bg-[#212934]">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1 max-h-40 overflow-y-auto p-2 border border-gray-300 rounded-md bg-white">
                         {(appConstants.targetAudiences || []).map(audience => (
                             <div key={audience} className="flex items-center">
-                                <input id={`wiz-audience-${audience}`} type="checkbox" checked={(formData.sflTenor.targetAudience || []).includes(audience)} onChange={() => handleTargetAudienceChange(audience)} className="h-4 w-4 rounded border-gray-400 text-[#c36e26] focus:ring-[#e2a32d] bg-[#212934]" />
-                                <label htmlFor={`wiz-audience-${audience}`} className="ml-2 text-sm text-gray-200 select-none">{audience}</label>
+                                <input id={`wiz-audience-${audience}`} type="checkbox" checked={(formData.sflTenor.targetAudience || []).includes(audience)} onChange={() => handleTargetAudienceChange(audience)} className="h-4 w-4 rounded border-gray-300 text-[#4A69E2] focus:ring-[#4A69E2]" />
+                                <label htmlFor={`wiz-audience-${audience}`} className="ml-2 text-sm text-gray-800 select-none">{audience}</label>
                             </div>
                         ))}
                     </div>
@@ -256,15 +254,15 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                                 handleTargetAudienceChange(value);
                                 setNewOptionValues(prev => ({...prev, 'targetAudience': ''}));
                             }
-                        }} className="px-3 py-2 text-sm bg-[#5c6f7e] hover:bg-opacity-90 rounded-md shrink-0">Add</button>
+                        }} className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md shrink-0 text-gray-800">Add</button>
                     </div>
                 </div>
                 <div className="md:col-span-2"><label className={labelClasses}>Interpersonal Stance</label><input type="text" name="sflTenor.interpersonalStance" value={formData.sflTenor.interpersonalStance} onChange={handleSFLChange} className={commonInputClasses}/></div>
               </div>
             </fieldset>
 
-            <fieldset className="border border-[#5c6f7e] p-4 rounded-md">
-              <legend className="text-lg font-medium text-gray-200 px-2">SFL: Mode</legend>
+            <fieldset className="border border-gray-300 p-4 rounded-md">
+              <legend className="text-lg font-medium text-gray-800 px-2">SFL: Mode</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 {renderCreatableSelect('Output Format', 'sflMode.outputFormat', formData.sflMode.outputFormat, handleSFLChange, appConstants.outputFormats, 'outputFormats', 'sflMode', 'outputFormat')}
                 {renderCreatableSelect('Length Constraint', 'sflMode.lengthConstraint', formData.sflMode.lengthConstraint, handleSFLChange, appConstants.lengthConstraints, 'lengthConstraints', 'sflMode', 'lengthConstraint')}
@@ -292,7 +290,7 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleGenerate(); }}>
                         <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt,.md,.text"/>
                         <div>
-                            <label htmlFor="goal" className="block text-lg text-[#95aac0] mb-2">Describe your prompt's goal</label>
+                            <label htmlFor="goal" className="block text-lg text-gray-700 mb-2">Describe your prompt's goal</label>
                             <textarea
                                 id="goal"
                                 value={goal}
@@ -305,11 +303,11 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                         </div>
                         <div>
                             <label className={labelClasses}>Source Document (Optional)</label>
-                            <p className="text-xs text-[#95aac0] mb-2">Attach a text file for stylistic reference. The AI will analyze its style to generate the prompt.</p>
+                            <p className="text-xs text-gray-500 mb-2">Attach a text file for stylistic reference. The AI will analyze its style to generate the prompt.</p>
                             {sourceDoc ? (
-                                <div className="flex items-center justify-between bg-[#212934] p-2 rounded-md border border-[#5c6f7e]">
-                                <span className="text-sm text-gray-200 truncate pr-2">{sourceDoc.name}</span>
-                                <button type="button" onClick={() => setSourceDoc(null)} className="text-red-400 hover:text-red-300 shrink-0" aria-label="Remove source document">
+                                <div className="flex items-center justify-between bg-gray-100 p-2 rounded-md border border-gray-300">
+                                <span className="text-sm text-gray-800 truncate pr-2">{sourceDoc.name}</span>
+                                <button type="button" onClick={() => setSourceDoc(null)} className="text-red-500 hover:text-red-700 shrink-0" aria-label="Remove source document">
                                     <XCircleIcon className="w-5 h-5"/>
                                 </button>
                                 </div>
@@ -317,7 +315,7 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                                 <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full flex items-center justify-center px-3 py-2 bg-[#212934] border-2 border-dashed border-[#5c6f7e] text-[#95aac0] rounded-md hover:bg-[#333e48] hover:border-[#95aac0] transition-colors"
+                                className="w-full flex items-center justify-center px-3 py-2 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-colors"
                                 >
                                 <PaperClipIcon className="w-5 h-5 mr-2" />
                                 Attach Document
@@ -325,8 +323,8 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                             )}
                         </div>
                          <div className="flex justify-end space-x-3 pt-4">
-                            <button type="button" onClick={handleCloseAndReset} className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#5c6f7e] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#95aac0] focus:ring-offset-[#333e48]">Cancel</button>
-                            <button type="submit" className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#c36e26] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e2a32d] focus:ring-offset-[#333e48]">Generate SFL Prompt</button>
+                            <button type="button" onClick={handleCloseAndReset} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
+                            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4A69E2]">Generate SFL Prompt</button>
                         </div>
                     </form>
                 );
@@ -334,26 +332,26 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
                 return (
                     <div className="flex flex-col items-center justify-center p-8 text-center h-64">
                         <div className="spinner mb-4"></div>
-                        <p className="text-lg text-[#e2a32d]">Generating SFL structure...</p>
-                        <p className="text-[#95aac0] text-sm">This may take a moment.</p>
+                        <p className="text-lg text-gray-800">Generating SFL structure...</p>
+                        <p className="text-gray-500 text-sm">This may take a moment.</p>
                     </div>
                 );
             case 'refinement':
                 return (
                    <div className="space-y-6">
                        {renderRefinementForm()}
-                       <div className="flex justify-end space-x-3 pt-4 border-t border-[#5c6f7e] mt-6">
-                            <button type="button" onClick={handleReset} className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#5c6f7e] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#95aac0] focus:ring-offset-[#333e48]">Start Over</button>
-                            <button type="button" onClick={handleSave} className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#c36e26] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e2a32d] focus:ring-offset-[#333e48]">Save Prompt</button>
+                       <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6">
+                            <button type="button" onClick={handleReset} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Start Over</button>
+                            <button type="button" onClick={handleSave} className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90">Save Prompt</button>
                        </div>
                    </div>
                 );
             case 'error':
                  return (
-                    <div className="flex flex-col items-center justify-center p-8 text-center bg-red-900/30 border border-red-700 rounded-lg">
-                        <h4 className="text-lg font-bold text-red-300 mb-2">Error</h4>
-                        <p className="text-red-300 mb-4">{errorMessage}</p>
-                        <button onClick={handleReset} className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#5c6f7e] rounded-md hover:bg-opacity-90">Try Again</button>
+                    <div className="flex flex-col items-center justify-center p-8 text-center bg-red-50 border border-red-200 rounded-lg">
+                        <h4 className="text-lg font-bold text-red-700 mb-2">Error</h4>
+                        <p className="text-red-600 mb-4">{errorMessage}</p>
+                        <button onClick={handleReset} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Try Again</button>
                     </div>
                 );
         }

@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PromptSFL } from '../types';
-import EyeIcon from './icons/EyeIcon';
-import PencilIcon from './icons/PencilIcon';
-import TrashIcon from './icons/TrashIcon';
+import EllipsisVerticalIcon from './icons/EllipsisVerticalIcon';
+import CodeBracketIcon from './icons/CodeBracketIcon';
+import ChatBubbleLeftRightIcon from './icons/ChatBubbleLeftRightIcon';
+import DocumentTextIcon from './icons/DocumentTextIcon';
+import ArrowsRightLeftIcon from './icons/ArrowsRightLeftIcon';
+import GlobeAltIcon from './icons/GlobeAltIcon';
+import WrenchScrewdriverIcon from './icons/WrenchScrewdriverIcon';
+import AcademicCapIcon from './icons/AcademicCapIcon';
+
 
 interface PromptCardProps {
   prompt: PromptSFL;
@@ -11,49 +17,105 @@ interface PromptCardProps {
   onDelete: (promptId: string) => void;
 }
 
+const getTaskIcon = (taskType: string) => {
+    const iconProps = { className: "w-5 h-5" };
+    switch (taskType) {
+        case 'Explanation': return <ChatBubbleLeftRightIcon {...iconProps} />;
+        case 'Code Generation': return <CodeBracketIcon {...iconProps} />;
+        case 'Summarization': return <DocumentTextIcon {...iconProps} />;
+        case 'Translation': return <GlobeAltIcon {...iconProps} />;
+        case 'Code Debugging Assistant': return <WrenchScrewdriverIcon {...iconProps} />;
+        case 'JSON Data Transformation': return <ArrowsRightLeftIcon {...iconProps} />;
+        case 'Technical Concept Explanation': return <AcademicCapIcon {...iconProps} />;
+        default: return <DocumentTextIcon {...iconProps} />;
+    }
+}
+
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelete }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const isTested = !!prompt.geminiResponse;
+
+  const cardIconColorMapping: Record<string, string> = {
+    Explanation: 'text-blue-500 bg-blue-100',
+    'Code Generation': 'text-green-500 bg-green-100',
+    Summarization: 'text-purple-500 bg-purple-100',
+    Translation: 'text-sky-500 bg-sky-100',
+    'Code Debugging Assistant': 'text-red-500 bg-red-100',
+    'JSON Data Transformation': 'text-indigo-500 bg-indigo-100',
+    'Technical Concept Explanation': 'text-amber-500 bg-amber-100',
+    default: 'text-gray-500 bg-gray-100',
+  }
+
+  const iconColor = cardIconColorMapping[prompt.sflField.taskType] || cardIconColorMapping.default;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuRef]);
+
   return (
-    <div className="bg-[#333e48] shadow-lg rounded-xl p-6 hover:shadow-2xl transition-shadow duration-300 ease-in-out flex flex-col justify-between border border-[#5c6f7e] hover:border-[#95aac0]">
+    <div className="bg-white shadow-sm rounded-lg p-5 border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between">
       <div>
-        <h3 className="text-xl font-semibold text-[#e2a32d] mb-2 truncate" title={prompt.title}>{prompt.title}</h3>
-        <p className="text-gray-200 text-sm mb-3 line-clamp-2" title={prompt.promptText}>{prompt.promptText}</p>
-        <div className="mb-4 space-y-1">
-          <p className="text-xs text-[#95aac0]">
-            <span className="font-medium text-gray-200">Task:</span> {prompt.sflField.taskType}
-          </p>
-          <p className="text-xs text-[#95aac0]">
-            <span className="font-medium text-gray-200">Persona:</span> {prompt.sflTenor.aiPersona}
-          </p>
-          <p className="text-xs text-[#95aac0]">
-             <span className="font-medium text-gray-200">Format:</span> {prompt.sflMode.outputFormat}
-          </p>
+        <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-md ${iconColor}`}>
+                    {getTaskIcon(prompt.sflField.taskType)}
+                </div>
+                <h3 className="text-md font-semibold text-gray-800" title={prompt.title}>
+                    {prompt.title}
+                </h3>
+            </div>
+            <div className="relative" ref={menuRef}>
+                <button
+                    onClick={() => setMenuOpen(prev => !prev)}
+                    className="p-1 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
+                    aria-label="Options"
+                >
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                </button>
+                {menuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                    <button onClick={() => { onView(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Details</button>
+                    <button onClick={() => { onEdit(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit</button>
+                    <button onClick={() => { onDelete(prompt.id); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</button>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2" title={prompt.promptText}>{prompt.promptText}</p>
+        
+        <div className="space-y-2 text-sm mb-4">
+            <div className="flex"><p className="w-16 font-medium text-gray-500 shrink-0">Task:</p> <p className="text-gray-700 truncate">{prompt.sflField.taskType}</p></div>
+            <div className="flex"><p className="w-16 font-medium text-gray-500 shrink-0">Persona:</p> <p className="text-gray-700 truncate">{prompt.sflTenor.aiPersona}</p></div>
+            <div className="flex"><p className="w-16 font-medium text-gray-500 shrink-0">Format:</p> <p className="text-gray-700 truncate">{prompt.sflMode.outputFormat}</p></div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {prompt.sflField.keywords.split(',').slice(0, 3).map((keyword) => (
+            keyword.trim() && (
+              <span key={keyword} className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
+                #{keyword.trim()}
+              </span>
+            )
+          ))}
         </div>
       </div>
-      <div className="border-t border-[#5c6f7e] pt-4 flex justify-end items-center space-x-2">
-        <button
-          onClick={() => onView(prompt)}
-          className="p-2 text-[#95aac0] hover:text-[#e2a32d] transition-colors"
-          title="View Details"
-          aria-label="View prompt details"
-        >
-          <EyeIcon className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => onEdit(prompt)}
-          className="p-2 text-[#95aac0] hover:text-[#e2a32d] transition-colors"
-          title="Edit Prompt"
-          aria-label="Edit prompt"
-        >
-          <PencilIcon className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => onDelete(prompt.id)}
-          className="p-2 text-[#95aac0] hover:text-red-400 transition-colors"
-          title="Delete Prompt"
-          aria-label="Delete prompt"
-        >
-          <TrashIcon className="w-5 h-5" />
-        </button>
+      
+      <div className="border-t border-gray-200 pt-4 flex justify-between items-center text-sm">
+        <p className="text-gray-500">Updated {new Date(prompt.updatedAt).toLocaleDateString()}</p>
+        {isTested ? (
+          <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-md">Tested</span>
+        ) : (
+          <span className="px-2 py-1 text-xs font-semibold text-amber-800 bg-amber-100 rounded-md">Not Tested</span>
+        )}
       </div>
     </div>
   );
