@@ -140,7 +140,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
       const now = new Date().toISOString();
       const finalPrompt: PromptSFL = {
         ...formData,
-        id: promptToEdit?.id || `prompt-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+        id: promptToEdit?.id || crypto.randomUUID(),
         createdAt: promptToEdit?.createdAt || now,
         updatedAt: now,
         geminiResponse: promptToEdit?.geminiResponse, 
