@@ -248,7 +248,7 @@ Now, generate the workflow for the user's goal.
         }
         
         // Add a random ID to the workflow
-        jsonData.id = `wf-custom-${crypto.randomUUID().slice(0, 8)}`;
+        jsonData.id = `wf-custom-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 
         return jsonData as Workflow;
 
