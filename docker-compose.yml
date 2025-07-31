@@ -26,11 +26,7 @@ services:
     build: ./frontend
     container_name: sfl-frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev
+      - "80:80"
     depends_on:
       - backend
     networks:
