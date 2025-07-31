@@ -55,6 +55,8 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         );
     }
 
+    const keywordsString = sflField.keywords ? `\`${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}\`` : 'N/A';
+
     sections.push(
         '---',
         '## SFL Metadata',
@@ -62,7 +64,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         `- **Topic:** ${sflField.topic || 'N/A'}`,
         `- **Task Type:** ${sflField.taskType || 'N/A'}`,
         `- **Domain Specifics:** ${sflField.domainSpecifics || 'N/A'}`,
-        `- **Keywords:** ${sflField.keywords ? `\`${sflField.keywords.split(',').map(k => k.trim()).join('`, `')}\`` : 'N/A'}``,
+        `- **Keywords:** ${keywordsString}`,
         '',
         '### Tenor (Who is taking part?)',
         `- **AI Persona:** ${sflTenor.aiPersona || 'N/A'}`,
@@ -258,7 +260,7 @@ const App: React.FC = () => {
     
     let finalPromptText = promptToTest.promptText;
     Object.keys(variables).forEach(key => {
-      const regex = new RegExp(`{{\s*${key}\s*}}`, 'g');
+      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
       finalPromptText = finalPromptText.replace(regex, variables[key] || '');
     });
 
