@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: sfl-backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app # Mount for live-reloading in dev
+      - /app/node_modules # Avoids overwriting container node_modules
+    depends_on:
+      - db
+      - cache
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/sfl_db
+      - REDIS_URL=redis://cache:6379
+      - NODE_ENV=development
+    networks:
+      - sfl-network
+
+  frontend:
+    build: ./frontend
+    container_name: sfl-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - sfl-network
+
+  db:
+    image: docker.io/pgvector/pgvector:pg16 # Use an image with pgvector pre-installed
+    container_name: sfl-db
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=sfl_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sfl-network
+
+  cache:
+    image: docker.io/library/redis:7-alpine
+    container_name: sfl-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - sfl-network
+
+volumes:
+  pgdata:
+
+networks:
+  sfl-network:
+    driver: bridge
