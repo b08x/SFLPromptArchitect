@@ -25,6 +25,8 @@ services:
   frontend:
     build: ./frontend
     container_name: sfl-frontend
+    env_file:
+      - ./frontend/.env    
     ports:
       - "80:80"
     depends_on:
