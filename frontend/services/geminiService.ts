@@ -13,12 +13,23 @@ if (!API_KEY) {
 const ai = new GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY" }); // Fallback to prevent crash, though API calls will fail.
 
 const parseJsonFromText = (text: string) => {
+  // First, try to find a JSON object within markdown fences
+  const fenceRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/;
+  const match = text.match(fenceRegex);
+
   let jsonStr = text.trim();
-  const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-  const match = jsonStr.match(fenceRegex);
-  if (match && match[2]) {
-    jsonStr = match[2].trim();
+
+  if (match && match[1]) {
+    jsonStr = match[1].trim();
+  } else {
+    // If no fences are found, try to extract content between the first '{' and the last '}'
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    }
   }
+
   try {
     return JSON.parse(jsonStr);
   } catch (e) {
