@@ -33,7 +33,7 @@ class PromptService {
 
   async deletePrompt(id: string): Promise<boolean> {
     const result = await pool.query('DELETE FROM prompts WHERE id = $1', [id]);
-    return result.rowCount > 0;
+    return !!result.rowCount;
   }
 }
 

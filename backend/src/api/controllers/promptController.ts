@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import PromptService from '../services/promptService';
+import PromptService from '../../services/promptService';
 
 class PromptController {
   async createPrompt(req: Request, res: Response, next: NextFunction) {
