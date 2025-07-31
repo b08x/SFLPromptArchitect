@@ -16,6 +16,7 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/sfl_db
       - REDIS_URL=redis://cache:6379
       - NODE_ENV=development
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     networks:
       - sfl-network
 
