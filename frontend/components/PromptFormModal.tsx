@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PromptSFL, SFLField, SFLTenor, SFLMode } from '../types';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, INITIAL_PROMPT_SFL } from '../constants';
+import { generateId } from '../utils/generateId';
 import ModalShell from './ModalShell';
 import { regenerateSFLFromSuggestion } from '../services/geminiService';
 import SparklesIcon from './icons/SparklesIcon';
@@ -140,7 +141,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
       const now = new Date().toISOString();
       const finalPrompt: PromptSFL = {
         ...formData,
-        id: promptToEdit?.id || crypto.randomUUID(),
+        id: promptToEdit?.id || generateId(),
         createdAt: promptToEdit?.createdAt || now,
         updatedAt: now,
         geminiResponse: promptToEdit?.geminiResponse, 

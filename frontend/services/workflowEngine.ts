@@ -37,7 +37,7 @@ export const templateString = (template: string, dataStore: DataStore): any => {
 
 
 const executeGeminiPrompt = async (prompt: string, agentConfig?: AgentConfig) => {
-    const model = agentConfig?.model || 'gemini-2.5-flash';
+    const model = agentConfig?.model || 'gemini-2.0-flash';
     const response = await ai.models.generateContent({
         model: model,
         contents: prompt,
@@ -52,7 +52,7 @@ const executeGeminiPrompt = async (prompt: string, agentConfig?: AgentConfig) =>
 };
 
 const executeImageAnalysis = async (prompt: string, imagePart: Part, agentConfig?: AgentConfig) => {
-    const model = agentConfig?.model || 'gemini-2.5-flash';
+    const model = agentConfig?.model || 'gemini-2.0-flash';
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
@@ -68,7 +68,7 @@ const executeImageAnalysis = async (prompt: string, imagePart: Part, agentConfig
 };
 
 const executeGroundedGeneration = async (prompt: string, agentConfig?: AgentConfig) => {
-    const model = agentConfig?.model || 'gemini-2.5-flash';
+    const model = agentConfig?.model || 'gemini-2.0-flash';
     const response = await ai.models.generateContent({
         model,
         contents: prompt,

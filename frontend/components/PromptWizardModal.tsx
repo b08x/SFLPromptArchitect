@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { PromptSFL } from '../types';
 import { generateSFLFromGoal, regenerateSFLFromSuggestion } from '../services/geminiService';
 import { INITIAL_PROMPT_SFL } from '../constants';
+import { generateId } from '../utils/generateId';
 import ModalShell from './ModalShell';
 import SparklesIcon from './icons/SparklesIcon';
 import PaperClipIcon from './icons/PaperClipIcon';
@@ -81,16 +82,12 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         }
 
         try {
-            const now = new Date().toISOString();
-            const finalPrompt: PromptSFL = {
+            const finalPrompt: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'> = {
                 ...formData,
-                id: crypto.randomUUID(),
-                createdAt: now,
-                updatedAt: now,
                 isTesting: false,
             };
             
-            await onSave(finalPrompt);
+            await onSave(finalPrompt as PromptSFL);
             setSaveState({ saving: false, error: '' });
             onClose();
         } catch (error) {

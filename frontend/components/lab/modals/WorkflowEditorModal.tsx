@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Workflow, Task, TaskType, PromptSFL } from '../../../types';
+import { generateId } from '../../../utils/generateId';
 import ModalShell from '../../ModalShell';
 import PlusIcon from '../../icons/PlusIcon';
 import TrashIcon from '../../icons/TrashIcon';
@@ -22,7 +23,7 @@ const emptyTask: Omit<Task, 'id'> = {
     inputKeys: [],
     outputKey: 'newResult',
     promptTemplate: '',
-    agentConfig: { model: 'gemini-2.5-flash', temperature: 0.7 },
+    agentConfig: { model: 'gemini-2.0-flash', temperature: 0.7 },
     functionBody: '',
     staticValue: '',
     dataKey: '',
@@ -171,7 +172,7 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
             if(workflowToEdit.isDefault) {
                 setWorkflow({
                     ...workflowToEdit,
-                    id: `wf-custom-${crypto.randomUUID().slice(0, 8)}`,
+                    id: `wf-custom-${generateId().slice(0, 8)}`,
                     name: `${workflowToEdit.name} (Copy)`,
                     isDefault: false,
                 });
@@ -180,7 +181,7 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
             }
         } else {
             setWorkflow({
-                id: `wf-custom-${crypto.randomUUID().slice(0, 8)}`,
+                id: `wf-custom-${generateId().slice(0, 8)}`,
                 name: 'New Custom Workflow',
                 description: '',
                 tasks: [],
@@ -195,7 +196,7 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
     };
 
     const addTask = () => {
-        const newTask: Task = { ...emptyTask, id: `task-${crypto.randomUUID().slice(0, 8)}` };
+        const newTask: Task = { ...emptyTask, id: `task-${generateId().slice(0, 8)}` };
         handleWorkflowChange('tasks', [...workflow.tasks, newTask]);
     };
 

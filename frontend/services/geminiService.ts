@@ -45,7 +45,7 @@ export const testPromptWithGemini = async (promptText: string): Promise<string> 
   }
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: promptText,
     });
     
@@ -86,7 +86,7 @@ export const generateSFLFromGoal = async (goal: string, sourceDocContent?: strin
 
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
             contents: userContent,
             config: {
                 systemInstruction: systemInstruction,
@@ -157,7 +157,7 @@ export const regenerateSFLFromSuggestion = async (
 
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
             contents: userContent,
             config: {
                 systemInstruction: systemInstruction,
@@ -242,7 +242,7 @@ Now, generate the workflow for the user's goal.
 
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
             contents: `User's goal: "${goal}"`,
             config: {
                 systemInstruction: systemInstruction,
