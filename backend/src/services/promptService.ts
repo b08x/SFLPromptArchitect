@@ -1,5 +1,5 @@
 import pool from '../config/database';
-import { Prompt } from '../../types'; // We will create this type definition next
+import { Prompt } from '../types';
 
 class PromptService {
   async createPrompt(promptData: Omit<Prompt, 'id' | 'created_at' | 'updated_at'>): Promise<Prompt> {
