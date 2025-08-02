@@ -98,7 +98,7 @@ const executeTextManipulation = (funcBody: string, inputs: Record<string, any>):
 };
 
 class WorkflowExecutionService {
-    async executeTask(task: Task, dataStore: DataStore, prompts: PromptSFL[]): Promise<any> {
+    async executeTask(task: Task, dataStore: DataStore, prompt?: PromptSFL): Promise<any> {
         const inputs: Record<string, any> = {};
         for (const key of task.inputKeys) {
             inputs[key] = getNested(dataStore, key);
@@ -123,10 +123,10 @@ class WorkflowExecutionService {
 
             case 'GEMINI_PROMPT': {
                 if (task.promptId) {
-                    const linkedPrompt = prompts.find(p => p.id === task.promptId);
-                    if (!linkedPrompt) {
-                        throw new Error(`Task "${task.name}" has a linked prompt with ID "${task.promptId}" that was not found in the library.`);
+                    if (!prompt) {
+                        throw new Error(`Task "${task.name}" requires prompt ID "${task.promptId}" but no prompt was provided.`);
                     }
+                    const linkedPrompt = prompt;
                     
                     const { sflTenor, sflMode } = linkedPrompt;
                     
