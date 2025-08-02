@@ -55,7 +55,15 @@ class WorkflowService {
    * @returns {Promise<Workflow | null>} A promise that resolves to the updated workflow, or null if not found.
    */
   async updateWorkflow(id: string, workflowData: Partial<Workflow>): Promise<Workflow | null> {
-    const { name, graph_data } = workflowData;
+    // First, fetch the existing workflow from the database
+    const existing = await pool.query('SELECT * FROM workflows WHERE id = $1', [id]);
+    if (!existing.rows[0]) return null;
+
+    // Create a merged object by combining existing data with new data
+    const name = workflowData.name ?? existing.rows[0].name;
+    const graph_data = workflowData.graph_data ?? existing.rows[0].graph_data;
+
+    // Update with the merged values to ensure partial updates don't overwrite existing data
     const result = await pool.query(
       'UPDATE workflows SET name = $1, graph_data = $2, updated_at = now() WHERE id = $3 RETURNING *',
       [name, graph_data, id]

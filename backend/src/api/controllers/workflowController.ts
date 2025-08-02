@@ -72,7 +72,7 @@ class WorkflowController {
     try {
       const workflow = await WorkflowService.updateWorkflow(req.params.id, req.body);
       if (!workflow) {
-        return res.status(44).json({ message: 'Workflow not found' });
+        return res.status(404).json({ message: 'Workflow not found' });
       }
       res.status(200).json(workflow);
     } catch (error) {
