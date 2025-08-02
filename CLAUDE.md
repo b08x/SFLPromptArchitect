@@ -4,65 +4,123 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-### Environment Setup
-- Create `.env.local` file and set `GEMINI_API_KEY` environment variable
-- Install dependencies: `npm install`
+### Full-Stack Development
+- **Start all services**: `docker-compose up` (backend on :4000, frontend on :80, PostgreSQL on :5432, Redis on :6379)
+- **Development mode**: `docker-compose up` with live reloading enabled
 
-### Development
-- Start development server: `npm run dev` (runs on default Vite port, typically http://localhost:5173)
-- Build application: `npm run build` (outputs to `dist/`)
-- Preview production build: `npm run preview`
+### Frontend Development
+- **Directory**: `frontend/`
+- **Install dependencies**: `cd frontend && npm install`
+- **Dev server**: `cd frontend && npm run dev` (Vite, typically localhost:5173)
+- **Build**: `cd frontend && npm run build` (outputs to `dist/`)
+- **Preview**: `cd frontend && npm run preview`
+
+### Backend Development
+- **Directory**: `backend/`
+- **Install dependencies**: `cd backend && npm install`
+- **Dev server**: `cd backend && npm run dev` (nodemon with TypeScript)
+- **Build**: `cd backend && npm run build` (TypeScript compilation to `dist/`)
+- **Production**: `cd backend && npm start`
+
+### Database Management
+- **Run migrations**: `cd backend && npm run migrate:up`
+- **Rollback migrations**: `cd backend && npm run migrate:down`
+- **Manual migrate**: `cd backend && npm run migrate`
+- **Seed data**: Located in `database/seeds/`
+
+### Environment Setup
+- **Frontend**: Create `.env.local` with `GEMINI_API_KEY`
+- **Backend**: Create `.env` with database and service configurations
+- **Docker**: Environment variables configured in `docker-compose.yml`
 
 ### Testing
-- No automated test framework is currently configured
-- Manual testing is done via the Gemini API integration in the UI
-- Test prompts directly through the application interface
+- No automated test framework currently configured
+- Manual testing through UI and API endpoints
+- Database testing via migrations and seeds
 
 ## Architecture Overview
 
-This is a React/TypeScript application built with Vite that implements a Systemic Functional Linguistics (SFL) prompt architect tool for AI prompt engineering.
+Full-stack SFL (Systemic Functional Linguistics) prompt engineering application with React frontend, Express.js backend, PostgreSQL database with pgvector extension, and Redis caching.
 
-### Core Architecture
-- **Frontend**: React 19 with TypeScript, styled with Tailwind CSS classes
-- **Build Tool**: Vite with custom configuration for environment variables
-- **AI Integration**: Google Gemini API via `@google/genai` package
-- **State Management**: React useState/useEffect with localStorage persistence
-- **Data Structure**: SFL-based prompt structure with Field, Tenor, and Mode components
+### System Architecture
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
+- **Backend**: Express.js + TypeScript + Winston logging
+- **Database**: PostgreSQL 16 with pgvector extension for embeddings
+- **Cache**: Redis 7 Alpine
+- **Deployment**: Docker Compose with nginx proxy
+- **AI Integration**: Google Gemini API integration
 
-### Key Components Structure
-- `App.tsx` - Main application component with state management, modal orchestration, and data persistence
-- `types.ts` - TypeScript interfaces for SFL prompt structure and application state
-- `services/geminiService.ts` - Gemini API integration for prompt testing and automated SFL generation
-- `components/` - Reusable UI components (modals, forms, lists, filters, icons)
-- `constants.ts` - Application constants and configuration
-- `vite.config.ts` - Custom Vite configuration for environment variables (`GEMINI_API_KEY` → `process.env.API_KEY`)
-- `outputs/` - Directory for exported prompt files (JSON format)
+### Backend Architecture (`backend/src/`)
+- **Entry Point**: `index.ts` - Express server setup with middleware and routes
+- **API Routes**: `api/routes.ts` - RESTful API endpoints
+- **Controllers**: `api/controllers/` - Request handling logic (prompts, models, workflows)
+- **Services**: `services/` - Business logic layer (promptService, modelService, workflowService)
+- **Database**: `config/database.ts` - PostgreSQL connection configuration
+- **Middleware**: `middleware/errorHandler.ts` - Centralized error handling
+- **Types**: `types.ts` - Shared TypeScript interfaces for database entities
 
-### SFL Prompt Structure
-The application uses Systemic Functional Linguistics framework with three main components:
-- **SFL Field**: What is happening (topic, task type, domain specifics, keywords)
-- **SFL Tenor**: Who is taking part (AI persona, target audience, tone, interpersonal stance)
-- **SFL Mode**: How it's communicated (output format, rhetorical structure, length, textual directives)
+### Database Schema (`database/migrations/`)
+- **Users**: Authentication and user management
+- **Prompts**: SFL-structured prompts with JSONB metadata
+- **Workflows**: Graph-based workflow definitions with JSONB data
+- **Documents**: File storage with vector embeddings
+- **Document Chunks**: Text chunks with pgvector embeddings for RAG
 
-### Data Flow
-1. **Persistence**: Prompts stored in browser localStorage, automatically synced with React state
-2. **API Integration**: Gemini API (`gemini-2.5-flash-preview-04-17` model) for testing and SFL generation
-3. **Modal System**: Centralized modal management via `ModalType` enum (create/edit/view/wizard)
-4. **Filtering**: Real-time search across titles, content, and all SFL components
-5. **Variable Substitution**: Dynamic `{{variable}}` replacement in prompt text during testing
-6. **Export**: Individual prompt export as JSON files with sanitized filenames
+### Frontend Architecture (`frontend/`)
+- **Core Components**: 
+  - `App.tsx` - Main application with state management and modal orchestration
+  - `types.ts` - Frontend TypeScript interfaces (PromptSFL, Task, Workflow)
+- **UI Components**: `components/` - Modular React components with consistent patterns
+- **Services**: 
+  - `geminiService.ts` - AI API integration
+  - `promptApiService.ts` - Backend API communication
+  - `workflowEngine.ts` - Workflow execution engine
+- **Advanced Features**: `components/lab/` - Prompt Lab with workflow management
+
+### Key Architectural Patterns
+- **API Design**: RESTful endpoints with consistent error handling
+- **State Management**: React hooks with localStorage fallback, migrating to backend persistence
+- **Type Safety**: Shared TypeScript interfaces between frontend/backend
+- **Modal System**: Centralized modal state with `ModalType` enum
+- **Workflow Engine**: Task-based workflow execution with dependency management
+- **Vector Search**: pgvector integration for document similarity search
+
+### SFL Framework Implementation
+The application implements Systemic Functional Linguistics with three dimensions:
+- **Field**: Content domain, task type, specifics, keywords
+- **Tenor**: AI persona, audience, tone, interpersonal dynamics
+- **Mode**: Output format, structure, length, textual directives
+
+### Data Flow Patterns
+1. **Prompt Management**: Frontend ↔ Backend API ↔ PostgreSQL storage
+2. **AI Integration**: Frontend → Backend → Gemini API (for testing/generation)
+3. **Workflow Execution**: Task dependency resolution with data store management
+4. **Document Processing**: File upload → text extraction → embedding generation → vector storage
+5. **Real-time Features**: Workflow status updates, prompt testing feedback
 
 ### Important Implementation Details
-- **State Management**: Single source of truth in `App.tsx` with localStorage persistence
-- **Sample Data**: Application includes sample prompts for initial setup
-- **Error Handling**: Graceful fallbacks for API failures and malformed localStorage data
-- **Variable Pattern**: Uses `{{variable}}` syntax with regex replacement during prompt testing
-- **Modal Architecture**: Single modal state with type-based rendering (no multiple modal instances)
-- **Export Format**: Excludes runtime state (`isTesting`, `geminiResponse`, `geminiTestError`) from exports
+- **Database**: Uses UUID primary keys, JSONB for flexible metadata, pgvector for embeddings
+- **API Integration**: Gemini 2.5 Flash model with configurable parameters
+- **Error Handling**: Winston logging in backend, graceful UI fallbacks in frontend
+- **Variable Substitution**: `{{variable}}` syntax with regex replacement
+- **Export/Import**: JSON format with metadata preservation
+- **Containerization**: Multi-service Docker setup with development/production configs
 
 ## Environment Variables
-- `GEMINI_API_KEY` - Required for Gemini API integration (set in `.env.local`)
-- Accessed via `process.env.API_KEY` in the application (mapped in vite.config.ts)
+### Frontend (.env.local)
+- `GEMINI_API_KEY` - Google Gemini API key (mapped to `process.env.API_KEY` in vite.config.ts)
+
+### Backend (.env)
+- `DATABASE_URL` - PostgreSQL connection string
+- `REDIS_URL` - Redis connection string
+- `NODE_ENV` - Environment mode (development/production)
+- `PORT` - Backend server port (default: 4000)
 
 ## Implementation Guidelines
-- Use agents when implementing changes
+- **Database Changes**: Always create migrations in `database/migrations/`
+- **API Development**: Follow REST conventions, use TypeScript interfaces
+- **Frontend Patterns**: Use existing component patterns, maintain modal architecture
+- **State Management**: Prefer backend persistence over localStorage for new features
+- **Type Safety**: Keep frontend/backend types synchronized
+- **Error Handling**: Use Winston for backend logging, graceful UI fallbacks
+- **Testing**: Test migrations up/down, verify API endpoints, validate UI workflows
