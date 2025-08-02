@@ -45,9 +45,9 @@ interface PromptCardProps {
 /**
  * Returns a specific icon component based on the task type string.
  * @param {string} taskType - The task type from the prompt's SFL Field.
- * @returns {JSX.Element} A React icon component.
+ * @returns {React.ReactElement} A React icon component.
  */
-const getTaskIcon = (taskType: string): JSX.Element => {
+const getTaskIcon = (taskType: string): React.ReactElement => {
     const iconProps = { className: "w-5 h-5" };
     switch (taskType) {
         case 'Explanation': return <ChatBubbleLeftRightIcon {...iconProps} />;

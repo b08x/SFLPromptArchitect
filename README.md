@@ -49,9 +49,11 @@ This systematic approach ensures your prompts are not just functional, but optim
 ### Prerequisites
 
 - Node.js (v16 or higher)
+- Docker and Docker Compose (recommended)
 - Google Gemini API key
+- PostgreSQL (if not using Docker)
 
-### Installation
+### Quick Start with Docker (Recommended)
 
 1. **Clone the repository**
 
@@ -60,36 +62,81 @@ This systematic approach ensures your prompts are not just functional, but optim
    cd sfl-prompt-architect
    ```
 
-2. **Install dependencies**
+2. **Start all services with Docker**
 
    ```bash
-   npm install
+   docker-compose up
    ```
 
-3. **Set up environment variables**
-   - In the `frontend` directory, copy the `.env.example` file to a new file named `.env`:
+   This starts:
+   - Frontend (React) on http://localhost:80
+   - Backend (Express.js) on http://localhost:4000
+   - PostgreSQL database on port 5432
+   - Redis cache on port 6379
+
+### Manual Installation
+
+1. **Clone and install dependencies**
 
    ```bash
-   cp frontend/.env.example frontend/.env
+   git clone <repository-url>
+   cd sfl-prompt-architect
+   npm install  # Install root dependencies
+   cd frontend && npm install  # Install frontend dependencies
+   cd ../backend && npm install  # Install backend dependencies
    ```
 
-   - Open `frontend/.env` and add your Google Gemini API key:
+2. **Set up environment variables**
 
-   ```shell
-   VITE_GEMINI_API_KEY=your_api_key_here
+   **Frontend** (`.env.local`):
+   ```bash
+   cd frontend
+   echo "VITE_GEMINI_API_KEY=your_api_key_here" > .env.local
    ```
 
-4. **Start the development server**
+   **Backend** (`.env`):
+   ```bash
+   cd backend
+   cat > .env << EOF
+   DATABASE_URL=postgresql://user:password@localhost:5432/sfl_prompt_architect
+   REDIS_URL=redis://localhost:6379
+   NODE_ENV=development
+   PORT=4000
+   EOF
+   ```
+
+3. **Set up the database**
 
    ```bash
-   npm run dev
+   cd backend
+   npm run migrate:up  # Run database migrations
    ```
 
-5. **Build for production**
+4. **Start development servers**
 
    ```bash
-   npm run build
+   # Terminal 1 - Backend
+   npm run dev:backend
+
+   # Terminal 2 - Frontend  
+   npm run dev:frontend
    ```
+
+### Production Build
+
+```bash
+npm run build  # Builds both frontend and backend
+```
+
+### Documentation
+
+Generate complete API documentation:
+
+```bash
+npm run docs  # Generates unified documentation
+```
+
+View the documentation by opening `docs/index.html` in your browser.
 
 ## Illustrative Use Cases
 
@@ -213,11 +260,80 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 
 ## Technical Architecture
 
-- **Frontend**: React 19 with TypeScript
-- **Build Tool**: Vite with environment variable support
-- **AI Integration**: Google Gemini API
-- **Styling**: Tailwind CSS
-- **Storage**: Browser localStorage with JSON export
+### Full-Stack Application
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
+- **Backend**: Express.js + TypeScript + Winston logging
+- **Database**: PostgreSQL 16 with pgvector extension for embeddings
+- **Cache**: Redis 7 Alpine
+- **Deployment**: Docker Compose with nginx proxy
+
+### AI & Integration
+- **AI Integration**: Google Gemini API integration
+- **Vector Search**: pgvector for document similarity search
+- **Workflow Engine**: Task-based workflow execution with dependency management
+
+### Development & Documentation
+- **Documentation**: Automated TypeDoc generation for frontend and backend
+- **Type Safety**: Shared TypeScript interfaces between frontend/backend
+- **API Design**: RESTful endpoints with consistent error handling
+- **Testing**: Manual testing through UI and API endpoints
+
+### Key Features
+- **SFL Framework**: Three-dimensional prompt structure (Field, Tenor, Mode)
+- **Variable Substitution**: `{{variable}}` syntax with regex replacement
+- **Export/Import**: JSON format with metadata preservation
+- **Workflow Management**: Complex task dependency resolution
+- **Real-time Features**: Workflow status updates, prompt testing feedback
+
+### Available Scripts
+- `npm run docs` - Generate complete unified documentation
+- `npm run dev:frontend` - Start frontend development server
+- `npm run dev:backend` - Start backend development server  
+- `npm run build` - Build both frontend and backend
+- `docker-compose up` - Start all services with Docker
+
+## Documentation System
+
+SFL Prompt Architect includes a comprehensive automated documentation system that generates unified API documentation for both frontend and backend components.
+
+### Features
+- **Automated Generation**: Single command generates complete documentation
+- **Unified Interface**: Professional main page with navigation to all sections
+- **TypeDoc Integration**: Full TypeScript API documentation
+- **Multiple Formats**: HTML for backend, Markdown for frontend
+- **GitHub Pages Ready**: Includes `.nojekyll` and proper structure for deployment
+
+### Usage
+```bash
+# Generate complete documentation
+npm run docs
+
+# Generate only (without combining)
+npm run docs:generate
+
+# Combine existing documentation
+npm run docs:combine
+```
+
+### Documentation Structure
+```
+docs/
+├── index.html              # Main documentation homepage
+├── frontend/               # Frontend TypeDoc (Markdown)
+│   ├── README.html        # Frontend overview
+│   ├── types/             # TypeScript interfaces
+│   └── components/        # Component documentation
+├── backend/               # Backend TypeDoc (HTML)
+│   ├── index.html         # Backend API overview
+│   └── modules/           # API endpoint documentation
+├── docs-summary.json      # Build metadata
+└── .nojekyll             # GitHub Pages compatibility
+```
+
+### Accessing Documentation
+- **Local**: Open `docs/index.html` in your browser
+- **GitHub Pages**: Deploy the `docs/` folder to GitHub Pages
+- **CI/CD**: Integrate `npm run docs` into your build pipeline
 
 ## Contributing
 

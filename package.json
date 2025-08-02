@@ -1,0 +1,32 @@
+{
+  "name": "sfl-prompt-architect",
+  "version": "0.5.0",
+  "description": "SFL Prompt Architect - Full-stack application for creating and managing prompts using Systemic Functional Linguistics",
+  "private": true,
+  "scripts": {
+    "docs:generate": "npm run docs --prefix frontend && npm run docs --prefix backend",
+    "docs:combine": "node scripts/combine-docs.js",
+    "docs": "npm run docs:generate && npm run docs:combine",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build": "npm run build:frontend && npm run build:backend"
+  },
+  "keywords": [
+    "sfl",
+    "prompt-engineering",
+    "react",
+    "typescript",
+    "express",
+    "postgresql",
+    "documentation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.0.0"
+  }
+}

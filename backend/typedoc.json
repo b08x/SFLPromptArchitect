@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../docs/backend",
+  "plugin": ["typedoc-unhoax-theme"],
+  "name": "Backend API",
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "node_modules/**/*",
+    "dist/**/*"
+  ],
+  "excludePrivate": true,
+  "excludeExternals": true
+}

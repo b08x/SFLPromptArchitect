@@ -1,3 +1,4 @@
+
 import { PromptSFL } from '../types';
 
 const API_BASE_URL = '/api'; // Using a relative URL for proxying

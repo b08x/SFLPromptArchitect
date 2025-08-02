@@ -2,10 +2,28 @@ import { Task, DataStore, PromptSFL } from '../types';
 
 const API_BASE_URL = '/api/workflows';
 
+/**
+ * Safely retrieves a nested value from an object using a dot-notation path.
+ * @param obj The object to query.
+ * @param path The dot-notation path to the desired value.
+ * @returns The value at the specified path, or undefined if not found.
+ * @example
+ * const myObj = { a: { b: { c: 1 } } };
+ * getNested(myObj, 'a.b.c'); // returns 1
+ * getNested(myObj, 'a.d'); // returns undefined
+ */
 const getNested = (obj: Record<string, any>, path: string): any => {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 };
 
+/**
+ * Replaces placeholders in a template string with values from the data store.
+ * If the template is a single variable `{{var}}`, it returns the raw value.
+ * Otherwise, it performs string interpolation.
+ * @param template The string containing placeholders (e.g., "Hello, {{user.name}}").
+ * @param dataStore The object containing data to fill in the template.
+ * @returns The processed string or the raw value if it was a single variable.
+ */
 const templateString = (template: string, dataStore: DataStore): any => {
     const singleVarMatch = template.trim().match(/^\{\{\s*([\w\.]+)\s*\}\}$/);
     if (singleVarMatch) {
@@ -27,6 +45,13 @@ const templateString = (template: string, dataStore: DataStore): any => {
     });
 };
 
+/**
+ * Executes a string of JavaScript code as a function body.
+ * @param funcBody The string of code to execute.
+ * @param inputs An object containing input values accessible to the function.
+ * @returns The result of the executed function.
+ * @throws An error if the custom function code fails.
+ */
 const executeTextManipulation = (funcBody: string, inputs: Record<string, any>): any => {
     try {
         const func = new Function('inputs', funcBody);
@@ -36,6 +61,14 @@ const executeTextManipulation = (funcBody: string, inputs: Record<string, any>):
     }
 };
 
+/**
+ * Executes a single task, either client-side or by calling the backend.
+ * @param task The task object to execute.
+ * @param dataStore The current state of the workflow's data.
+ * @param prompts A list of available SFL prompts (used by some task types).
+ * @returns A promise that resolves with the task's output.
+ * @throws An error if the task execution fails.
+ */
 export const executeTask = async (task: Task, dataStore: DataStore, prompts: PromptSFL[]): Promise<any> => {
     const isClientSideTask = ['DATA_INPUT', 'TEXT_MANIPULATION', 'DISPLAY_CHART', 'SIMULATE_PROCESS'].includes(task.type);
 
@@ -83,6 +116,12 @@ export const executeTask = async (task: Task, dataStore: DataStore, prompts: Pro
     }
 };
 
+/**
+ * Sorts tasks in a workflow based on their dependencies using a topological sort algorithm.
+ * Also detects cycles and missing dependencies.
+ * @param tasks An array of task objects.
+ * @returns An object containing the sorted tasks and an array of feedback messages (errors/warnings).
+ */
 export const topologicalSort = (tasks: Task[]): { sortedTasks: Task[], feedback: string[] } => {
     const sortedTasks: Task[] = [];
     const feedback: string[] = [];
@@ -130,6 +169,15 @@ export const topologicalSort = (tasks: Task[]): { sortedTasks: Task[], feedback:
     return { sortedTasks, feedback };
 };
 
+/**
+ * Runs a complete workflow by executing its tasks in the correct order.
+ * @param tasks The array of tasks in the workflow.
+ * @param initialDataStore The initial data to start the workflow with.
+ * @param prompts A list of available SFL prompts.
+ * @param onTaskComplete A callback function executed after each successful task.
+ * @param onTaskError A callback function executed when a task fails.
+ * @param onWorkflowComplete A callback function executed after the entire workflow finishes successfully.
+ */
 export const runWorkflow = async (
     tasks: Task[],
     initialDataStore: DataStore,
@@ -165,4 +213,67 @@ export const runWorkflow = async (
     }
 
     onWorkflowComplete(dataStore);
+};
+
+/**
+ * Saves a new workflow or updates an existing one on the backend.
+ * @param workflow The workflow object to save. Must include name and tasks. Can optionally include an id for updates.
+ * @returns A promise that resolves with the ID of the saved workflow.
+ * @throws An error if the API request fails.
+ */
+export const saveWorkflow = async (workflow: { id?: string; name: string; tasks: Task[] }): Promise<{ id: string }> => {
+    const url = workflow.id ? `${API_BASE_URL}/${workflow.id}` : API_BASE_URL;
+    const method = workflow.id ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: workflow.name, tasks: workflow.tasks }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save workflow');
+    }
+    return response.json();
+};
+
+/**
+ * Fetches a list of all workflows from the backend.
+ * @returns A promise that resolves to an array of workflow metadata (id and name).
+ * @throws An error if the API request fails.
+ */
+export const getWorkflows = async (): Promise<{ id: string; name: string }[]> => {
+    const response = await fetch(API_BASE_URL);
+    if (!response.ok) {
+        throw new Error('Failed to fetch workflows');
+    }
+    return response.json();
+};
+
+/**
+ * Fetches a single, complete workflow by its ID from the backend.
+ * @param id The ID of the workflow to fetch.
+ * @returns A promise that resolves to the full workflow object, including its tasks.
+ * @throws An error if the API request fails.
+ */
+export const getWorkflowById = async (id: string): Promise<{ id: string; name: string; tasks: Task[] }> => {
+    const response = await fetch(`${API_BASE_URL}/${id}`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch workflow with id ${id}`);
+    }
+    return response.json();
+};
+
+/**
+ * Deletes a workflow from the backend by its ID.
+ * @param id The ID of the workflow to delete.
+ * @returns A promise that resolves when the deletion is successful.
+ * @throws An error if the API request fails.
+ */
+export const deleteWorkflow = async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+        throw new Error('Failed to delete workflow');
+    }
 };
