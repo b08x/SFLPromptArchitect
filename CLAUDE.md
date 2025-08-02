@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Dev server**: `cd frontend && npm run dev` (Vite, typically localhost:5173)
 - **Build**: `cd frontend && npm run build` (outputs to `dist/`)
 - **Preview**: `cd frontend && npm run preview`
+- **Package.json scripts**: Only `dev`, `build`, and `preview` available
 
 ### Backend Development
 - **Directory**: `backend/`
@@ -29,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Seed data**: Located in `database/seeds/`
 
 ### Environment Setup
-- **Frontend**: Create `.env.local` with `GEMINI_API_KEY`
+- **Frontend**: Create `.env.local` with `VITE_GEMINI_API_KEY` (note the VITE_ prefix)
 - **Backend**: Create `.env` with database and service configurations
 - **Docker**: Environment variables configured in `docker-compose.yml`
 
@@ -108,11 +109,11 @@ The application implements Systemic Functional Linguistics with three dimensions
 
 ## Environment Variables
 ### Frontend (.env.local)
-- `GEMINI_API_KEY` - Google Gemini API key (mapped to `process.env.API_KEY` in vite.config.ts)
+- `VITE_GEMINI_API_KEY` - Google Gemini API key (exposed to client via vite.config.ts)
 
 ### Backend (.env)
 - `DATABASE_URL` - PostgreSQL connection string
-- `REDIS_URL` - Redis connection string
+- `REDIS_URL` - Redis connection string  
 - `NODE_ENV` - Environment mode (development/production)
 - `PORT` - Backend server port (default: 4000)
 
@@ -124,3 +125,12 @@ The application implements Systemic Functional Linguistics with three dimensions
 - **Type Safety**: Keep frontend/backend types synchronized
 - **Error Handling**: Use Winston for backend logging, graceful UI fallbacks
 - **Testing**: Test migrations up/down, verify API endpoints, validate UI workflows
+
+## Key Development Notes
+- **No linting/formatting**: No ESLint, Prettier, or other code quality tools configured
+- **Frontend State**: Uses React hooks for state management with ModalType enum system
+- **API Structure**: Controllers → Services → Database pattern in backend
+- **Default User**: System uses default user ID `00000000-0000-0000-0000-000000000001` for prompts
+- **Migration System**: Uses node-pg-migrate for database schema management
+- **Vector Embeddings**: pgvector extension enabled for document similarity search (1536 dimensions)
+- **Workflow System**: Complex task dependency resolution with JSON-based graph data storage
