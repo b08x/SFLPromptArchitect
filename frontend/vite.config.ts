@@ -25,7 +25,6 @@ export default defineConfig(({ mode }) => {
       // Expose environment variables to the client.
       // Vite automatically exposes VITE_ prefixed variables, but being explicit can help debugging.
       // We are stringifying the values.
-      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
     },
   };
 });
