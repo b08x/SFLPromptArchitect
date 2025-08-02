@@ -27,26 +27,62 @@ if (!API_KEY) {
 }
 const ai = new genai_1.GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY" });
 const parseJsonFromText = (text) => {
-    const fenceRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/;
-    const match = text.match(fenceRegex);
-    let jsonStr = text.trim();
-    if (match && match[1]) {
-        jsonStr = match[1].trim();
-    }
-    else {
-        const firstBrace = jsonStr.indexOf('{');
-        const lastBrace = jsonStr.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace > firstBrace) {
-            jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    console.log("Attempting to parse JSON from text:", text.substring(0, 200) + "...");
+    // Try multiple extraction strategies
+    const strategies = [
+        // Strategy 1: Extract code block content (original)
+        () => {
+            const fenceRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/;
+            const match = text.match(fenceRegex);
+            return match && match[1] ? match[1].trim() : null;
+        },
+        // Strategy 2: Extract content between first { and last }
+        () => {
+            const firstBrace = text.indexOf('{');
+            const lastBrace = text.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace > firstBrace) {
+                return text.substring(firstBrace, lastBrace + 1);
+            }
+            return null;
+        },
+        // Strategy 3: Try the text as-is if it starts with {
+        () => {
+            const trimmed = text.trim();
+            return trimmed.startsWith('{') ? trimmed : null;
+        },
+        // Strategy 4: Remove common prefixes and try again
+        () => {
+            const cleaned = text.replace(/^(bash\s*|```\s*|json\s*|```json\s*)/i, '').trim();
+            const firstBrace = cleaned.indexOf('{');
+            const lastBrace = cleaned.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace > firstBrace) {
+                return cleaned.substring(firstBrace, lastBrace + 1);
+            }
+            return null;
+        }
+    ];
+    // Try each strategy
+    for (let i = 0; i < strategies.length; i++) {
+        const jsonStr = strategies[i]();
+        if (jsonStr) {
+            try {
+                console.log(`Strategy ${i + 1} extracted JSON:`, jsonStr.substring(0, 100) + "...");
+                const parsed = JSON.parse(jsonStr);
+                console.log("Successfully parsed JSON with strategy", i + 1);
+                return parsed;
+            }
+            catch (e) {
+                console.log(`Strategy ${i + 1} failed to parse:`, e);
+                continue;
+            }
         }
     }
-    try {
-        return JSON.parse(jsonStr);
-    }
-    catch (e) {
-        console.error("Failed to parse JSON response:", e, "Raw text:", text);
-        throw new Error("The AI returned a response that was not valid JSON.");
-    }
+    // If all strategies fail, log detailed error info
+    console.error("All JSON parsing strategies failed");
+    console.error("Raw text length:", text.length);
+    console.error("Raw text preview:", text.substring(0, 500));
+    console.error("Text ends with:", text.substring(Math.max(0, text.length - 100)));
+    throw new Error("The AI returned a response that could not be parsed as JSON using any available strategy.");
 };
 class GeminiService {
     testPrompt(promptText) {

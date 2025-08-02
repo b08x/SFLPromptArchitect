@@ -72,9 +72,10 @@ This systematic approach ensures your prompts are not just functional, but optim
    ```bash
    cp frontend/.env.example frontend/.env
    ```
+
    - Open `frontend/.env` and add your Google Gemini API key:
 
-   ```
+   ```shell
    VITE_GEMINI_API_KEY=your_api_key_here
    ```
 
