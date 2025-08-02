@@ -483,7 +483,7 @@ The schema is designed to support the core features outlined in the backlog: pro
 
 To accommodate the new backend, the project should be restructured into a monorepo-style layout.
 
-```
+```bash
 /SFL-Prompt-Architect/
 ├── .gitignore
 ├── docker-compose.yml        # New: Orchestrates all services

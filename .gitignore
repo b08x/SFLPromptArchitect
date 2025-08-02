@@ -31,3 +31,4 @@ yarn-error.log*
 /backend/node_modules/
 /backend/error.log
 combined.log
+.claude/session_exports/
