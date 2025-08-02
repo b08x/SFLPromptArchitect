@@ -45,7 +45,7 @@ const emptyTask: Omit<Task, 'id'> = {
     inputKeys: [],
     outputKey: 'newResult',
     promptTemplate: '',
-    agentConfig: { model: 'gemini-2.0-flash', temperature: 0.7 },
+    agentConfig: { model: 'gemini-2.5-flash', temperature: 0.7 },
     functionBody: '',
     staticValue: '',
     dataKey: '',

@@ -91,4 +91,57 @@ export interface Workflow {
   graph_data: Record<string, any>;
   created_at: string;
   updated_at: string;
+  tasks?: Task[]; // Tasks are part of the graph_data but can be represented here
 }
+
+/**
+ * @enum {string} TaskType
+ * @description Enumerates the different types of tasks that can be part of a workflow.
+ */
+export enum TaskType {
+  DATA_INPUT = "DATA_INPUT",
+  GEMINI_PROMPT = "GEMINI_PROMPT",
+  IMAGE_ANALYSIS = "IMAGE_ANALYSIS",
+  TEXT_MANIPULATION = "TEXT_MANIPULATION",
+  SIMULATE_PROCESS = "SIMULATE_PROCESS",
+  DISPLAY_CHART = "DISPLAY_CHART",
+  GEMINI_GROUNDED = "GEMINI_GROUNDED",
+}
+
+/**
+ * @interface AgentConfig
+ * @description Defines the configuration for an AI agent used in a task.
+ */
+export interface AgentConfig {
+  model?: string;
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+  systemInstruction?: string;
+}
+
+/**
+ * @interface Task
+ * @description Represents a single task within a workflow.
+ */
+export interface Task {
+  id: string;
+  name: string;
+  description: string;
+  type: TaskType;
+  dependencies: string[];
+  inputKeys: string[];
+  outputKey: string;
+  promptId?: string;
+  promptTemplate?: string;
+  agentConfig?: AgentConfig;
+  functionBody?: string;
+  staticValue?: any;
+  dataKey?: string;
+}
+
+/**
+ * @type DataStore
+ * @description Represents the data store for a workflow run, which is a key-value map.
+ */
+export type DataStore = Record<string, any>;
