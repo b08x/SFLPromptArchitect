@@ -461,7 +461,7 @@ const App: React.FC = () => {
           } catch (error: any) {
               console.error("Error importing prompts:", error);
               alert(`Import failed: ${error.message}`);
-          finally {
+          } finally {
               if (event.target) {
                   event.target.value = '';
               }

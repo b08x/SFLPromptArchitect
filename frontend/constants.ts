@@ -104,7 +104,7 @@ export const DEFAULT_WORKFLOWS: Workflow[] = [
         inputKeys: ["articleText"],
         outputKey: "sentiment",
         promptTemplate: "Analyze the sentiment of the following article and classify it as POSITIVE, NEGATIVE, or NEUTRAL. Return only the classification. Article: {{articleText}}",
-        agentConfig: { model: 'gemini-2.0-flash', temperature: 0.1 }
+        agentConfig: { model: 'gemini-2.5-flash', temperature: 0.1 }
       },
       {
         id: "task-3",
@@ -115,7 +115,7 @@ export const DEFAULT_WORKFLOWS: Workflow[] = [
         inputKeys: ["articleText"],
         outputKey: "summary",
         promptTemplate: "Summarize the following article in three concise sentences. Article: {{articleText}}",
-        agentConfig: { model: 'gemini-2.0-flash', temperature: 0.7 }
+        agentConfig: { model: 'gemini-2.5-flash', temperature: 0.7 }
       },
       {
         id: "task-4",
@@ -154,7 +154,7 @@ export const DEFAULT_WORKFLOWS: Workflow[] = [
         inputKeys: ["userImage"],
         outputKey: "imageDescription",
         promptTemplate: "Describe the contents of this image in detail.",
-        agentConfig: { model: 'gemini-2.0-flash' }
+        agentConfig: { model: 'gemini-2.5-flash' }
       },
       {
         id: "img-task-3",
@@ -165,7 +165,7 @@ export const DEFAULT_WORKFLOWS: Workflow[] = [
         inputKeys: ["imageDescription"],
         outputKey: "captions",
         promptTemplate: "Based on the following description of an image, generate 3 creative and engaging social media captions. Image description: {{imageDescription}}",
-        agentConfig: { model: 'gemini-2.0-flash', temperature: 0.8 }
+        agentConfig: { model: 'gemini-2.5-flash', temperature: 0.8 }
       }
     ]
   }
