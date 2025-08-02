@@ -32,3 +32,4 @@ yarn-error.log*
 /backend/error.log
 combined.log
 .claude/session_exports/
+/docs/
