@@ -2,7 +2,8 @@
  * @file FilterControls.tsx
  * @description This component provides a set of UI controls for filtering a list of prompts.
  * It allows users to filter by a search term, topic, task type, AI persona, and output format.
- * The component receives the current filter state and callback functions to handle changes and reset actions.
+ * The component is designed to be a controlled component, receiving the current filter state and
+ * callback functions from its parent to handle state changes.
  *
  * @requires react
  * @requires ../types
@@ -15,10 +16,10 @@ import { TASK_TYPES, AI_PERSONAS, OUTPUT_FORMATS } from '../constants';
 
 /**
  * @interface FilterControlsProps
- * @description Defines the props for the FilterControls component.
- * @property {Filters} filters - The current state of the filters.
- * @property {(key: K, value: Filters[K]) => void} onFilterChange - Callback function to update a specific filter.
- * @property {() => void} onResetFilters - Callback function to reset all filters to their default state.
+ * @description Defines the props for the `FilterControls` component.
+ * @property {Filters} filters - The current state of the filters. This object's values populate the form fields.
+ * @property {(key: K, value: Filters[K]) => void} onFilterChange - A generic callback function to update a specific filter property in the parent component's state.
+ * @property {() => void} onResetFilters - A callback function to reset all filters to their default state in the parent component.
  */
 interface FilterControlsProps {
   filters: Filters;
@@ -27,17 +28,21 @@ interface FilterControlsProps {
 }
 
 /**
- * A component that renders a set of controls for filtering prompts.
- * It includes text inputs and select dropdowns for various filter criteria.
+ * A component that renders a form with a set of controls for filtering prompts.
+ * It includes text inputs for free-form searching and select dropdowns for
+ * filtering based on predefined SFL categories.
  *
- * @param {FilterControlsProps} props - The props for the component.
+ * @param {FilterControlsProps} props - The props for the component, including the current filter values and change handlers.
  * @returns {JSX.Element} The rendered filter controls form.
  */
 const FilterControls: React.FC<FilterControlsProps> = ({ filters, onFilterChange, onResetFilters }) => {
   /**
-   * Handles changes to any of the input or select elements.
-   * It calls the `onFilterChange` prop with the updated filter key and value.
-   * @param {React.ChangeEvent<HTMLInputElement | HTMLSelectElement>} e - The change event.
+   * Handles `onChange` events from any of the input or select elements within the form.
+   * It extracts the `name` and `value` from the event target and calls the `onFilterChange`
+   * prop to update the parent component's state.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLSelectElement>} e - The DOM change event.
+   * @private
    */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

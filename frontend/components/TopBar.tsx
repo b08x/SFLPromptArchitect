@@ -17,11 +17,11 @@ import MagicWandIcon from './icons/MagicWandIcon';
 
 /**
  * @interface TopBarProps
- * @description Defines the props for the TopBar component.
- * @property {() => void} onAddNewPrompt - Callback function for the "Create New Prompt" button.
- * @property {() => void} onOpenWizard - Callback function for the "Prompt Wizard" button.
- * @property {string} searchTerm - The current value of the search input.
- * @property {(value: string) => void} onSearchChange - Callback function to handle changes to the search term.
+ * @description Defines the props for the `TopBar` component.
+ * @property {() => void} onAddNewPrompt - Callback function invoked when the "Create New Prompt" button is clicked.
+ * @property {() => void} onOpenWizard - Callback function invoked when the "Prompt Wizard" button is clicked.
+ * @property {string} searchTerm - The current value of the search input, making it a controlled component.
+ * @property {(value: string) => void} onSearchChange - Callback function to handle changes to the search term, lifting the state up.
  */
 interface TopBarProps {
   onAddNewPrompt: () => void;
@@ -31,10 +31,11 @@ interface TopBarProps {
 }
 
 /**
- * The top bar component containing a search field and primary action buttons.
+ * The top bar component that sits above the main content area.
+ * It provides a persistent search field and the primary "create" actions for prompts.
  *
  * @param {TopBarProps} props - The props for the component.
- * @returns {JSX.Element} The rendered top bar.
+ * @returns {JSX.Element} The rendered top bar header element.
  */
 const TopBar: React.FC<TopBarProps> = ({ onAddNewPrompt, onOpenWizard, searchTerm, onSearchChange }) => {
   return (
@@ -47,6 +48,7 @@ const TopBar: React.FC<TopBarProps> = ({ onAddNewPrompt, onOpenWizard, searchTer
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] outline-none"
+          aria-label="Search prompts"
         />
       </div>
       <div className="flex items-center space-x-4">

@@ -27,18 +27,18 @@ import XCircleIcon from './icons/XCircleIcon';
 
 /**
  * @interface PromptFormModalProps
- * @description Defines the props for the PromptFormModal component.
- * @property {boolean} isOpen - Whether the modal is currently open.
+ * @description Defines the props for the `PromptFormModal` component.
+ * @property {boolean} isOpen - Controls the visibility of the modal.
  * @property {() => void} onClose - Callback function to close the modal.
- * @property {(prompt: PromptSFL) => void} onSave - Callback function to save the prompt.
- * @property {PromptSFL | null} [promptToEdit] - The prompt object to edit. If null, the form is for creating a new prompt.
- * @property {object} appConstants - An object containing arrays of predefined options for various SFL fields.
- * @property {(key: keyof PromptFormModalProps['appConstants'], value: string) => void} onAddConstant - Callback to add a new option to the app's constants.
+ * @property {(prompt: PromptSFL) => Promise<void>} onSave - Async callback function to save the prompt data.
+ * @property {PromptSFL | null} [promptToEdit] - The prompt object to edit. If `null` or `undefined`, the form operates in creation mode.
+ * @property {object} appConstants - An object containing arrays of predefined options for various SFL fields (e.g., taskTypes, aiPersonas).
+ * @property {(key: keyof PromptFormModalProps['appConstants'], value: string) => void} onAddConstant - Callback to add a new user-defined option to the application's constants.
  */
 interface PromptFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (prompt: PromptSFL) => void;
+  onSave: (prompt: PromptSFL) => Promise<void>;
   promptToEdit?: PromptSFL | null;
   appConstants: {
     taskTypes: string[];
@@ -52,20 +52,43 @@ interface PromptFormModalProps {
 }
 
 /**
- * A modal form for creating and editing SFL prompts.
- * It manages the form state, handles user input, and provides functionality for
- * AI-powered regeneration and saving the prompt.
+ * A comprehensive modal form for creating and editing SFL prompts.
+ * It manages the form's state, handles user input for all SFL fields, and provides advanced
+ * functionality such as AI-powered regeneration and attaching source documents for context.
  *
  * @param {PromptFormModalProps} props - The props for the component.
  * @returns {JSX.Element} The rendered form modal.
  */
 const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSave, promptToEdit, appConstants, onAddConstant }) => {
+  /**
+   * @state {Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>} formData - The main state object for the form, holding all prompt data.
+   */
   const [formData, setFormData] = useState<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>(INITIAL_PROMPT_SFL);
+  
+  /**
+   * @state {Record<string, string>} newOptionValues - Holds the input values for new, user-defined options for the creatable select fields.
+   */
   const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({});
+  
+  /**
+   * @state {object} regenState - Manages the state of the AI regeneration feature, including visibility, user input, and loading status.
+   */
   const [regenState, setRegenState] = useState({ shown: false, suggestion: '', loading: false });
+  
+  /**
+   * @state {object} saveState - Manages the state of the save operation, including loading status and any error messages.
+   */
   const [saveState, setSaveState] = useState({ saving: false, error: '' });
+  
+  /**
+   * @ref {HTMLInputElement} fileInputRef - A ref to a hidden file input for programmatically triggering the file selection dialog.
+   */
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * @effect Populates the form with data when `promptToEdit` is provided, or resets to the initial state for a new prompt.
+   * This runs whenever the modal is opened or the `promptToEdit` prop changes.
+   */
   useEffect(() => {
     if (promptToEdit) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -78,6 +101,12 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
      setSaveState({ saving: false, error: '' });
   }, [promptToEdit, isOpen]);
 
+  /**
+   * @callback handleChange
+   * @description A generic handler for updating top-level fields in the `formData` state.
+   * @param {T} field - The name of the field to update.
+   * @param {Omit<PromptSFL, ...>[T]} value - The new value for the field.
+   */
   const handleChange = <T extends keyof Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'sflField' | 'sflTenor' | 'sflMode' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>>(
     field: T,
     value: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>[T]
@@ -85,6 +114,13 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  /**
+   * @callback handleSFLChange
+   * @description A specific handler for updating nested fields within the SFL objects (`sflField`, `sflTenor`, `sflMode`).
+   * @param {K} sflType - The top-level SFL category ('sflField', 'sflTenor', 'sflMode').
+   * @param {F} field - The specific field within the SFL category to update.
+   * @param {*} value - The new value for the field.
+   */
   const handleSFLChange = <
     K extends 'sflField' | 'sflTenor' | 'sflMode',
     F extends keyof PromptSFL[K],
@@ -102,6 +138,11 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     }));
   };
   
+  /**
+   * @callback handleTargetAudienceChange
+   * @description Handles changes to the 'targetAudience' checkboxes, adding or removing audiences from the array.
+   * @param {string} audience - The audience string to toggle.
+   */
   const handleTargetAudienceChange = (audience: string) => {
     const currentAudiences = formData.sflTenor.targetAudience || [];
     const newAudiences = currentAudiences.includes(audience)
@@ -110,6 +151,14 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     handleSFLChange('sflTenor', 'targetAudience', newAudiences);
   };
 
+  /**
+   * @callback handleAddNewOption
+   * @description Handles the submission of a new, user-defined option for a creatable select field.
+   * It calls the `onAddConstant` prop to update the global list and then sets the new value in the form.
+   * @param {keyof typeof appConstants} constantsKey - The key for the global constants array.
+   * @param {K} sflKey - The SFL category key.
+   * @param {F} fieldKey - The SFL field key.
+   */
   const handleAddNewOption = <
     K extends 'sflField' | 'sflTenor' | 'sflMode',
     F extends keyof PromptSFL[K]
@@ -122,6 +171,11 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     }
   };
 
+  /**
+   * @callback handleRegeneratePrompt
+   * @description Initiates an AI-powered regeneration of the prompt based on the user's suggestion.
+   * It calls the `regenerateSFLFromSuggestion` service and updates the entire form with the new data.
+   */
   const handleRegeneratePrompt = async () => {
     if (!regenState.suggestion.trim()) return;
     setRegenState(prev => ({ ...prev, loading: true }));
@@ -136,6 +190,12 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     }
   };
 
+  /**
+   * @callback handleFileChange
+   * @description Handles the selection of a source document file. Reads the file content
+   * and stores it along with the filename in the form state.
+   * @param {React.ChangeEvent<HTMLInputElement>} event - The file input change event.
+   */
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -149,10 +209,20 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     if(event.target) event.target.value = '';
   };
 
+  /**
+   * @function handleRemoveFile
+   * @description Removes the attached source document from the form state.
+   */
   const handleRemoveFile = () => {
     setFormData(prev => ({...prev, sourceDocument: undefined }));
   };
 
+  /**
+   * @callback handleSubmit
+   * @description Handles the form submission. It performs validation, constructs the final
+   * `PromptSFL` object with necessary metadata, calls the `onSave` prop, and closes the modal on success.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveState({ saving: true, error: '' });
@@ -192,6 +262,12 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
   const commonInputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] transition-colors placeholder-gray-400";
   const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
 
+  /**
+   * @function renderTextField
+   * @description A helper function to render a standard text input or textarea field.
+   * @returns {JSX.Element}
+   * @private
+   */
   const renderTextField = (label: string, name: keyof Omit<PromptSFL, 'id'|'createdAt'|'updatedAt'|'sflField'|'sflTenor'|'sflMode' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>, placeholder?: string, isTextArea = false) => (
     <div>
       <label htmlFor={name} className={labelClasses}>{label}</label>
@@ -219,6 +295,12 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     </div>
   );
 
+  /**
+   * @function renderSFLTextField
+   * @description A helper function to render a text input or textarea for a nested SFL field.
+   * @returns {JSX.Element}
+   * @private
+   */
   const renderSFLTextField = <
     K extends 'sflField' | 'sflTenor' | 'sflMode',
     F extends keyof PromptSFL[K],
@@ -255,6 +337,12 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     </div>
   );
 
+  /**
+   * @function renderCreatableSFLSelectField
+   * @description A helper function to render a select dropdown that also allows users to add new options.
+   * @returns {JSX.Element}
+   * @private
+   */
   const renderCreatableSFLSelectField = <
     K extends 'sflField' | 'sflTenor' | 'sflMode',
     F extends keyof PromptSFL[K],

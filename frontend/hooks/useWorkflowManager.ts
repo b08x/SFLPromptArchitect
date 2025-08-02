@@ -13,24 +13,60 @@ import { useState, useEffect, useCallback } from 'react';
 import { Workflow } from '../types';
 import { DEFAULT_WORKFLOWS } from '../constants';
 
+/**
+ * @constant {string} LOCAL_STORAGE_KEY - The key used to store and retrieve custom workflows from the browser's local storage.
+ * @private
+ */
 const LOCAL_STORAGE_KEY = 'sfl-custom-workflows';
 
 /**
  * A custom hook to manage the state of both default and custom workflows.
- * It persists custom workflows to local storage.
+ * It initializes the state by loading default workflows from constants and custom workflows
+ * from local storage. It provides a set of memoized functions to interact with the
+ * custom workflows, ensuring that any changes are persisted.
  *
- * @returns {object} An object containing the list of workflows, loading state, and functions to manage them.
- * @property {Workflow[]} workflows - The combined list of default and custom workflows.
- * @property {(workflow: Workflow) => void} saveWorkflow - Function to save or update a custom workflow.
- * @property {(id: string) => void} deleteWorkflow - Function to delete a custom workflow.
- * @property {boolean} isLoading - A boolean indicating if the initial workflow load is in progress.
- * @property {React.Dispatch<React.SetStateAction<Workflow[]>>} setWorkflows - Function to directly set the workflows state.
- * @property {(workflows: Workflow[]) => void} saveCustomWorkflows - Function to save all custom workflows at once.
+ * @returns {{
+ *   workflows: Workflow[];
+ *   saveWorkflow: (workflow: Workflow) => void;
+ *   deleteWorkflow: (id: string) => void;
+ *   isLoading: boolean;
+ *   saveCustomWorkflows: (workflows: Workflow[]) => void;
+ * }} An object containing the list of all workflows, loading state, and functions to manage them.
+ *
+ * @example
+ * const { workflows, saveWorkflow, deleteWorkflow, isLoading } = useWorkflowManager();
+ *
+ * if (isLoading) {
+ *   return <p>Loading workflows...</p>;
+ * }
+ *
+ * return (
+ *   <WorkflowList
+ *     workflows={workflows}
+ *     onSave={saveWorkflow}
+ *     onDelete={deleteWorkflow}
+ *   />
+ * );
  */
 export const useWorkflowManager = () => {
+    /**
+     * @state
+     * @description The combined list of default and custom workflows.
+     */
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
+    
+    /**
+     * @state
+     * @description A boolean flag indicating if the initial load of workflows from local storage is in progress.
+     */
     const [isLoading, setIsLoading] = useState(true);
 
+    /**
+     * @effect
+     * @description On initial mount, this effect loads the default workflows and any custom workflows
+     * saved in local storage. It handles potential parsing errors by clearing the invalid
+     * local storage entry and falling back to just the default workflows.
+     */
     useEffect(() => {
         try {
             const savedWorkflowsRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -54,6 +90,11 @@ export const useWorkflowManager = () => {
         }
     }, []);
 
+    /**
+     * @function
+     * @description Saves an array of custom workflows to local storage and updates the component state.
+     * @param {Workflow[]} customWorkflows - The array of custom workflows to persist.
+     */
     const saveCustomWorkflows = useCallback((customWorkflows: Workflow[]) => {
         try {
             const workflowsToSave = customWorkflows.filter(wf => !wf.isDefault);
@@ -67,6 +108,12 @@ export const useWorkflowManager = () => {
         }
     }, []);
 
+    /**
+     * @function
+     * @description Adds a new custom workflow or updates an existing one.
+     * It ensures the `isDefault` flag is set to `false` and then persists the changes.
+     * @param {Workflow} workflowToSave - The workflow object to save.
+     */
     const saveWorkflow = useCallback((workflowToSave: Workflow) => {
         setWorkflows(prevWorkflows => {
             const newWorkflow = { ...workflowToSave, isDefault: false };
@@ -87,6 +134,11 @@ export const useWorkflowManager = () => {
         });
     }, [saveCustomWorkflows]);
     
+    /**
+     * @function
+     * @description Deletes a custom workflow by its ID. Default workflows cannot be deleted.
+     * @param {string} workflowId - The ID of the custom workflow to delete.
+     */
     const deleteWorkflow = useCallback((workflowId: string) => {
         setWorkflows(prevWorkflows => {
             const updatedCustomWorkflows = prevWorkflows.filter(wf => wf.id !== workflowId && !wf.isDefault);
@@ -98,5 +150,5 @@ export const useWorkflowManager = () => {
         });
     }, [saveCustomWorkflows]);
 
-    return { workflows, saveWorkflow, deleteWorkflow, isLoading, setWorkflows, saveCustomWorkflows };
+    return { workflows, saveWorkflow, deleteWorkflow, isLoading, saveCustomWorkflows };
 };
