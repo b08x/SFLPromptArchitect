@@ -33,7 +33,7 @@ class PromptService {
     };
 
     return {
-      user_id: '79e06398-14dc-4d4c-b2b2-7611e742172c', // TODO: Replace with actual user ID from authentication
+      user_id: '00000000-0000-0000-0000-000000000001', // Default system user (created in migration 003)
       title: sflData.title || 'Untitled Prompt',
       body: sflData.promptText || '',
       metadata,

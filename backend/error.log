@@ -10,3 +10,8 @@
 {"level":"error"}
 {"level":"error"}
 {"level":"error"}
+{"code":"42P01","file":"parse_relation.c","length":106,"level":"error","line":"1449","name":"error","position":"15","routine":"parserOpenTable","severity":"ERROR"}
+{"code":"42P01","file":"parse_relation.c","length":106,"level":"error","line":"1449","name":"error","position":"15","routine":"parserOpenTable","severity":"ERROR"}
+{"level":"error"}
+{"level":"error"}
+{"level":"error"}

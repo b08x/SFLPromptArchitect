@@ -13,7 +13,7 @@ services:
       - /app/node_modules # Avoids overwriting container node_modules
     command: npm run dev
     depends_on:
-      - db
+      - migration
       - cache
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/sfl_db
@@ -32,6 +32,25 @@ services:
     networks:
       - sfl-network
 
+  migration:
+    build: ./backend
+    container_name: sfl-migration
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/sfl_db
+      - NODE_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run migrate:up
+    networks:
+      - sfl-network
+    volumes:
+      - ./backend:/app
+      - ./database:/app/database
+      - /app/node_modules
+
   db:
     image: docker.io/pgvector/pgvector:pg16 # Use an image with pgvector pre-installed
     container_name: sfl-db
@@ -45,6 +64,11 @@ services:
       - "5432:5432"
     networks:
       - sfl-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d sfl_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   cache:
     image: docker.io/library/redis:7-alpine
