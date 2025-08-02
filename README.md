@@ -67,10 +67,15 @@ This systematic approach ensures your prompts are not just functional, but optim
    ```
 
 3. **Set up environment variables**
-   - Copy `.env.local` and add your Gemini API key:
+   - In the `frontend` directory, copy the `.env.example` file to a new file named `.env`:
 
    ```bash
-   GEMINI_API_KEY=your_api_key_here
+   cp frontend/.env.example frontend/.env
+   ```
+   - Open `frontend/.env` and add your Google Gemini API key:
+
+   ```
+   VITE_GEMINI_API_KEY=your_api_key_here
    ```
 
 4. **Start the development server**
