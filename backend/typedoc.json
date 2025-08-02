@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": ["src/index.ts", "src/types.ts"],
   "out": "../../docs/backend",
   "plugin": ["typedoc-unhoax-theme"],
   "name": "Backend API",
