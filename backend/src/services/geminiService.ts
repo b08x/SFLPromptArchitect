@@ -1,14 +1,55 @@
+/**
+ * @file geminiService.ts
+ * @description Service module for interacting with Google's Gemini AI API.
+ * Provides functionality for prompt testing, SFL prompt generation, and workflow creation
+ * using the Gemini language model. This service handles API communication, response parsing,
+ * and error handling for all Gemini-related operations.
+ * 
+ * @requires @google/genai
+ * @requires ../types
+ * @since 0.5.1
+ */
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { PromptSFL, Workflow } from '../types';
 
+/**
+ * @constant {string|undefined} API_KEY
+ * @description The API key for accessing Google's Gemini API, retrieved from environment variables.
+ * @private
+ */
 const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
   console.error("Gemini API Key is missing. Please set the GEMINI_API_KEY environment variable.");
 }
 
+/**
+ * @constant {GoogleGenAI} ai
+ * @description Initialized GoogleGenAI client instance for API communication.
+ * @private
+ */
 const ai = new GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY" });
 
+/**
+ * Parses JSON content from AI-generated text using multiple extraction strategies.
+ * This utility function handles various formats that the AI might return, including
+ * code blocks, plain JSON, and text with prefixes.
+ * 
+ * @param {string} text - The raw text response from the AI that contains JSON data.
+ * @returns {any} The parsed JSON object.
+ * @throws {Error} Throws an error if all parsing strategies fail.
+ * 
+ * @example
+ * ```typescript
+ * const aiResponse = "```json\n{\"key\": \"value\"}\n```";
+ * const parsed = parseJsonFromText(aiResponse);
+ * console.log(parsed); // { key: "value" }
+ * ```
+ * 
+ * @since 0.5.1
+ * @private
+ */
 const parseJsonFromText = (text: string): any => {
   console.log("Attempting to parse JSON from text:", text.substring(0, 200) + "...");
   
@@ -74,7 +115,36 @@ const parseJsonFromText = (text: string): any => {
   throw new Error("The AI returned a response that could not be parsed as JSON using any available strategy.");
 };
 
+/**
+ * @class GeminiService
+ * @description Service class for interacting with Google's Gemini AI API.
+ * Provides methods for testing prompts, generating SFL-structured prompts from goals,
+ * regenerating prompts based on suggestions, and creating workflows.
+ * 
+ * @since 0.5.1
+ */
 class GeminiService {
+  /**
+   * Tests a prompt by sending it to the Gemini API and returning the response.
+   * This method is used for validating prompt effectiveness and getting sample responses.
+   * 
+   * @param {string} promptText - The prompt text to test with the Gemini model.
+   * @returns {Promise<string>} A promise that resolves to the AI-generated response text.
+   * @throws {Error} Throws an error if the API key is not configured or if the API call fails.
+   * 
+   * @example
+   * ```typescript
+   * const service = new GeminiService();
+   * try {
+   *   const response = await service.testPrompt("Explain quantum computing briefly.");
+   *   console.log("AI Response:", response);
+   * } catch (error) {
+   *   console.error("Test failed:", error.message);
+   * }
+   * ```
+   * 
+   * @since 0.5.1
+   */
   async testPrompt(promptText: string): Promise<string> {
     if (!API_KEY) {
       throw new Error("Gemini API Key is not configured.");
@@ -96,6 +166,31 @@ class GeminiService {
     }
   }
 
+  /**
+   * Generates a complete SFL (Systemic Functional Linguistics) prompt structure from a high-level goal.
+   * This method uses AI to analyze the goal and create structured prompt components including
+   * Field (what), Tenor (who), and Mode (how) aspects. Optionally incorporates style from a source document.
+   * 
+   * @param {string} goal - A natural language description of what the user wants to achieve.
+   * @param {string} [sourceDocContent] - Optional content from a source document to provide stylistic reference.
+   * @returns {Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>} A promise resolving to the generated SFL prompt structure.
+   * @throws {Error} Throws an error if the API key is not configured or if the generation fails.
+   * 
+   * @example
+   * ```typescript
+   * const service = new GeminiService();
+   * const goal = "Create a formal business proposal for a new software project";
+   * const sourceDoc = "Sample business document text for style reference...";
+   * try {
+   *   const sflPrompt = await service.generateSFLFromGoal(goal, sourceDoc);
+   *   console.log("Generated SFL prompt:", sflPrompt.title);
+   * } catch (error) {
+   *   console.error("Generation failed:", error.message);
+   * }
+   * ```
+   * 
+   * @since 0.5.1
+   */
   async generateSFLFromGoal(goal: string, sourceDocContent?: string): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> {
     if (!API_KEY) {
         throw new Error("Gemini API Key is not configured.");
@@ -138,6 +233,31 @@ class GeminiService {
     }
   }
 
+  /**
+   * Regenerates an existing SFL prompt based on a user's suggestion for improvement.
+   * This method takes an existing prompt and a natural language suggestion, then uses AI
+   * to intelligently modify the prompt structure while maintaining SFL principles.
+   * 
+   * @param {Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>} currentPrompt - The existing prompt to be modified.
+   * @param {string} suggestion - A natural language suggestion for how to improve or change the prompt.
+   * @returns {Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>} A promise resolving to the regenerated SFL prompt structure.
+   * @throws {Error} Throws an error if the API key is not configured or if the regeneration fails.
+   * 
+   * @example
+   * ```typescript
+   * const service = new GeminiService();
+   * const existingPrompt = { // ... existing SFL prompt structure };
+   * const suggestion = "Make the tone more casual and add examples";
+   * try {
+   *   const improvedPrompt = await service.regenerateSFLFromSuggestion(existingPrompt, suggestion);
+   *   console.log("Improved prompt:", improvedPrompt.title);
+   * } catch (error) {
+   *   console.error("Regeneration failed:", error.message);
+   * }
+   * ```
+   * 
+   * @since 0.5.1
+   */
   async regenerateSFLFromSuggestion(
     currentPrompt: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>,
     suggestion: string
@@ -197,6 +317,29 @@ class GeminiService {
     }
   }
 
+  /**
+   * Generates a complete workflow structure from a high-level goal description.
+   * This method uses AI to analyze a user's goal and create a multi-task workflow
+   * with appropriate task types, dependencies, and data flow connections.
+   * 
+   * @param {string} goal - A natural language description of the multi-step process to automate.
+   * @returns {Promise<Workflow>} A promise resolving to the generated workflow structure with tasks.
+   * @throws {Error} Throws an error if the API key is not configured or if the workflow generation fails.
+   * 
+   * @example
+   * ```typescript
+   * const service = new GeminiService();
+   * const goal = "Analyze customer feedback sentiment and generate a summary report";
+   * try {
+   *   const workflow = await service.generateWorkflowFromGoal(goal);
+   *   console.log(`Generated workflow "${workflow.name}" with ${workflow.tasks.length} tasks`);
+   * } catch (error) {
+   *   console.error("Workflow generation failed:", error.message);
+   * }
+   * ```
+   * 
+   * @since 0.5.1
+   */
   async generateWorkflowFromGoal(goal: string): Promise<Workflow> {
     if (!API_KEY) {
         throw new Error("Gemini API Key is not configured.");
@@ -235,4 +378,12 @@ class GeminiService {
   }
 }
 
+/**
+ * @exports {GeminiService} geminiService
+ * @description Singleton instance of the GeminiService class, ready to be used across the application.
+ * This exported instance provides all Gemini AI functionality including prompt testing,
+ * SFL generation, and workflow creation.
+ * 
+ * @since 0.5.1
+ */
 export default new GeminiService();
