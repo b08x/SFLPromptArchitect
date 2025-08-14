@@ -92,35 +92,12 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border-left-color: #e2a32d; /* accent color */
+    border-left-color: #e2a32d;
     animation: spin 1s ease infinite;
   }
   
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-}
-
-/* Utility classes for the new color scheme */
-@layer utilities {
-  .bg-app-primary {
-    @apply bg-app-bg;
-  }
-  
-  .bg-app-surface {
-    @apply bg-surface;
-  }
-  
-  .border-app {
-    @apply border-border-gray;
-  }
-  
-  .text-app-accent {
-    @apply text-accent;
-  }
-  
-  .text-app-muted {
-    @apply text-text-secondary;
   }
 }
