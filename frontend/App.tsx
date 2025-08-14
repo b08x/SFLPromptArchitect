@@ -652,16 +652,16 @@ const App: React.FC = () => {
         case 'settings':
         default:
              return (
-                <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-800">Coming Soon!</h2>
-                    <p className="text-gray-500 mt-2">This page is under construction.</p>
+                <div className="text-center py-20 bg-[#333e48] rounded-lg border border-[#5c6f7e]">
+                    <h2 className="text-2xl font-bold text-gray-200">Coming Soon!</h2>
+                    <p className="text-[#95aac0] mt-2">This page is under construction.</p>
                 </div>
             );
     }
   }
 
   return (
-    <div className="flex h-screen bg-[#F7FF8FC] font-sans">
+    <div className="flex h-screen bg-[#212934] font-sans">
       <Sidebar 
         filters={filters}
         onFilterChange={handleFilterChange}

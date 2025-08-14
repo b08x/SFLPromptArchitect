@@ -91,14 +91,14 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelet
    * @private
    */
   const cardIconColorMapping: Record<string, string> = {
-    Explanation: 'text-blue-500 bg-blue-100',
-    'Code Generation': 'text-green-500 bg-green-100',
-    Summarization: 'text-purple-500 bg-purple-100',
-    Translation: 'text-sky-500 bg-sky-100',
-    'Code Debugging Assistant': 'text-red-500 bg-red-100',
-    'JSON Data Transformation': 'text-indigo-500 bg-indigo-100',
-    'Technical Concept Explanation': 'text-amber-500 bg-amber-100',
-    default: 'text-gray-500 bg-gray-100',
+    Explanation: 'text-blue-400 bg-blue-900/20',
+    'Code Generation': 'text-green-400 bg-green-900/20',
+    Summarization: 'text-purple-400 bg-purple-900/20',
+    Translation: 'text-sky-400 bg-sky-900/20',
+    'Code Debugging Assistant': 'text-red-400 bg-red-900/20',
+    'JSON Data Transformation': 'text-indigo-400 bg-indigo-900/20',
+    'Technical Concept Explanation': 'text-[#e2a32d] bg-[#e2a32d]/20',
+    default: 'text-[#95aac0] bg-[#333e48]',
   }
 
   const iconColor = cardIconColorMapping[prompt.sflField.taskType] || cardIconColorMapping.default;
@@ -117,47 +117,47 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelet
   }, [menuRef]);
 
   return (
-    <div className="bg-white shadow-sm rounded-lg p-5 border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between">
+    <div className="bg-[#333e48] shadow-sm rounded-lg p-5 border border-[#5c6f7e] hover:shadow-md transition-shadow duration-200 flex flex-col justify-between">
       <div>
         <div className="flex justify-between items-start mb-3">
             <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-md ${iconColor}`}>
                     {getTaskIcon(prompt.sflField.taskType)}
                 </div>
-                <h3 className="text-md font-semibold text-gray-800" title={prompt.title}>
+                <h3 className="text-md font-semibold text-gray-200" title={prompt.title}>
                     {prompt.title}
                 </h3>
             </div>
             <div className="relative" ref={menuRef}>
                 <button
                     onClick={() => setMenuOpen(prev => !prev)}
-                    className="p-1 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
+                    className="p-1 text-[#95aac0] hover:text-gray-200 rounded-full hover:bg-[#333e48]"
                     aria-label="Options"
                 >
                     <EllipsisVerticalIcon className="w-5 h-5" />
                 </button>
                 {menuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                    <button onClick={() => { onView(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Details</button>
-                    <button onClick={() => { onEdit(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit</button>
-                    <button onClick={() => { onDelete(prompt.id); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</button>
+                    <div className="absolute right-0 mt-2 w-48 bg-[#333e48] rounded-md shadow-lg z-10 border border-[#5c6f7e]">
+                    <button onClick={() => { onView(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-[#212934]">View Details</button>
+                    <button onClick={() => { onEdit(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-[#212934]">Edit</button>
+                    <button onClick={() => { onDelete(prompt.id); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-red-300 hover:bg-red-900/20">Delete</button>
                     </div>
                 )}
             </div>
         </div>
 
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2" title={prompt.promptText}>{prompt.promptText}</p>
+        <p className="text-[#95aac0] text-sm mb-3 line-clamp-2" title={prompt.promptText}>{prompt.promptText}</p>
         
         <div className="space-y-2 text-sm mb-4">
-            <div className="flex"><p className="w-16 font-medium text-gray-500 shrink-0">Task:</p> <p className="text-gray-700 truncate">{prompt.sflField.taskType}</p></div>
-            <div className="flex"><p className="w-16 font-medium text-gray-500 shrink-0">Persona:</p> <p className="text-gray-700 truncate">{prompt.sflTenor.aiPersona}</p></div>
-            <div className="flex"><p className="w-16 font-medium text-gray-500 shrink-0">Format:</p> <p className="text-gray-700 truncate">{prompt.sflMode.outputFormat}</p></div>
+            <div className="flex"><p className="w-16 font-medium text-[#95aac0] shrink-0">Task:</p> <p className="text-gray-200 truncate">{prompt.sflField.taskType}</p></div>
+            <div className="flex"><p className="w-16 font-medium text-[#95aac0] shrink-0">Persona:</p> <p className="text-gray-200 truncate">{prompt.sflTenor.aiPersona}</p></div>
+            <div className="flex"><p className="w-16 font-medium text-[#95aac0] shrink-0">Format:</p> <p className="text-gray-200 truncate">{prompt.sflMode.outputFormat}</p></div>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-4">
           {prompt.sflField.keywords.split(',').slice(0, 3).map((keyword) => (
             keyword.trim() && (
-              <span key={keyword} className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
+              <span key={keyword} className="px-2 py-0.5 text-xs font-medium text-[#95aac0] bg-[#212934] rounded-full">
                 #{keyword.trim()}
               </span>
             )
@@ -165,12 +165,12 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelet
         </div>
       </div>
       
-      <div className="border-t border-gray-200 pt-4 flex justify-between items-center text-sm">
-        <p className="text-gray-500">Updated {new Date(prompt.updatedAt).toLocaleDateString()}</p>
+      <div className="border-t border-[#5c6f7e] pt-4 flex justify-between items-center text-sm">
+        <p className="text-[#95aac0]">Updated {new Date(prompt.updatedAt).toLocaleDateString()}</p>
         {isTested ? (
-          <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-md">Tested</span>
+          <span className="px-2 py-1 text-xs font-semibold text-green-400 bg-green-900/20 rounded-md">Tested</span>
         ) : (
-          <span className="px-2 py-1 text-xs font-semibold text-amber-800 bg-amber-100 rounded-md">Not Tested</span>
+          <span className="px-2 py-1 text-xs font-semibold text-amber-400 bg-amber-900/20 rounded-md">Not Tested</span>
         )}
       </div>
     </div>

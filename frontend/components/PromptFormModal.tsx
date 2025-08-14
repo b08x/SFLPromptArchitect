@@ -259,8 +259,8 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     }
   };
 
-  const commonInputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] transition-colors placeholder-gray-400";
-  const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
+  const commonInputClasses = "w-full px-3 py-2 bg-[#333e48] border border-[#5c6f7e] text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#e2a32d] focus:border-[#e2a32d] transition-colors placeholder-[#95aac0]";
+  const labelClasses = "block text-sm font-medium text-gray-200 mb-1";
 
   /**
    * @function renderTextField
@@ -372,7 +372,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
             onChange={e => setNewOptionValues(prev => ({...prev, [String(name)]: e.target.value}))}
             className={`${commonInputClasses} text-sm`}
         />
-        <button type="button" onClick={() => handleAddNewOption(constantsKey, sflType, name)} className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md shrink-0 text-gray-800">Add</button>
+        <button type="button" onClick={() => handleAddNewOption(constantsKey, sflType, name)} className="px-3 py-2 text-sm bg-[#c36e26] hover:bg-[#c36e26]/90 rounded-md shrink-0 text-gray-200">Add</button>
       </div>
     </div>
   );
@@ -398,11 +398,11 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
 
          <div>
           <label className={labelClasses}>Source Document (Optional)</label>
-          <p className="text-xs text-gray-500 mb-2">Attach a text file for stylistic reference. Its style will be analyzed when using the AI regeneration feature.</p>
+          <p className="text-xs text-[#95aac0] mb-2">Attach a text file for stylistic reference. Its style will be analyzed when using the AI regeneration feature.</p>
           {formData.sourceDocument ? (
-            <div className="flex items-center justify-between bg-gray-100 p-2 rounded-md border border-gray-300">
-              <span className="text-sm text-gray-800 truncate pr-2">{formData.sourceDocument.name}</span>
-              <button type="button" onClick={handleRemoveFile} className="text-red-500 hover:text-red-700 shrink-0" aria-label="Remove source document">
+            <div className="flex items-center justify-between bg-[#212934] p-2 rounded-md border border-[#5c6f7e]">
+              <span className="text-sm text-gray-200 truncate pr-2">{formData.sourceDocument.name}</span>
+              <button type="button" onClick={handleRemoveFile} className="text-red-300 hover:text-red-400 shrink-0" aria-label="Remove source document">
                 <XCircleIcon className="w-5 h-5"/>
               </button>
             </div>
@@ -410,7 +410,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center px-3 py-2 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-colors"
+              className="w-full flex items-center justify-center px-3 py-2 bg-[#212934] border-2 border-dashed border-[#5c6f7e] text-[#95aac0] rounded-md hover:bg-[#333e48] hover:border-[#95aac0] transition-colors"
             >
               <PaperClipIcon className="w-5 h-5 mr-2" />
               Attach Document
@@ -419,18 +419,18 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
         </div>
 
         <div className="my-2 text-right">
-          <button type="button" onClick={() => setRegenState(prev => ({...prev, shown: !prev.shown, suggestion: ''}))} className="text-sm text-[#4A69E2] hover:text-blue-700 flex items-center justify-end">
+          <button type="button" onClick={() => setRegenState(prev => ({...prev, shown: !prev.shown, suggestion: ''}))} className="text-sm text-[#e2a32d] hover:text-[#e2a32d]/80 flex items-center justify-end">
               <SparklesIcon className="w-5 h-5 mr-1"/> Regenerate Prompt with AI
           </button>
         </div>
         
         {regenState.shown && (
-            <div className="space-y-2 p-3 bg-gray-50 rounded-md border border-gray-200">
-                <label htmlFor="regenSuggestion" className={`${labelClasses} text-gray-800`}>How should this prompt be changed?</label>
+            <div className="space-y-2 p-3 bg-[#212934] rounded-md border border-[#5c6f7e]">
+                <label htmlFor="regenSuggestion" className={`${labelClasses} text-gray-200`}>How should this prompt be changed?</label>
                 <textarea id="regenSuggestion" value={regenState.suggestion} onChange={e => setRegenState(prev => ({...prev, suggestion: e.target.value}))} rows={2} placeholder="e.g., Make the tone more formal, target it to experts..." className={commonInputClasses} />
                 <div className="flex justify-end space-x-2">
-                    <button type="button" onClick={() => setRegenState({ shown: false, suggestion: '', loading: false })} className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
-                    <button type="button" onClick={handleRegeneratePrompt} disabled={regenState.loading || !regenState.suggestion.trim()} className="px-3 py-1 text-xs bg-[#4A69E2] text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed flex items-center">
+                    <button type="button" onClick={() => setRegenState({ shown: false, suggestion: '', loading: false })} className="px-3 py-1 text-xs bg-[#333e48] text-gray-200 rounded-md hover:bg-[#5c6f7e]">Cancel</button>
+                    <button type="button" onClick={handleRegeneratePrompt} disabled={regenState.loading || !regenState.suggestion.trim()} className="px-3 py-1 text-xs bg-[#c36e26] text-gray-200 rounded-md hover:bg-opacity-90 disabled:bg-opacity-50 disabled:cursor-not-allowed flex items-center">
                         {regenState.loading && <div className="w-3 h-3 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>}
                         {regenState.loading ? 'Regenerating...' : 'Regenerate'}
                     </button>
@@ -439,7 +439,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
         )}
 
         <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="text-lg font-medium text-gray-800 px-2">SFL: Field (What is happening?)</legend>
+          <legend className="text-lg font-medium text-gray-200 px-2">SFL: Field (What is happening?)</legend>
           <div className="space-y-4 mt-2">
             {renderSFLTextField('sflField', 'topic', 'Topic', 'e.g., Quantum Physics, Recipe Generation')}
             {renderCreatableSFLSelectField('sflField', 'taskType', 'Task Type', appConstants.taskTypes, 'taskTypes')}
@@ -449,13 +449,13 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
         </fieldset>
 
         <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="text-lg font-medium text-gray-800 px-2">SFL: Tenor (Who is taking part?)</legend>
+          <legend className="text-lg font-medium text-gray-200 px-2">SFL: Tenor (Who is taking part?)</legend>
           <div className="space-y-4 mt-2">
             {renderCreatableSFLSelectField('sflTenor', 'aiPersona', 'AI Persona', appConstants.aiPersonas, 'aiPersonas')}
             
             <div>
                 <label className={labelClasses}>Target Audience</label>
-                <div className="grid grid-cols-2 gap-2 mt-1 max-h-40 overflow-y-auto p-2 border border-gray-300 rounded-md bg-white">
+                <div className="grid grid-cols-2 gap-2 mt-1 max-h-40 overflow-y-auto p-2 border border-[#5c6f7e] rounded-md bg-[#212934]">
                     {(appConstants.targetAudiences || []).map(audience => (
                         <div key={audience} className="flex items-center">
                             <input
@@ -463,9 +463,9 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
                                 type="checkbox"
                                 checked={(formData.sflTenor.targetAudience || []).includes(audience)}
                                 onChange={() => handleTargetAudienceChange(audience)}
-                                className="h-4 w-4 rounded border-gray-300 text-[#4A69E2] focus:ring-[#4A69E2]"
+                                className="h-4 w-4 rounded border-[#5c6f7e] text-[#e2a32d] focus:ring-[#e2a32d] bg-[#333e48]"
                             />
-                            <label htmlFor={`audience-${audience}`} className="ml-2 text-sm text-gray-800 select-none">{audience}</label>
+                            <label htmlFor={`audience-${audience}`} className="ml-2 text-sm text-gray-200 select-none">{audience}</label>
                         </div>
                     ))}
                 </div>
@@ -478,7 +478,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
                             handleTargetAudienceChange(value);
                             setNewOptionValues(prev => ({...prev, 'targetAudience': ''}));
                         }
-                    }} className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md shrink-0 text-gray-800">Add</button>
+                    }} className="px-3 py-2 text-sm bg-[#c36e26] hover:bg-[#c36e26]/90 rounded-md shrink-0 text-gray-200">Add</button>
                 </div>
             </div>
 
@@ -488,7 +488,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
         </fieldset>
 
         <fieldset className="border border-gray-300 p-4 rounded-md">
-          <legend className="text-lg font-medium text-gray-800 px-2">SFL: Mode (What role is language playing?)</legend>
+          <legend className="text-lg font-medium text-gray-200 px-2">SFL: Mode (What role is language playing?)</legend>
           <div className="space-y-4 mt-2">
             {renderCreatableSFLSelectField('sflMode', 'outputFormat', 'Output Format', appConstants.outputFormats, 'outputFormats')}
             {renderSFLTextField('sflMode', 'rhetoricalStructure', 'Rhetorical Structure', 'e.g., Intro, 3 points, conclusion; Problem-Solution', true)}
@@ -505,13 +505,13 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
         {renderTextField('Notes (Optional)', 'notes', 'Your private notes about this prompt', true)}
 
         {saveState.error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <div className="bg-red-900/20 border border-red-600 rounded-md p-3">
             <div className="flex">
               <div className="flex-shrink-0">
-                <XCircleIcon className="h-5 w-5 text-red-400" />
+                <XCircleIcon className="h-5 w-5 text-red-300" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800">{saveState.error}</p>
+                <p className="text-sm text-red-300">{saveState.error}</p>
               </div>
             </div>
           </div>
@@ -522,14 +522,14 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
             type="button"
             onClick={onClose}
             disabled={saveState.saving}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#333e48] border border-[#5c6f7e] rounded-md hover:bg-[#212934] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e2a32d] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saveState.saving}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4A69E2] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#c36e26] rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e2a32d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
           >
             {saveState.saving && (
               <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>

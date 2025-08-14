@@ -42,10 +42,10 @@ interface PromptListProps {
 const PromptList: React.FC<PromptListProps> = ({ prompts, onViewPrompt, onEditPrompt, onDeletePrompt }) => {
   if (prompts.length === 0) {
     return (
-      <div className="text-center py-10 bg-white rounded-lg border border-gray-200">
-        <ClipboardDocumentListIcon className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
-        <p className="text-xl text-gray-700 font-semibold">No prompts found.</p>
-        <p className="text-sm text-gray-500">Try adjusting your filters or adding a new prompt.</p>
+      <div className="text-center py-10 bg-[#333e48] rounded-lg border border-[#5c6f7e]">
+        <ClipboardDocumentListIcon className="w-16 h-16 text-[#95aac0] mx-auto mb-4"/>
+        <p className="text-xl text-gray-200 font-semibold">No prompts found.</p>
+        <p className="text-sm text-[#95aac0]">Try adjusting your filters or adding a new prompt.</p>
       </div>
     );
   }

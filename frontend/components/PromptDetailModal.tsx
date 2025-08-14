@@ -66,7 +66,7 @@ const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: bool
     <div className="mb-3">
       <h4 className="text-sm font-semibold text-gray-500 mb-0.5">{label}</h4>
       {isCode ? (
-        <pre className="bg-gray-50 p-3 rounded-md text-sm text-gray-800 whitespace-pre-wrap break-all border border-gray-200">{value}</pre>
+        <pre className="bg-[#212934] p-3 rounded-md text-sm text-gray-200 whitespace-pre-wrap break-all border border-[#5c6f7e]">{value}</pre>
       ) : (
         <p className="text-gray-800 text-sm whitespace-pre-wrap break-words">{value}</p>
       )}
@@ -157,7 +157,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
         {prompt.sourceDocument && (
             <div className="mb-3">
                 <h4 className="text-sm font-semibold text-gray-500 mb-0.5">Source Document</h4>
-                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md text-sm border border-gray-200">
+                <div className="flex items-center justify-between bg-[#212934] p-3 rounded-md text-sm border border-[#5c6f7e]">
                     <span className="italic">{prompt.sourceDocument.name}</span>
                     <button onClick={() => setDocVisible(!isDocVisible)} className="text-xs font-semibold text-[#4A69E2] hover:underline">
                         {isDocVisible ? 'Hide Content' : 'View Content'}
@@ -165,10 +165,10 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
                 </div>
                 {isDocVisible && (
                     <div className="relative mt-2">
-                        <pre className="bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap break-all max-h-48 overflow-y-auto border border-gray-200">
+                        <pre className="bg-[#212934] p-3 rounded-md text-sm text-gray-200 whitespace-pre-wrap break-all max-h-48 overflow-y-auto border border-[#5c6f7e]">
                            {prompt.sourceDocument.content}
                         </pre>
-                        <button onClick={handleCopyDocContent} className="absolute top-2 right-2 p-1.5 bg-white rounded-md text-gray-500 hover:text-gray-800 transition-colors border border-gray-200">
+                        <button onClick={handleCopyDocContent} className="absolute top-2 right-2 p-1.5 bg-[#333e48] rounded-md text-[#95aac0] hover:text-gray-200 transition-colors border border-[#5c6f7e]">
                            {docCopied ? <span className="text-xs">Copied!</span> : <ClipboardIcon className="w-4 h-4" />}
                         </button>
                     </div>
@@ -177,7 +177,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <section className="border border-gray-200 p-4 rounded-lg bg-gray-50/50">
+          <section className="border border-[#5c6f7e] p-4 rounded-lg bg-[#212934]/50">
             <h3 className="text-md font-semibold text-gray-800 mb-2 border-b pb-1 border-gray-200">Field</h3>
             <DetailItem label="Topic" value={prompt.sflField.topic} />
             <DetailItem label="Task Type" value={prompt.sflField.taskType} />
@@ -185,7 +185,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
             <DetailItem label="Keywords" value={prompt.sflField.keywords} />
           </section>
 
-          <section className="border border-gray-200 p-4 rounded-lg bg-gray-50/50">
+          <section className="border border-[#5c6f7e] p-4 rounded-lg bg-[#212934]/50">
             <h3 className="text-md font-semibold text-gray-800 mb-2 border-b pb-1 border-gray-200">Tenor</h3>
             <DetailItem label="AI Persona" value={prompt.sflTenor.aiPersona} />
             <DetailItem label="Target Audience" value={prompt.sflTenor.targetAudience.join(', ')} />
@@ -193,7 +193,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
             <DetailItem label="Interpersonal Stance" value={prompt.sflTenor.interpersonalStance} />
           </section>
 
-          <section className="border border-gray-200 p-4 rounded-lg bg-gray-50/50">
+          <section className="border border-[#5c6f7e] p-4 rounded-lg bg-[#212934]/50">
             <h3 className="text-md font-semibold text-gray-800 mb-2 border-b pb-1 border-gray-200">Mode</h3>
             <DetailItem label="Output Format" value={prompt.sflMode.outputFormat} />
             <DetailItem label="Rhetorical Structure" value={prompt.sflMode.rhetoricalStructure} />
@@ -211,7 +211,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
         </div>
 
         {variables.length > 0 && (
-          <section className="space-y-4 border border-gray-200 p-4 rounded-lg bg-gray-50/50">
+          <section className="space-y-4 border border-[#5c6f7e] p-4 rounded-lg bg-[#212934]/50">
             <h3 className="text-md font-semibold text-gray-800 mb-2 border-b pb-1 border-gray-200">Prompt Variables</h3>
             <div className="space-y-4">
               {variables.map((varName) => (
@@ -223,7 +223,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
                     onChange={(e) => handleVariableChange(varName, e.target.value)}
                     placeholder={`Enter value for ${varName}...`}
                     rows={2}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] transition-colors placeholder-gray-400"
+                    className="w-full px-3 py-2 bg-[#333e48] border border-[#5c6f7e] text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#e2a32d] focus:border-[#e2a32d] transition-colors placeholder-[#95aac0]"
                   />
                 </div>
               ))}
@@ -232,7 +232,7 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
         )}
 
         {prompt.isTesting && (
-          <div className="my-4 p-4 border border-blue-300 rounded-md bg-blue-50 flex items-center justify-center">
+          <div className="my-4 p-4 border border-blue-600 rounded-md bg-blue-900/20 flex items-center justify-center">
             <div className="spinner"></div>
             <p className="ml-3 text-blue-700">Testing with Gemini...</p>
           </div>

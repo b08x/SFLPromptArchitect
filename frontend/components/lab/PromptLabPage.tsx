@@ -85,8 +85,8 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
     }
 
     return (
-        <div className="flex h-full bg-[#F7F8FC] font-sans">
-            <aside className="w-[350px] bg-white border-r border-gray-200 flex flex-col p-4 space-y-4 overflow-y-auto">
+        <div className="flex h-full bg-[#212934] font-sans">
+            <aside className="w-[350px] bg-[#333e48] border-r border-[#5c6f7e] flex flex-col p-4 space-y-4 overflow-y-auto">
                 <WorkflowControls
                     workflows={workflows}
                     activeWorkflow={activeWorkflow}

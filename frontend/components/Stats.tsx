@@ -50,13 +50,13 @@ interface StatCardProps {
  */
 const StatCard: React.FC<StatCardProps> = ({ icon, label, value, iconBgColor }) => {
     return (
-        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-4">
+        <div className="bg-[#333e48] p-5 rounded-lg shadow-sm border border-[#5c6f7e] flex items-center space-x-4">
             <div className={`p-3 rounded-full ${iconBgColor}`}>
                 {icon}
             </div>
             <div>
-                <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-2xl font-bold text-gray-800">{value}</p>
+                <p className="text-sm text-[#95aac0]">{label}</p>
+                <p className="text-2xl font-bold text-gray-200">{value}</p>
             </div>
         </div>
     );
@@ -74,28 +74,28 @@ const Stats: React.FC<StatsProps> = ({ totalPrompts }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <StatCard 
-                icon={<ClipboardDocumentListIcon className="w-6 h-6 text-blue-600"/>} 
+                icon={<ClipboardDocumentListIcon className="w-6 h-6 text-blue-400"/>} 
                 label="Total Prompts" 
                 value={totalPrompts}
-                iconBgColor="bg-blue-100"
+                iconBgColor="bg-blue-900/20"
             />
             <StatCard 
-                icon={<UsersIcon className="w-6 h-6 text-indigo-600"/>} 
+                icon={<UsersIcon className="w-6 h-6 text-indigo-400"/>} 
                 label="AI Personas" 
                 value={8} // Note: This is currently a static value.
-                iconBgColor="bg-indigo-100"
+                iconBgColor="bg-indigo-900/20"
             />
             <StatCard 
-                icon={<PresentationChartLineIcon className="w-6 h-6 text-green-600"/>} 
+                icon={<PresentationChartLineIcon className="w-6 h-6 text-green-400"/>} 
                 label="Test Coverage" 
                 value="87%" // Note: This is currently a static value.
-                iconBgColor="bg-green-100"
+                iconBgColor="bg-green-900/20"
             />
             <StatCard 
-                icon={<ClockIcon className="w-6 h-6 text-amber-600"/>} 
+                icon={<ClockIcon className="w-6 h-6 text-[#e2a32d]"/>} 
                 label="Last Tested" 
                 value="2h ago" // Note: This is currently a static value.
-                iconBgColor="bg-amber-100"
+                iconBgColor="bg-[#e2a32d]/20"
             />
         </div>
     );

@@ -73,7 +73,7 @@ interface SidebarProps {
  */
 const NavItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; active?: boolean, onClick: () => void; }> = ({ icon: Icon, label, active, onClick }) => (
   <button onClick={onClick} className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
-      active ? 'bg-[#4A69E2] text-white' : 'text-[#A6B0C3] hover:bg-white/10'
+      active ? 'bg-[#e2a32d] text-gray-200' : 'text-[#95aac0] hover:bg-[#333e48]'
     }`}
   >
     <Icon className="w-5 h-5 mr-3" />
@@ -94,7 +94,7 @@ const NavItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; lab
  */
 const FilterItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; selected: boolean }> = ({ icon: Icon, label, onClick, selected }) => (
     <button onClick={onClick} className={`flex w-full items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-        selected ? 'text-white bg-white/20' : 'text-[#A6B0C3] hover:bg-white/10'
+        selected ? 'text-gray-200 bg-[#333e48]' : 'text-[#95aac0] hover:bg-[#333e48]'
       }`}
     >
       <Icon className="w-5 h-5 mr-3" />
@@ -127,15 +127,15 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
     };
 
   return (
-    <aside className="w-72 bg-[#1C2536] text-white flex flex-col p-4 space-y-4 overflow-y-auto">
+    <aside className="w-72 bg-[#212934] text-gray-200 flex flex-col p-4 space-y-4 overflow-y-auto border-r border-[#5c6f7e]">
       <div className="flex items-center space-x-2 px-3 pt-2 pb-4">
-        <BrainCircuitIcon className="w-8 h-8 text-white" />
+        <BrainCircuitIcon className="w-8 h-8 text-[#e2a32d]" />
         <span className="text-xl font-bold">SFL Prompt Knowledge Base</span>
       </div>
 
       <div className="flex-grow space-y-6">
         <div>
-          <h3 className="px-3 text-xs font-semibold text-[#6F7A8E] uppercase tracking-wider mb-2">Navigation</h3>
+          <h3 className="px-3 text-xs font-semibold text-[#95aac0] uppercase tracking-wider mb-2">Navigation</h3>
           <nav className="space-y-1">
             <NavItem icon={HomeIcon} label="Dashboard" active={activePage === 'dashboard'} onClick={() => onNavigate('dashboard')} />
             <NavItem icon={FlaskIcon} label="Prompt Lab" active={activePage === 'lab'} onClick={() => onNavigate('lab')} />
@@ -145,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
         </div>
 
         <div>
-            <h3 className="px-3 text-xs font-semibold text-[#6F7A8E] uppercase tracking-wider mb-2">Filter by Task Type</h3>
+            <h3 className="px-3 text-xs font-semibold text-[#95aac0] uppercase tracking-wider mb-2">Filter by Task Type</h3>
             <div className="space-y-1">
                 {taskTypes.map(type => (
                     <FilterItem 
@@ -160,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
         </div>
 
         <div>
-            <h3 className="px-3 text-xs font-semibold text-[#6F7A8E] uppercase tracking-wider mb-2">Filter by AI Persona</h3>
+            <h3 className="px-3 text-xs font-semibold text-[#95aac0] uppercase tracking-wider mb-2">Filter by AI Persona</h3>
             <div className="space-y-1">
                  {aiPersonas.map(persona => (
                     <FilterItem 
@@ -175,14 +175,14 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
         </div>
         
         <div>
-          <h3 className="px-3 text-xs font-semibold text-[#6F7A8E] uppercase tracking-wider mb-2">Popular Tags</h3>
+          <h3 className="px-3 text-xs font-semibold text-[#95aac0] uppercase tracking-wider mb-2">Popular Tags</h3>
           <div className="flex flex-wrap gap-2 px-3">
             {popularTags.map(tag => (
                 <button 
                   key={tag}
                   onClick={() => onFilterChange('searchTerm', filters.searchTerm === tag ? '' : tag)}
                   className={`px-2 py-1 text-xs rounded-full transition-colors ${
-                    filters.searchTerm === tag ? 'bg-[#4A69E2] text-white' : 'bg-[#344158] text-[#A6B0C3] hover:bg-[#4A69E2]/80'
+                    filters.searchTerm === tag ? 'bg-[#e2a32d] text-gray-200' : 'bg-[#333e48] text-[#95aac0] hover:bg-[#e2a32d]/80'
                   }`}
                 >
                     {tag}
@@ -193,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
       </div>
       
       <div className="flex-shrink-0 space-y-4">
-        <div className="bg-[#344158] rounded-lg p-3">
+        <div className="bg-[#333e48] rounded-lg p-3 border border-[#5c6f7e]">
             <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 rounded-full bg-green-400"></div>
@@ -202,7 +202,7 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
                 <span className="text-xs font-semibold bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full">Active</span>
             </div>
         </div>
-        <button className="w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-[#A6B0C3] hover:bg-white/10 transition-colors border border-[#344158]">
+        <button className="w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-[#95aac0] hover:bg-[#333e48] transition-colors border border-[#5c6f7e]">
             <PlusIcon className="w-5 h-5" />
             <span>Add Model</span>
         </button>
