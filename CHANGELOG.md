@@ -1,5 +1,11 @@
 # CHANGELOG.md
 
+## [0.5.2] - 2025-08-14
+
+### 🚜 Refactor
+
+- Rename project from SFL Prompt Architect to SFL Prompt Studio
+
 ## [0.5.1] - 2025-08-14
 
 ### 🚀 Features
