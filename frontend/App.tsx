@@ -1,9 +1,10 @@
 /**
  * @file App.tsx
  * @description This is the root component of the SFL Prompt Architect application.
- * It manages the main state of the application, including the list of prompts, active modals,
- * filters, and the current page. It orchestrates all the main components like the Sidebar,
- * TopBar, and the main content area.
+ * It serves as the main controller, managing the application's core state, including the list of prompts,
+ * active modals, filters, and the current page. It orchestrates all the main components like the Sidebar,
+ * TopBar, and the main content area, and wires up all the event handling logic for prompt management,
+ * navigation, and interaction with AI services.
  *
  * @requires react
  * @requires ./types
@@ -38,6 +39,10 @@ import { testPromptWithGemini } from './services/geminiService';
 import { getPrompts, savePrompt, deletePrompt as apiDeletePrompt } from './services/promptApiService';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
 
+/**
+ * @constant {Filters} initialFilters - The default state for the prompt filters.
+ * @private
+ */
 const initialFilters: Filters = {
   searchTerm: '',
   topic: '',
@@ -47,9 +52,12 @@ const initialFilters: Filters = {
 };
 
 /**
- * Converts a PromptSFL object into a Markdown string.
- * @param {PromptSFL} prompt - The prompt to convert.
+ * Converts a `PromptSFL` object into a well-formatted Markdown string.
+ * This is used for exporting prompts in a human-readable format.
+ *
+ * @param {PromptSFL} prompt - The prompt object to convert.
  * @returns {string} The Markdown representation of the prompt.
+ * @private
  */
 const promptToMarkdown = (prompt: PromptSFL): string => {
     const { 
@@ -57,7 +65,7 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
     } = prompt;
 
     const sections = [
-        `# ${title || 'Untitled Prompt'}`,
+        `# ${title || 'Untitled Prompt'}`, 
         `**Last Updated:** ${new Date(updatedAt).toLocaleString()}`,
         '---',
         '## Prompt Text',
@@ -70,8 +78,8 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         sections.push(
             '---',
             '## Source Document',
-            `**Filename:** \`${sourceDocument.name}\``,
-            '> This document was used as a stylistic reference during prompt generation.',
+            `**Filename:** \`${sourceDocument.name}\`
+`,            '> This document was used as a stylistic reference during prompt generation.',
             '',
             '<details>',
             '<summary>View Content</summary>',
@@ -89,21 +97,21 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
         '---',
         '## SFL Metadata',
         '### Field (What is happening?)',
-        `- **Topic:** ${sflField.topic || 'N/A'}`,
-        `- **Task Type:** ${sflField.taskType || 'N/A'}`,
-        `- **Domain Specifics:** ${sflField.domainSpecifics || 'N/A'}`,
+        `- **Topic:** ${sflField.topic || 'N/A'}`, 
+        `- **Task Type:** ${sflField.taskType || 'N/A'}`, 
+        `- **Domain Specifics:** ${sflField.domainSpecifics || 'N/A'}`, 
         `- **Keywords:** ${keywordsString}`,
         '',
         '### Tenor (Who is taking part?)',
-        `- **AI Persona:** ${sflTenor.aiPersona || 'N/A'}`,
-        `- **Target Audience:** ${sflTenor.targetAudience.join(', ') || 'N/A'}`,
-        `- **Desired Tone:** ${sflTenor.desiredTone || 'N/A'}`,
+        `- **AI Persona:** ${sflTenor.aiPersona || 'N/A'}`, 
+        `- **Target Audience:** ${sflTenor.targetAudience.join(', ') || 'N/A'}`, 
+        `- **Desired Tone:** ${sflTenor.desiredTone || 'N/A'}`, 
         `- **Interpersonal Stance:** ${sflTenor.interpersonalStance || 'N/A'}`,
         '',
         '### Mode (What role is language playing?)',
-        `- **Output Format:** ${sflMode.outputFormat || 'N/A'}`,
-        `- **Rhetorical Structure:** ${sflMode.rhetoricalStructure || 'N/A'}`,
-        `- **Length Constraint:** ${sflMode.lengthConstraint || 'N/A'}`,
+        `- **Output Format:** ${sflMode.outputFormat || 'N/A'}`, 
+        `- **Rhetorical Structure:** ${sflMode.rhetoricalStructure || 'N/A'}`, 
+        `- **Length Constraint:** ${sflMode.lengthConstraint || 'N/A'}`, 
         `- **Textual Directives:** ${sflMode.textualDirectives || 'N/A'}`,
     );
 
@@ -128,20 +136,53 @@ const promptToMarkdown = (prompt: PromptSFL): string => {
     return sections.join('\n');
 };
 
+/**
+ * @typedef {'dashboard' | 'lab' | 'documentation' | 'settings'}
+ * @description Represents the possible main pages the user can navigate to.
+ */
 type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 
 /**
- * The main App component.
- * @returns {JSX.Element} The rendered application.
+ * The main `App` component. It acts as the root of the application,
+ * managing state, handling side effects, and composing the UI from smaller components.
+ *
+ * @returns {JSX.Element} The rendered application UI.
  */
 const App: React.FC = () => {
+  /**
+   * @state {PromptSFL[]} prompts - The master list of all SFL prompts loaded in the application.
+   */
   const [prompts, setPrompts] = useState<PromptSFL[]>([]);
+  
+  /**
+   * @state {ModalType} activeModal - The type of the currently active modal, or `ModalType.NONE` if no modal is open.
+   */
   const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
+  
+  /**
+   * @state {PromptSFL | null} selectedPrompt - The prompt that is currently selected for viewing or editing.
+   */
   const [selectedPrompt, setSelectedPrompt] = useState<PromptSFL | null>(null);
+  
+  /**
+   * @state {Filters} filters - The current state of the filters used to narrow down the list of prompts.
+   */
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  
+  /**
+   * @state {Page} activePage - The currently displayed main page of the application.
+   */
   const [activePage, setActivePage] = useState<Page>('dashboard');
+  
+  /**
+   * @ref {HTMLInputElement} importFileRef - A ref to a hidden file input element, used to trigger the file import dialog programmatically.
+   */
   const importFileRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * @state {object} appConstants - The state holding the dynamic lists of options for SFL fields (e.g., Task Types, AI Personas).
+   * This allows users to add new options at runtime.
+   */
   const [appConstants, setAppConstants] = useState({
     taskTypes: TASK_TYPES,
     aiPersonas: AI_PERSONAS,
@@ -152,6 +193,9 @@ const App: React.FC = () => {
     popularTags: POPULAR_TAGS,
   });
 
+  /**
+   * @effect Fetches the initial list of prompts from the API when the component mounts.
+   */
   useEffect(() => {
     const fetchPrompts = async () => {
       try {
@@ -164,10 +208,22 @@ const App: React.FC = () => {
     fetchPrompts();
   }, []);
 
+  /**
+   * @callback handleNavigate
+   * @description Handles navigation between the main pages of the application.
+   * @param {Page} page - The page to navigate to.
+   */
   const handleNavigate = useCallback((page: Page) => {
     setActivePage(page);
   }, []);
 
+  /**
+   * @callback handleAddConstant
+   * @description Adds a new, user-defined option to one of the SFL dropdown lists (e.g., a new 'Task Type').
+   * It ensures the new value is unique before adding it to the state.
+   * @param {keyof typeof appConstants} key - The category of the constant to add (e.g., 'taskTypes').
+   * @param {string} value - The new string value to add.
+   */
   const handleAddConstant = useCallback((key: keyof typeof appConstants, value: string) => {
     if (!value || !value.trim()) return;
     const trimmedValue = value.trim();
@@ -188,33 +244,66 @@ const App: React.FC = () => {
     });
   }, []);
 
+  /**
+   * @function handleOpenCreateModal
+   * @description Opens the modal for creating a new prompt.
+   */
   const handleOpenCreateModal = () => {
     setSelectedPrompt(null);
     setActiveModal(ModalType.CREATE_EDIT_PROMPT);
   };
   
+  /**
+   * @function handleOpenHelpModal
+   * @description Opens the help guide modal.
+   */
   const handleOpenHelpModal = () => {
     setActiveModal(ModalType.HELP);
   };
 
+  /**
+   * @function handleOpenWizard
+   * @description Opens the prompt creation wizard modal.
+   */
   const handleOpenWizard = () => {
     setActiveModal(ModalType.WIZARD);
   };
 
+  /**
+   * @function handleOpenEditModal
+   * @description Opens the modal to edit an existing prompt.
+   * @param {PromptSFL} prompt - The prompt to be edited.
+   */
   const handleOpenEditModal = (prompt: PromptSFL) => {
     setSelectedPrompt(prompt);
     setActiveModal(ModalType.CREATE_EDIT_PROMPT);
   };
 
+  /**
+   * @function handleOpenDetailModal
+   * @description Opens the modal to view the full details of a prompt.
+   * @param {PromptSFL} prompt - The prompt to be viewed.
+   */
   const handleOpenDetailModal = (prompt: PromptSFL) => {
     setSelectedPrompt(prompt);
     setActiveModal(ModalType.VIEW_PROMPT_DETAIL);
   };
 
+  /**
+   * @function handleCloseModal
+   * @description Closes any currently active modal.
+   */
   const handleCloseModal = () => {
     setActiveModal(ModalType.NONE);
   };
 
+  /**
+   * @callback handleSavePrompt
+   * @description Handles saving a new or updated prompt. It calls the API service
+   * and then updates the local state with the returned prompt data.
+   * @param {PromptSFL} prompt - The prompt to be saved.
+   * @throws {Error} Propagates any errors from the API service.
+   */
   const handleSavePrompt = async (prompt: PromptSFL) => {
     try {
       const saved = await savePrompt(prompt);
@@ -233,6 +322,12 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * @callback handleDeletePrompt
+   * @description Handles the deletion of a prompt after user confirmation.
+   * It calls the API service and then removes the prompt from the local state.
+   * @param {string} promptId - The ID of the prompt to delete.
+   */
   const handleDeletePrompt = async (promptId: string) => {
     if(window.confirm('Are you sure you want to delete this prompt?')){
       try {
@@ -249,14 +344,29 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * @callback handleFilterChange
+   * @description Updates the filter state based on user input.
+   * @param {K} key - The filter key to update.
+   * @param {Filters[K]} value - The new value for the filter.
+   */
   const handleFilterChange = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
   
+  /**
+   * @callback handleResetFilters
+   * @description Resets all filters to their initial, empty state.
+   */
   const handleResetFilters = useCallback(() => {
     setFilters(initialFilters);
   }, []);
 
+  /**
+   * @memorized {PromptSFL[]} filteredPrompts
+   * @description A memoized list of prompts that have been filtered based on the current `filters` state.
+   * This prevents re-filtering on every render.
+   */
   const filteredPrompts = useMemo(() => {
     return prompts.filter(p => {
       const searchTermLower = filters.searchTerm.toLowerCase();
@@ -280,6 +390,14 @@ const App: React.FC = () => {
     }).sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [prompts, filters]);
 
+  /**
+   * @callback handleTestWithGemini
+   * @description Handles testing a prompt with the Gemini API. It updates the prompt's state to show
+   * loading, interpolates any variables into the prompt text, calls the API, and then updates the state
+   * with the response or error.
+   * @param {PromptSFL} promptToTest - The prompt to be tested.
+   * @param {Record<string, string>} variables - A map of variable names to their values for interpolation.
+   */
   const handleTestWithGemini = async (promptToTest: PromptSFL, variables: Record<string, string>) => {
     const updatePromptState = (id: string, updates: Partial<PromptSFL>) => {
         setPrompts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
@@ -302,10 +420,22 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * @function sanitizeFilename
+   * @description A utility function to sanitize a string for use as a filename.
+   * @param {string} filename - The string to sanitize.
+   * @returns {string} The sanitized filename.
+   * @private
+   */
   const sanitizeFilename = (filename: string): string => {
     return filename.replace(/[^a-z0-9_\-\s]/gi, '_').replace(/\s+/g, '_');
   };
 
+  /**
+   * @function handleExportSinglePrompt
+   * @description Exports a single prompt as a JSON file.
+   * @param {PromptSFL} promptToExport - The prompt to export.
+   */
   const handleExportSinglePrompt = (promptToExport: PromptSFL) => {
     if (!promptToExport) {
       alert("No prompt selected for export.");
@@ -331,6 +461,11 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * @function handleExportSinglePromptMarkdown
+   * @description Exports a single prompt as a Markdown file.
+   * @param {PromptSFL} promptToExport - The prompt to export.
+   */
   const handleExportSinglePromptMarkdown = (promptToExport: PromptSFL) => {
     if (!promptToExport) {
       alert("No prompt selected for export.");
@@ -355,7 +490,10 @@ const App: React.FC = () => {
     }
   };
 
-
+  /**
+   * @function handleExportAllPrompts
+   * @description Exports all prompts in the library as a single JSON file.
+   */
   const handleExportAllPrompts = () => {
     if (prompts.length === 0) {
       alert("There are no prompts to export.");
@@ -383,6 +521,10 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * @function handleExportAllPromptsMarkdown
+   * @description Exports all prompts in the library as a single Markdown file.
+   */
   const handleExportAllPromptsMarkdown = () => {
     if (prompts.length === 0) {
       alert("There are no prompts to export.");
@@ -409,10 +551,21 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * @function handleImportPrompts
+   * @description Programmatically clicks the hidden file input to open the file import dialog.
+   */
   const handleImportPrompts = () => {
       importFileRef.current?.click();
   };
 
+  /**
+   * @callback onFileImport
+   * @description Handles the file import process once a user selects a file.
+   * It reads, parses, and validates the JSON file, then merges the imported prompts
+   * into the existing state, updating existing prompts and adding new ones.
+   * @param {React.ChangeEvent<HTMLInputElement>} event - The file input change event.
+   */
   const onFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -470,6 +623,12 @@ const App: React.FC = () => {
       reader.readAsText(file);
   };
 
+  /**
+   * @function renderMainContent
+   * @description A router-like function that renders the main content area based on the `activePage` state.
+   * @returns {JSX.Element} The component for the currently active page.
+   * @private
+   */
   const renderMainContent = () => {
     switch(activePage) {
         case 'dashboard':

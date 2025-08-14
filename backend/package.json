@@ -1,6 +1,6 @@
 {
-  "name": "backend",
-  "version": "0.5.0",
+  "name": "sfl-prompt-architect-backend",
+  "version": "0.5.1",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
@@ -8,12 +8,14 @@
     "start": "node dist/index.js",
     "migrate": "node-pg-migrate -r dotenv/config -m /app/database/migrations",
     "migrate:up": "npm run migrate up",
-    "migrate:down": "npm run migrate down"
+    "migrate:down": "npm run migrate down",
+    "docs": "typedoc",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Backend API for SFL Prompt Architect",
   "dependencies": {
     "@google/genai": "^1.12.0",
     "@types/express": "^5.0.3",
@@ -27,6 +29,15 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.15.5"
+    "@types/jest": "^30.0.0",
+    "@types/pg": "^8.15.5",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.0.5",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.1",
+    "typedoc": "^0.28.9",
+    "typedoc-plugin-frontmatter": "^1.3.0",
+    "typedoc-plugin-markdown": "^4.8.0",
+    "typedoc-unhoax-theme": "^0.5.3"
   }
 }

@@ -1,8 +1,8 @@
 /**
  * @file PromptDetailModal.tsx
  * @description This component displays the full details of a selected SFL prompt in a modal dialog.
- * It provides a comprehensive view of all SFL parameters, the prompt text, and any associated metadata.
- * It also includes controls for testing the prompt with Gemini, editing, deleting, and exporting.
+ * It provides a comprehensive, read-only view of all SFL parameters, the prompt text, and any associated metadata.
+ * It also includes controls for testing the prompt with Gemini (handling variables), editing, deleting, and exporting the prompt.
  *
  * @requires react
  * @requires ../types
@@ -27,15 +27,15 @@ import ClipboardIcon from './icons/ClipboardIcon';
 
 /**
  * @interface PromptDetailModalProps
- * @description Defines the props for the PromptDetailModal component.
- * @property {boolean} isOpen - Whether the modal is currently visible.
+ * @description Defines the props for the `PromptDetailModal` component.
+ * @property {boolean} isOpen - Controls the visibility of the modal.
  * @property {() => void} onClose - Callback function to close the modal.
- * @property {PromptSFL | null} prompt - The prompt object to display. If null, the modal is not rendered.
- * @property {(prompt: PromptSFL) => void} onEdit - Callback to trigger editing of the current prompt.
- * @property {(promptId: string) => void} onDelete - Callback to trigger deletion of the current prompt.
- * @property {(prompt: PromptSFL, variables: Record<string, string>) => void} onTestWithGemini - Callback to test the prompt with the Gemini API.
- * @property {(prompt: PromptSFL) => void} onExportPrompt - Callback to export the prompt as JSON.
- * @property {(prompt: PromptSFL) => void} onExportPromptMarkdown - Callback to export the prompt as Markdown.
+ * @property {PromptSFL | null} prompt - The prompt object to display. If `null`, the modal will not render.
+ * @property {(prompt: PromptSFL) => void} onEdit - Callback to trigger the editing mode for the current prompt.
+ * @property {(promptId: string) => void} onDelete - Callback to trigger the deletion of the current prompt.
+ * @property {(prompt: PromptSFL, variables: Record<string, string>) => void} onTestWithGemini - Callback to test the prompt with the Gemini API, passing any interpolated variable values.
+ * @property {(prompt: PromptSFL) => void} onExportPrompt - Callback to export the prompt as a JSON file.
+ * @property {(prompt: PromptSFL) => void} onExportPromptMarkdown - Callback to export the prompt as a Markdown file.
  */
 interface PromptDetailModalProps {
   isOpen: boolean;
@@ -49,13 +49,16 @@ interface PromptDetailModalProps {
 }
 
 /**
- * A small component to display a single piece of detail (label and value).
+ * A small, reusable component to display a single piece of detail (a label and its value).
+ * It handles conditional rendering and provides an option for code-like formatting.
+ *
  * @param {object} props - The component props.
  * @param {string} props.label - The label for the detail item.
- * @param {string | null} [props.value] - The value to display.
- * @param {boolean} [props.isCode] - If true, formats the value as a code block.
- * @param {boolean} [props.isEmpty] - If true, the component renders nothing.
- * @returns {JSX.Element | null} The rendered detail item or null.
+ * @param {string | null} [props.value] - The value to display. If falsy, the component renders nothing.
+ * @param {boolean} [props.isCode=false] - If `true`, formats the value in a `<pre>` tag for a code-like appearance.
+ * @param {boolean} [props.isEmpty=false] - If `true`, the component will not render, regardless of the value.
+ * @returns {JSX.Element | null} The rendered detail item or `null`.
+ * @private
  */
 const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: boolean; isEmpty?: boolean }> = ({ label, value, isCode, isEmpty }) => {
   if (isEmpty || !value) return null;
@@ -73,20 +76,34 @@ const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: bool
 
 /**
  * A modal component that displays the complete details of an SFL prompt.
- * It organizes all SFL parameters into Field, Tenor, and Mode sections.
- * It also provides functionality for handling prompt variables, testing with Gemini,
- * and viewing test results or errors.
+ * It organizes all SFL parameters into Field, Tenor, and Mode sections for clarity.
+ * It automatically detects `{{variables}}` in the prompt text and provides input fields for them.
+ * Users can test the prompt with Gemini, view results or errors, and access other management actions.
  *
  * @param {PromptDetailModalProps} props - The props for the component.
- * @returns {JSX.Element | null} The rendered modal or null if no prompt is provided.
+ * @returns {JSX.Element | null} The rendered modal, or `null` if no prompt is provided or `isOpen` is false.
  */
 const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, prompt, onEdit, onDelete, onTestWithGemini, onExportPrompt, onExportPromptMarkdown }) => {
   if (!prompt) return null;
 
+  /**
+   * @state {Record<string, string>} variableValues - Stores the current values for any variables found in the prompt text.
+   */
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  
+  /**
+   * @state {boolean} isDocVisible - Toggles the visibility of the source document's content.
+   */
   const [isDocVisible, setDocVisible] = useState(false);
+  
+  /**
+   * @state {boolean} docCopied - A transient state to provide feedback when the source document content is copied.
+   */
   const [docCopied, setDocCopied] = useState(false);
 
+  /**
+   * @memorized {string[]} variables - A memoized array of unique variable names extracted from the prompt text.
+   */
   const variables = useMemo(() => {
     if (!prompt?.promptText) return [];
     const regex = /{{\s*(\w+)\s*}}/g;
@@ -95,6 +112,9 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
     return [...new Set(matches.map(v => v.replace(/{{\s*|\s*}}/g, '')))];
   }, [prompt?.promptText]);
 
+  /**
+   * @effect Resets the state of the modal (variable values, document visibility) whenever it is opened or the prompt changes.
+   */
   useEffect(() => {
     if (isOpen && prompt) {
       const initialValues: Record<string, string> = {};
@@ -107,10 +127,20 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
     }
   }, [isOpen, prompt, variables]);
 
+  /**
+   * @callback handleVariableChange
+   * @description Updates the state for a single prompt variable.
+   * @param {string} variableName - The name of the variable to update.
+   * @param {string} value - The new value for the variable.
+   */
   const handleVariableChange = (variableName: string, value: string) => {
     setVariableValues(prev => ({ ...prev, [variableName]: value }));
   };
   
+  /**
+   * @callback handleCopyDocContent
+   * @description Copies the content of the attached source document to the clipboard and provides user feedback.
+   */
   const handleCopyDocContent = () => {
     if (prompt?.sourceDocument?.content) {
       navigator.clipboard.writeText(prompt.sourceDocument.content);

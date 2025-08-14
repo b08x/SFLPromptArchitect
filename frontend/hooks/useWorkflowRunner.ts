@@ -15,23 +15,73 @@ import { topologicalSort, executeTask } from '../services/workflowEngine';
 
 /**
  * A custom hook to manage the execution of a workflow.
+ * It orchestrates the running of tasks in the correct topological order,
+ * manages state transitions for each task, and handles the flow of data
+ * through the workflow's `DataStore`.
  *
- * @param {Workflow | null} workflow - The workflow to be executed.
- * @param {PromptSFL[]} prompts - The library of available SFL prompts.
- * @returns {object} An object containing the state of the workflow run and functions to control it.
- * @property {DataStore} dataStore - The current state of the data store.
- * @property {TaskStateMap} taskStates - A map of task IDs to their current execution state.
- * @property {boolean} isRunning - A boolean indicating if the workflow is currently running.
- * @property {(stagedUserInput?: Record<string, any>) => Promise<void>} run - Function to start the workflow execution.
- * @property {() => void} reset - Function to reset the workflow to its initial state.
- * @property {string[]} runFeedback - An array of feedback messages from the workflow execution (e.g., warnings).
+ * @param {Workflow | null} workflow - The workflow object to be executed. If null, the hook remains idle.
+ * @param {PromptSFL[]} prompts - The library of available SFL prompts, used for tasks that reference them.
+ * @returns {{
+ *   dataStore: DataStore;
+ *   taskStates: TaskStateMap;
+ *   isRunning: boolean;
+ *   run: (stagedUserInput?: Record<string, any>) => Promise<void>;
+ *   reset: () => void;
+ *   runFeedback: string[];
+ * }} An object containing the state of the workflow run and functions to control it.
+ *
+ * @example
+ * const { dataStore, taskStates, isRunning, run, reset } = useWorkflowRunner(myWorkflow, allPrompts);
+ *
+ * // To run the workflow:
+ * <button onClick={() => run({ text: "Initial user text" })} disabled={isRunning}>
+ *   {isRunning ? 'Running...' : 'Run Workflow'}
+ * </button>
+ *
+ * // To reset the state:
+ * <button onClick={reset}>Reset</button>
+ *
+ * // To display task status:
+ * <div>
+ *   {myWorkflow.tasks.map(task => (
+ *     <p key={task.id}>
+ *       {task.name}: {taskStates[task.id]?.status || 'PENDING'}
+ *     </p>
+ *   ))}
+ * </div>
  */
 export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[]) => {
+    /**
+     * @state
+     * @description The central data repository for the workflow run.
+     * It stores the outputs of all completed tasks, keyed by their `outputKey`.
+     */
     const [dataStore, setDataStore] = useState<DataStore>({});
+    
+    /**
+     * @state
+     * @description A map from task IDs to their current execution state, including status, results, and errors.
+     */
     const [taskStates, setTaskStates] = useState<TaskStateMap>({});
+    
+    /**
+     * @state
+     * @description A boolean flag indicating whether the workflow is currently executing.
+     */
     const [isRunning, setIsRunning] = useState(false);
+    
+    /**
+     * @state
+     * @description An array of feedback messages generated during the workflow run, such as warnings about dependencies.
+     */
     const [runFeedback, setRunFeedback] = useState<string[]>([]);
     
+    /**
+     * @function
+     * @description Initializes or resets the state of all tasks in the workflow to PENDING.
+     * Also clears the data store and any run feedback.
+     * @param {Task[]} tasks - The array of tasks from the current workflow.
+     */
     const initializeStates = useCallback((tasks: Task[]) => {
         const initialStates: TaskStateMap = {};
         for (const task of tasks) {
@@ -42,6 +92,11 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
         setRunFeedback([]);
     }, []);
 
+    /**
+     * @function
+     * @description Resets the entire workflow execution state, setting all tasks to PENDING
+     * and clearing the data store.
+     */
     const reset = useCallback(() => {
         if (workflow) {
             initializeStates(workflow.tasks);
@@ -52,6 +107,15 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
         setIsRunning(false);
     }, [workflow, initializeStates]);
 
+    /**
+     * @function
+     * @description Starts the execution of the workflow.
+     * It performs a topological sort of the tasks, then executes them sequentially,
+     * updating the task states and data store as it progresses.
+     * @param {Record<string, any>} [stagedUserInput={}] - The initial input data provided by the user,
+     * which is placed in `dataStore.userInput`.
+     * @returns {Promise<void>} A promise that resolves when the workflow has finished running (either completed or failed).
+     */
     const run = useCallback(async (stagedUserInput: Record<string, any> = {}) => {
         if (!workflow) {
             setRunFeedback(['No workflow selected.']);

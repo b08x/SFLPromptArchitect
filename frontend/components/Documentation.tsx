@@ -34,12 +34,15 @@ import PlayIcon from './icons/PlayIcon';
 import CodeBracketIcon from './icons/CodeBracketIcon';
 
 /**
- * A reusable card component to display a key feature.
+ * A reusable card component to display a key feature of the application.
+ * It combines an icon, a title, and a description in a visually distinct block.
+ *
  * @param {object} props - The component props.
- * @param {React.ReactNode} props.icon - The icon to display for the feature.
+ * @param {React.ReactNode} props.icon - The icon element to display for the feature.
  * @param {string} props.title - The title of the feature.
- * @param {React.ReactNode} props.children - The description of the feature.
- * @returns {JSX.Element} A styled card element.
+ * @param {React.ReactNode} props.children - The descriptive text for the feature.
+ * @returns {JSX.Element} A styled card element for showcasing a feature.
+ * @private
  */
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; }> = ({ icon, title, children }) => (
     <div className="bg-white p-6 rounded-lg border border-gray-200 h-full">
@@ -54,13 +57,16 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: Re
 );
 
 /**
- * A component to explain a single SFL concept (Field, Tenor, or Mode).
+ * A component designed to explain a single SFL concept (Field, Tenor, or Mode).
+ * It presents the concept's name, its guiding question, and a detailed explanation.
+ *
  * @param {object} props - The component props.
- * @param {React.ReactNode} props.icon - The icon representing the concept.
+ * @param {React.ReactNode} props.icon - The icon representing the SFL concept.
  * @param {string} props.title - The name of the concept (e.g., "Field").
  * @param {string} props.question - The key question the concept answers (e.g., "What is happening?").
  * @param {React.ReactNode} props.children - The detailed explanation of the concept.
- * @returns {JSX.Element} A styled component explaining an SFL concept.
+ * @returns {JSX.Element} A styled component that clearly explains an SFL concept.
+ * @private
  */
 const SFLConcept: React.FC<{ icon: React.ReactNode; title: string; question: string; children: React.ReactNode; }> = ({ icon, title, question, children }) => (
     <div className="bg-gray-50/70 p-5 rounded-lg border border-gray-200/80">
@@ -76,12 +82,15 @@ const SFLConcept: React.FC<{ icon: React.ReactNode; title: string; question: str
 );
 
 /**
- * A component to display a single step in a process or guide.
+ * A component to display a single step in a process or instructional guide.
+ * It combines an icon, a title, and a description to clearly outline each step.
+ *
  * @param {object} props - The component props.
  * @param {React.ReactNode} props.icon - The icon for the step.
  * @param {string} props.title - The title of the step.
- * @param {React.ReactNode} props.children - The description of the step.
+ * @param {React.ReactNode} props.children - The description of the step's action.
  * @returns {JSX.Element} A styled step component.
+ * @private
  */
 const Step: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; }> = ({ icon, title, children }) => (
     <div className="flex space-x-4">
@@ -97,9 +106,10 @@ const Step: React.FC<{ icon: React.ReactNode; title: string; children: React.Rea
 
 /**
  * The main documentation component for the application.
- * It provides a comprehensive guide to using the SFL Prompt Architect,
- * covering the SFL framework, key application features, and a step-by-step guide
- * on how to create and use prompts and workflows.
+ * It provides a comprehensive, user-friendly guide to using the SFL Prompt Architect.
+ * The page is structured into sections covering the SFL framework, key application features,
+ * and a step-by-step guide on how to create and use prompts and workflows effectively.
+ *
  * @returns {JSX.Element} The rendered documentation page.
  */
 const Documentation: React.FC = () => {

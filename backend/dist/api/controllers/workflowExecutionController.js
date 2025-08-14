@@ -22,9 +22,16 @@ class WorkflowExecutionController {
                 if (!task || !dataStore) {
                     return res.status(400).json({ message: 'Task and dataStore are required' });
                 }
-                // We need to fetch all prompts to be able to find the linked prompt
-                const prompts = yield promptService_1.default.getPrompts({});
-                const result = yield workflowExecutionService_1.default.executeTask(task, dataStore, prompts);
+                // Optimize: Only fetch the specific prompt if needed, instead of all prompts
+                let linkedPrompt;
+                if (task.promptId) {
+                    const foundPrompt = yield promptService_1.default.getPromptById(task.promptId);
+                    if (!foundPrompt) {
+                        return res.status(404).json({ message: `Prompt with ID ${task.promptId} not found` });
+                    }
+                    linkedPrompt = foundPrompt;
+                }
+                const result = yield workflowExecutionService_1.default.executeTask(task, dataStore, linkedPrompt);
                 res.status(200).json(result);
             }
             catch (error) {

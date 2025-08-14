@@ -1,7 +1,35 @@
+/**
+ * @file geminiService.ts
+ * @description This service module provides functions for interacting with the backend's Gemini API endpoints.
+ * It handles tasks such as testing prompts, generating SFL structures from goals, and regenerating prompts based on feedback.
+ *
+ * @requires ../types
+ */
+
 import { PromptSFL, Workflow } from '../types';
 
+/**
+ * @constant {string} API_BASE_URL - The base URL for the Gemini API endpoints.
+ * @private
+ */
 const API_BASE_URL = '/api/gemini';
 
+/**
+ * Sends a prompt to the Gemini API for testing.
+ * This function communicates with the backend, which in turn calls the actual Gemini API.
+ *
+ * @param {string} promptText - The raw text of the prompt to be tested.
+ * @returns {Promise<string>} A promise that resolves to the text response from the Gemini model.
+ * @throws {Error} Throws an error if the API response is not ok, containing a message from the server.
+ *
+ * @example
+ * try {
+ *   const response = await testPromptWithGemini("Explain quantum computing in simple terms.");
+ *   console.log(response);
+ * } catch (error) {
+ *   console.error("Test failed:", error.message);
+ * }
+ */
 export const testPromptWithGemini = async (promptText: string): Promise<string> => {
   const response = await fetch(`${API_BASE_URL}/test-prompt`, {
     method: 'POST',
@@ -19,6 +47,21 @@ export const testPromptWithGemini = async (promptText: string): Promise<string> 
   return data.text;
 };
 
+/**
+ * Generates a complete SFL (Systemic Functional Linguistics) prompt structure from a high-level user goal.
+ * This is used for the "Prompt Wizard" feature.
+ *
+ * @param {string} goal - A natural language string describing what the user wants the prompt to achieve.
+ * @param {string} [sourceDocContent] - Optional content from a source document to provide stylistic or contextual reference.
+ * @returns {Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>} A promise that resolves to the generated SFL prompt object,
+ * ready to be saved or further edited.
+ * @throws {Error} Throws an error if the API response is not ok.
+ *
+ * @example
+ * const goal = "Create a Python function to sort a list of numbers.";
+ * const newPrompt = await generateSFLFromGoal(goal);
+ * // newPrompt can now be used to populate the prompt editor form.
+ */
 export const generateSFLFromGoal = async (goal: string, sourceDocContent?: string): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> => {
   const response = await fetch(`${API_BASE_URL}/generate-sfl`, {
     method: 'POST',
@@ -35,6 +78,20 @@ export const generateSFLFromGoal = async (goal: string, sourceDocContent?: strin
   return response.json();
 };
 
+/**
+ * Takes an existing SFL prompt and a user's suggestion to regenerate and improve it.
+ * The backend uses an AI model to interpret the suggestion and modify the SFL fields accordingly.
+ *
+ * @param {Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>} currentPrompt - The current state of the prompt to be improved.
+ * @param {string} suggestion - A natural language string with instructions for improvement (e.g., "make it more formal").
+ * @returns {Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>>} A promise that resolves to the newly regenerated SFL prompt object.
+ * @throws {Error} Throws an error if the API response is not ok.
+ *
+ * @example
+ * const suggestion = "Change the target audience to experts in the field.";
+ * const refinedPrompt = await regenerateSFLFromSuggestion(existingPrompt, suggestion);
+ * // refinedPrompt contains the AI-modified SFL structure.
+ */
 export const regenerateSFLFromSuggestion = async (
   currentPrompt: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>,
   suggestion: string
@@ -54,6 +111,19 @@ export const regenerateSFLFromSuggestion = async (
   return response.json();
 };
 
+/**
+ * Generates a structured workflow object from a high-level user goal.
+ * This is used for the "Workflow Wizard" feature.
+ *
+ * @param {string} goal - A natural language string describing the multi-step process the user wants to automate.
+ * @returns {Promise<Workflow>} A promise that resolves to the generated `Workflow` object, including its tasks.
+ * @throws {Error} Throws an error if the API response is not ok.
+ *
+ * @example
+ * const goal = "Summarize an article and then translate the summary to French.";
+ * const newWorkflow = await generateWorkflowFromGoal(goal);
+ * // newWorkflow can now be saved or opened in the workflow editor.
+ */
 export const generateWorkflowFromGoal = async (goal: string): Promise<Workflow> => {
   const response = await fetch(`${API_BASE_URL}/generate-workflow`, {
     method: 'POST',

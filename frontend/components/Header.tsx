@@ -1,8 +1,9 @@
 /**
  * @file Header.tsx
  * @description This component renders the main application header.
- * It includes the application title and a set of action buttons for creating, importing,
- * exporting, and getting help with prompts.
+ * It includes the application title and a set of primary action buttons for creating, importing,
+ * exporting, and getting help with prompts. It is a stateless component that receives all its
+ * functionality via props.
  *
  * @requires react
  * @requires ./icons/PlusIcon
@@ -23,14 +24,14 @@ import DocumentTextIcon from './icons/DocumentTextIcon';
 
 /**
  * @interface HeaderProps
- * @description Defines the props for the Header component.
- * It consists of callback functions to be triggered by the header buttons.
- * @property {() => void} onAddNewPrompt - Callback for the "New Prompt" button.
- * @property {() => void} onOpenWizard - Callback for the "Prompt Wizard" button.
- * @property {() => void} onImportPrompts - Callback for the "Import Prompts" button.
- * @property {() => void} onExportAllPrompts - Callback for the "Export All as JSON" button.
- * @property {() => void} onExportAllPromptsMarkdown - Callback for the "Export All as Markdown" button.
- * @property {() => void} onOpenHelp - Callback for the "Help Guide" button.
+ * @description Defines the props for the `Header` component.
+ * It consists of a collection of callback functions to be triggered by the various action buttons in the header.
+ * @property {() => void} onAddNewPrompt - Callback function invoked when the "New Prompt" button is clicked.
+ * @property {() => void} onOpenWizard - Callback function invoked when the "Prompt Wizard" button is clicked.
+ * @property {() => void} onImportPrompts - Callback function invoked when the "Import Prompts" button is clicked.
+ * @property {() => void} onExportAllPrompts - Callback function invoked when the "Export All as JSON" button is clicked.
+ * @property {() => void} onExportAllPromptsMarkdown - Callback function invoked when the "Export All as Markdown" button is clicked.
+ * @property {() => void} onOpenHelp - Callback function invoked when the "Help Guide" button is clicked.
  */
 interface HeaderProps {
   onAddNewPrompt: () => void;
@@ -43,9 +44,10 @@ interface HeaderProps {
 
 /**
  * The main header component for the application.
- * It displays the application title and provides primary action buttons.
+ * It displays the application title and provides a set of globally-relevant action buttons
+ * for managing the prompt library.
  *
- * @param {HeaderProps} props - The props for the component.
+ * @param {HeaderProps} props - The props for the component, containing the necessary event handlers.
  * @returns {JSX.Element} The rendered header element.
  */
 const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts, onExportAllPromptsMarkdown, onOpenHelp }) => {

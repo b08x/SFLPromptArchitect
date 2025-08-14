@@ -37,15 +37,19 @@ import FaceSmileIcon from './icons/FaceSmileIcon';
 import BeakerIcon from './icons/BeakerIcon';
 import PlusIcon from './icons/PlusIcon';
 
+/**
+ * @typedef {'dashboard' | 'lab' | 'documentation' | 'settings'} Page
+ * @description Represents the possible main pages the user can navigate to.
+ */
 type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 
 /**
  * @interface SidebarProps
- * @description Defines the props for the Sidebar component.
- * @property {Filters} filters - The current state of the filters.
- * @property {(key: K, value: Filters[K]) => void} onFilterChange - Callback to update a filter.
- * @property {string[]} popularTags - An array of popular tags to display as quick filters.
- * @property {Page} activePage - The currently active page.
+ * @description Defines the props for the `Sidebar` component.
+ * @property {Filters} filters - The current state of the filters, used to highlight active filter buttons.
+ * @property {(key: K, value: Filters[K]) => void} onFilterChange - Callback to update a filter property in the parent component's state.
+ * @property {string[]} popularTags - An array of popular tags to display as quick filter buttons.
+ * @property {Page} activePage - The currently active page, used to highlight the active navigation item.
  * @property {(page: Page) => void} onNavigate - Callback to handle navigation to a different page.
  */
 interface SidebarProps {
@@ -57,9 +61,15 @@ interface SidebarProps {
 }
 
 /**
- * A reusable navigation item component for the sidebar.
+ * A reusable, styled button component for primary navigation links in the sidebar.
+ *
  * @param {object} props - The component props.
+ * @param {React.ComponentType<{ className?: string }>} props.icon - The icon component to display.
+ * @param {string} props.label - The text label for the navigation item.
+ * @param {boolean} [props.active=false] - Whether the item is currently active.
+ * @param {() => void} props.onClick - The click handler for the navigation item.
  * @returns {JSX.Element} A styled button for navigation.
+ * @private
  */
 const NavItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; active?: boolean, onClick: () => void; }> = ({ icon: Icon, label, active, onClick }) => (
   <button onClick={onClick} className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
@@ -72,9 +82,15 @@ const NavItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; lab
 );
 
 /**
- * A reusable filter item component for the sidebar.
+ * A reusable, styled button component for quick filter items in the sidebar.
+ *
  * @param {object} props - The component props.
+ * @param {React.ComponentType<{ className?: string }>} props.icon - The icon component to display.
+ * @param {string} props.label - The text label for the filter.
+ * @param {() => void} props.onClick - The click handler to apply the filter.
+ * @param {boolean} props.selected - Whether the filter is currently selected.
  * @returns {JSX.Element} A styled button for applying a filter.
+ * @private
  */
 const FilterItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; selected: boolean }> = ({ icon: Icon, label, onClick, selected }) => (
     <button onClick={onClick} className={`flex w-full items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -87,8 +103,9 @@ const FilterItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; 
 );
 
 /**
- * The main sidebar component.
- * It provides navigation, filtering capabilities, and status information.
+ * The main sidebar component for the application.
+ * It provides primary navigation, quick filtering capabilities for prompts,
+ * and status information about the connected AI model.
  *
  * @param {SidebarProps} props - The props for the component.
  * @returns {JSX.Element} The rendered sidebar.

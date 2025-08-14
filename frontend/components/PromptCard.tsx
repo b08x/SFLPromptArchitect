@@ -1,8 +1,9 @@
 /**
  * @file PromptCard.tsx
  * @description This component renders a single card representing an SFL prompt.
- * It displays key information such as the title, task type, persona, and format.
- * It also includes a dropdown menu with actions like View, Edit, and Delete.
+ * It displays key information such as the title, task type, persona, and format,
+ * providing a quick, scannable overview. It also includes a dropdown menu with
+ * actions like View, Edit, and Delete.
  *
  * @requires react
  * @requires ../types
@@ -29,11 +30,11 @@ import AcademicCapIcon from './icons/AcademicCapIcon';
 
 /**
  * @interface PromptCardProps
- * @description Defines the props for the PromptCard component.
+ * @description Defines the props for the `PromptCard` component.
  * @property {PromptSFL} prompt - The SFL prompt object to display.
- * @property {(prompt: PromptSFL) => void} onView - Callback function when the "View" action is selected.
- * @property {(prompt: PromptSFL) => void} onEdit - Callback function when the "Edit" action is selected.
- * @property {(promptId: string) => void} onDelete - Callback function when the "Delete" action is selected.
+ * @property {(prompt: PromptSFL) => void} onView - Callback function invoked when the "View" action is selected from the menu.
+ * @property {(prompt: PromptSFL) => void} onEdit - Callback function invoked when the "Edit" action is selected from the menu.
+ * @property {(promptId: string) => void} onDelete - Callback function invoked when the "Delete" action is selected from the menu.
  */
 interface PromptCardProps {
   prompt: PromptSFL;
@@ -43,11 +44,14 @@ interface PromptCardProps {
 }
 
 /**
- * Returns a specific icon component based on the task type string.
- * @param {string} taskType - The task type from the prompt's SFL Field.
- * @returns {JSX.Element} A React icon component.
+ * A utility function that returns a specific icon component based on the task type string.
+ * This helps in visually distinguishing different types of prompts in the UI.
+ *
+ * @param {string} taskType - The task type from the prompt's SFL Field (e.g., "Code Generation").
+ * @returns {React.ReactElement} A React icon component corresponding to the task type.
+ * @private
  */
-const getTaskIcon = (taskType: string): JSX.Element => {
+const getTaskIcon = (taskType: string): React.ReactElement => {
     const iconProps = { className: "w-5 h-5" };
     switch (taskType) {
         case 'Explanation': return <ChatBubbleLeftRightIcon {...iconProps} />;
@@ -63,18 +67,29 @@ const getTaskIcon = (taskType: string): JSX.Element => {
 
 /**
  * A card component that displays a summary of an SFL prompt and provides actions.
- * It shows the prompt's title, text snippet, key SFL parameters, and keywords.
- * An options menu allows the user to view, edit, or delete the prompt.
+ * It shows the prompt's title, a snippet of its text, key SFL parameters (Task, Persona, Format),
+ * and associated keywords. An options menu allows the user to view, edit, or delete the prompt.
  *
  * @param {PromptCardProps} props - The props for the component.
  * @returns {JSX.Element} The rendered prompt card.
  */
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelete }) => {
+  /**
+   * @state {boolean} menuOpen - Manages the visibility of the dropdown actions menu.
+   */
   const [menuOpen, setMenuOpen] = useState(false);
+  
+  /**
+   * @ref {HTMLDivElement} menuRef - A ref attached to the menu container to detect clicks outside of it for closing.
+   */
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isTested = !!prompt.geminiResponse;
 
+  /**
+   * @constant {Record<string, string>} cardIconColorMapping - A mapping of task types to Tailwind CSS classes for styling the card's icon.
+   * @private
+   */
   const cardIconColorMapping: Record<string, string> = {
     Explanation: 'text-blue-500 bg-blue-100',
     'Code Generation': 'text-green-500 bg-green-100',
@@ -88,6 +103,9 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelet
 
   const iconColor = cardIconColorMapping[prompt.sflField.taskType] || cardIconColorMapping.default;
 
+  /**
+   * @effect Adds a global click listener to close the actions menu when the user clicks outside of it.
+   */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["index.tsx", "App.tsx", "types.ts", "constants.ts"],
+  "out": "../../docs/frontend",
+  "theme": "default",
+  "name": "Frontend Application",
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "node_modules/**/*",
+    "dist/**/*"
+  ],
+  "excludePrivate": true,
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-plugin-frontmatter"
+  ],
+  "excludeExternals": true,
+  "tsconfig": "tsconfig.typedoc.json"
+}

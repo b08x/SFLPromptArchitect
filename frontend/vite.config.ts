@@ -1,7 +1,9 @@
 /**
  * @file vite.config.ts
  * @description Vite configuration file for the frontend application.
- * It sets up path aliases for cleaner imports and handles environment variables.
+ * This configuration sets up essential build tools and development server options.
+ * It includes path aliases for cleaner imports (e.g., `@/components` instead of `../components`)
+ * and handles the loading of environment variables.
  *
  * @requires path
  * @requires vite
@@ -10,22 +12,34 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
+/**
+ * Exports the Vite configuration.
+ * The configuration is returned from a function to allow access to the current `mode` (development or production).
+ *
+ * @param {object} config - The Vite configuration object.
+ * @param {string} config.mode - The current mode ('development', 'production').
+ * @returns {import('vite').UserConfig} The Vite configuration object.
+ */
 export default defineConfig(({ mode }) => {
-  // Load environment variables from .env files.
-  // The third argument `''` loads all variables, not just those with VITE_ prefix.
+  // Load environment variables from .env files located in the project root.
+  // The third argument `''` ensures that all variables are loaded, not just those prefixed with `VITE_`.
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
     resolve: {
+      /**
+       * @property {object} alias - Defines path aliases for module resolution.
+       * This allows for cleaner, absolute-like imports within the project.
+       */
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
     },
     define: {
-      // Expose environment variables to the client.
-      // Vite automatically exposes VITE_ prefixed variables, but being explicit can help debugging.
-      // We are stringifying the values.
-      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
+      // This section can be used to expose environment variables to the client-side code.
+      // Vite automatically exposes variables prefixed with `VITE_` via `import.meta.env`.
+      // For variables without the prefix, you would define them here, for example:
+      // 'process.env.API_KEY': JSON.stringify(env.API_KEY)
     },
   };
 });
