@@ -326,7 +326,7 @@ npm run docs:combine
 
 ### Documentation Structure
 
-```
+```shell
 docs/
 ├── index.html              # Main documentation homepage
 ├── frontend/               # Frontend TypeDoc (Markdown)

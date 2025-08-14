@@ -1,0 +1,70 @@
+```json
+{
+  "productBacklog": [
+    {
+      "epic": "Security Hardening",
+      "issueId": "SEC-002",
+      "userStory": "As a DevOps engineer, I want the frontend container to run as a non-privileged user to minimize the potential impact of a container security breach.",
+      "taskDescription": "Modify the `frontend/Dockerfile` to switch to a non-root user before starting the nginx server.",
+      "llmAssistantPrompt": {
+        "instructions": "In the final `nginx` stage of the `frontend/Dockerfile`, add a `USER` instruction to switch to the non-root `nginx` user before the `CMD` instruction is executed. Provide the complete, corrected Dockerfile content.",
+        "acceptanceCriteria": [
+          "The file `frontend/Dockerfile` must be modified.",
+          "The final stage must still be based on an `nginx` image.",
+          "A `USER nginx` instruction must be added.",
+          "The `USER nginx` instruction must appear before the final `CMD` instruction.",
+          "All other instructions (`COPY`, `EXPOSE`, `CMD`) must remain functionally the same."
+        ]
+      }
+    },
+    {
+      "epic": "System Health & Robustness",
+      "issueId": "BUG-002",
+      "userStory": "As a developer, I want to use a cryptographically secure method for generating all unique identifiers to prevent data collisions and ensure data integrity.",
+      "taskDescription": "Refactor the `generateId` function in `frontend/utils/generateId.ts` to remove the non-cryptographically secure `Math.random()` fallback. Replace it with a robust, well-vetted UUID library like `nanoid` or `uuid` to ensure unique ID generation across all environments.",
+      "llmAssistantPrompt": {
+        "instructions": "1. Add a reliable UUID generation library (e.g., `nanoid`) as a dependency to the `frontend/package.json` file. 2. Modify the `frontend/utils/generateId.ts` file to remove the existing `Math.random()`-based fallback implementation. 3. Replace the entire function body with a call to the newly installed UUID library, ensuring it returns a UUID string. 4. Remove the `crypto.getRandomValues()` polyfill as it is no longer necessary.",
+        "acceptanceCriteria": [
+          "A UUID generation library (e.g., `nanoid` or `uuid`) must be added to the `dependencies` in `frontend/package.json`.",
+          "The file `frontend/utils/generateId.ts` must be modified.",
+          "The `generateId` function must be refactored to use the new library.",
+          "The `Math.random()`-based fallback logic must be completely removed from the function.",
+          "The function must still return a string-based unique identifier."
+        ]
+      }
+    },
+    {
+      "epic": "Maintainability & Scalability",
+      "issueId": "REFACTOR-002",
+      "userStory": "As a backend developer, I want all validation logic to be centralized in the service layer so that business rules are consistent and easy to maintain.",
+      "taskDescription": "Refactor the `promptController.ts` and `promptService.ts` to move all validation logic (e.g., checking for empty `title` and `promptText`) from the controller into the service. The controller should only handle HTTP request/response duties, while the service enforces all business rules.",
+      "llmAssistantPrompt": {
+        "instructions": "1. In `backend/src/api/controllers/promptController.ts`, remove the validation checks for `title` and `promptText` from the `createPrompt` and `updatePrompt` methods. 2. In `backend/src/services/promptService.ts`, ensure that the `createPrompt` and `updatePrompt` methods contain robust checks for empty or invalid `title` and `promptText` and throw an error if validation fails. 3. The controller should now directly call the service and use its `try...catch` block to handle any errors thrown by the service layer.",
+        "acceptanceCriteria": [
+          "The file `backend/src/api/controllers/promptController.ts` must be modified.",
+          "The `createPrompt` and `updatePrompt` methods in the controller must no longer contain `if` statements that check for empty `title` or `promptText`.",
+          "The file `backend/src/services/promptService.ts` must be modified.",
+          "The `createPrompt` and `updatePrompt` methods in the service must contain the validation logic and throw an `Error` for invalid data.",
+          "The API must still return a `400` status code for invalid requests, now caught by the controller's error handling block."
+        ]
+      }
+    },
+    {
+      "epic": "System Health & Robustness",
+      "issueId": "API-001",
+      "userStory": "As a frontend developer, I want the API to return standard and predictable HTTP status codes so that I can implement reliable error handling on the client-side.",
+      "taskDescription": "Conduct a full review of all controllers in `backend/src/api/controllers/` to ensure that all error paths return appropriate and standard HTTP status codes (e.g., 400, 404, 500). Standardize error responses using the existing `errorHandler` middleware.",
+      "llmAssistantPrompt": {
+        "instructions": "Review all controller files in `backend/src/api/controllers/` (`promptController.ts`, `workflowController.ts`, `geminiController.ts`, etc.). For every method, inspect all possible failure scenarios (e.g., item not found, invalid input, service error). Ensure that each failure path returns a response with a standard HTTP status code. For example, a 'not found' condition must consistently return `res.status(404)`.",
+        "acceptanceCriteria": [
+          "All controller files in `backend/src/api/controllers/` have been reviewed.",
+          "In `workflowController.ts`, any 'Workflow not found' error must return a `404` status.",
+          "In `promptController.ts`, any 'Prompt not found' error must return a `404` status.",
+          "In `geminiController.ts`, missing body parameters like `goal` or `promptText` must result in a `400` status.",
+          "All error handling should be consistent, leveraging the `next(error)` pattern where appropriate to delegate to the centralized `errorHandler.ts`."
+        ]
+      }
+    }
+  ]
+}
+```
