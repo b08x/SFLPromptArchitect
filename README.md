@@ -1,6 +1,6 @@
 # SFL Prompt Architect
 
-A sophisticated prompt engineering tool built on **Systemic Functional Linguistics (SFL)** principles to help you create, test, and manage AI prompts with precision and theoretical grounding.
+The SFL Prompt Architect is a full-stack application designed for systematic prompt engineering. Its core strength lies in the structured application of SFL theory to AI prompts, managed through a React-based frontend and a Node.js/Express backend. The system separates concerns, with the backend handling all business logic, database interactions, and secure communication with the Gemini AI API. The entire environment is containerized with Docker, ensuring consistent and reproducible deployments (docker-compose.yml).
 
 ## What is SFL Prompt Architect?
 
@@ -69,8 +69,8 @@ This systematic approach ensures your prompts are not just functional, but optim
    ```
 
    This starts:
-   - Frontend (React) on http://localhost:80
-   - Backend (Express.js) on http://localhost:4000
+   - Frontend (React) on <http://localhost:80>
+   - Backend (Express.js) on <http://localhost:4000>
    - PostgreSQL database on port 5432
    - Redis cache on port 6379
 
@@ -89,12 +89,14 @@ This systematic approach ensures your prompts are not just functional, but optim
 2. **Set up environment variables**
 
    **Frontend** (`.env.local`):
+
    ```bash
    cd frontend
    echo "VITE_GEMINI_API_KEY=your_api_key_here" > .env.local
    ```
 
    **Backend** (`.env`):
+
    ```bash
    cd backend
    cat > .env << EOF
@@ -261,6 +263,7 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 ## Technical Architecture
 
 ### Full-Stack Application
+
 - **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
 - **Backend**: Express.js + TypeScript + Winston logging
 - **Database**: PostgreSQL 16 with pgvector extension for embeddings
@@ -268,17 +271,20 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 - **Deployment**: Docker Compose with nginx proxy
 
 ### AI & Integration
+
 - **AI Integration**: Google Gemini API integration
 - **Vector Search**: pgvector for document similarity search
 - **Workflow Engine**: Task-based workflow execution with dependency management
 
 ### Development & Documentation
+
 - **Documentation**: Automated TypeDoc generation for frontend and backend
 - **Type Safety**: Shared TypeScript interfaces between frontend/backend
 - **API Design**: RESTful endpoints with consistent error handling
 - **Testing**: Manual testing through UI and API endpoints
 
 ### Key Features
+
 - **SFL Framework**: Three-dimensional prompt structure (Field, Tenor, Mode)
 - **Variable Substitution**: `{{variable}}` syntax with regex replacement
 - **Export/Import**: JSON format with metadata preservation
@@ -286,6 +292,7 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 - **Real-time Features**: Workflow status updates, prompt testing feedback
 
 ### Available Scripts
+
 - `npm run docs` - Generate complete unified documentation
 - `npm run dev:frontend` - Start frontend development server
 - `npm run dev:backend` - Start backend development server  
@@ -297,6 +304,7 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 SFL Prompt Architect includes a comprehensive automated documentation system that generates unified API documentation for both frontend and backend components.
 
 ### Features
+
 - **Automated Generation**: Single command generates complete documentation
 - **Unified Interface**: Professional main page with navigation to all sections
 - **TypeDoc Integration**: Full TypeScript API documentation
@@ -304,6 +312,7 @@ SFL Prompt Architect includes a comprehensive automated documentation system tha
 - **GitHub Pages Ready**: Includes `.nojekyll` and proper structure for deployment
 
 ### Usage
+
 ```bash
 # Generate complete documentation
 npm run docs
@@ -316,6 +325,7 @@ npm run docs:combine
 ```
 
 ### Documentation Structure
+
 ```
 docs/
 ├── index.html              # Main documentation homepage
@@ -331,6 +341,7 @@ docs/
 ```
 
 ### Accessing Documentation
+
 - **Local**: Open `docs/index.html` in your browser
 - **GitHub Pages**: Deploy the `docs/` folder to GitHub Pages
 - **CI/CD**: Integrate `npm run docs` into your build pipeline

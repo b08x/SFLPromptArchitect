@@ -33,3 +33,5 @@ yarn-error.log*
 combined.log
 .claude/session_exports/
 /docs/
+
+SFL-Prompt-Architect.code-workspace
