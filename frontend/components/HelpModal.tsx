@@ -24,9 +24,9 @@ import ModalShell from './ModalShell';
  */
 const HelpSection: React.FC<{ title: string; subtitle: string; children: React.ReactNode }> = ({ title, subtitle, children }) => (
     <div className="mb-8">
-        <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
-        <p className="text-md text-gray-500 mb-3 italic">"{subtitle}"</p>
-        <div className="space-y-4 text-gray-700 text-sm leading-relaxed pl-4 border-l-2 border-gray-200">
+        <h3 className="text-2xl font-bold text-gray-200">{title}</h3>
+        <p className="text-md text-[#95aac0] mb-3 italic">"{subtitle}"</p>
+        <div className="space-y-4 text-gray-200 text-sm leading-relaxed pl-4 border-l-2 border-[#5c6f7e]">
             {children}
         </div>
     </div>
@@ -47,7 +47,7 @@ const DetailBlock: React.FC<{ term: string; definition: string; algo: string }> 
     <div>
         <h4 className="font-semibold text-gray-800 text-base">{term}</h4>
         <p className="mb-1">{definition}</p>
-        <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+        <div className="bg-[#212934] p-3 rounded-md border border-[#5c6f7e]">
             <p className="font-mono text-xs text-gray-600"><span className="font-semibold text-[#4A69E2]">Algorithmic Representation:</span> {algo}</p>
         </div>
     </div>
@@ -161,7 +161,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
              <div className="flex justify-end pt-4 mt-6 border-t border-gray-200">
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-2 text-sm font-medium text-gray-200 bg-[#333e48] border border-[#5c6f7e] rounded-md hover:bg-[#212934] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e2a32d]"
                 >
                     Close
                 </button>

@@ -39,29 +39,29 @@ interface TopBarProps {
  */
 const TopBar: React.FC<TopBarProps> = ({ onAddNewPrompt, onOpenWizard, searchTerm, onSearchChange }) => {
   return (
-    <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+    <header className="bg-[#333e48]/80 backdrop-blur-lg border-b border-[#5c6f7e] px-6 py-4 flex items-center justify-between sticky top-0 z-20">
       <div className="relative w-full max-w-sm">
-        <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <MagnifyingGlassIcon className="w-5 h-5 text-[#95aac0] absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           placeholder="Search prompts..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2] outline-none"
+          className="w-full pl-10 pr-4 py-2 bg-[#333e48] border border-[#5c6f7e] rounded-lg text-sm text-gray-200 placeholder-[#95aac0] focus:ring-2 focus:ring-[#e2a32d] focus:border-[#e2a32d] outline-none"
           aria-label="Search prompts"
         />
       </div>
       <div className="flex items-center space-x-4">
           <button
             onClick={onOpenWizard}
-            className="flex items-center space-x-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+            className="flex items-center space-x-2 bg-[#333e48] text-gray-200 border border-[#5c6f7e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#333e48]/80 transition-colors shadow-sm"
           >
             <MagicWandIcon className="w-5 h-5" />
             <span>Prompt Wizard</span>
           </button>
           <button
             onClick={onAddNewPrompt}
-            className="flex items-center space-x-2 bg-[#4A69E2] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors shadow-sm"
+            className="flex items-center space-x-2 bg-[#c36e26] text-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors shadow-sm"
           >
             <PlusIcon className="w-5 h-5" />
             <span>Create New Prompt</span>

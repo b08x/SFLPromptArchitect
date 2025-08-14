@@ -45,9 +45,9 @@ import CodeBracketIcon from './icons/CodeBracketIcon';
  * @private
  */
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; }> = ({ icon, title, children }) => (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 h-full">
+    <div className="bg-[#333e48] p-6 rounded-lg border border-[#5c6f7e] h-full">
         <div className="flex items-center space-x-4 mb-3">
-            <div className="bg-blue-100 p-3 rounded-lg text-blue-600">
+            <div className="bg-blue-900/20 p-3 rounded-lg text-blue-400">
                 {icon}
             </div>
             <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
@@ -69,7 +69,7 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: Re
  * @private
  */
 const SFLConcept: React.FC<{ icon: React.ReactNode; title: string; question: string; children: React.ReactNode; }> = ({ icon, title, question, children }) => (
-    <div className="bg-gray-50/70 p-5 rounded-lg border border-gray-200/80">
+    <div className="bg-[#212934]/70 p-5 rounded-lg border border-[#5c6f7e]/80">
         <div className="flex items-center space-x-3 mb-2">
             {icon}
             <div>
@@ -94,7 +94,7 @@ const SFLConcept: React.FC<{ icon: React.ReactNode; title: string; question: str
  */
 const Step: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; }> = ({ icon, title, children }) => (
     <div className="flex space-x-4">
-        <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center">
+        <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-gray-200 rounded-full flex items-center justify-center">
             {icon}
         </div>
         <div>
@@ -116,7 +116,7 @@ const Documentation: React.FC = () => {
     return (
         <div className="space-y-12">
             {/* Header */}
-            <header className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-xl border border-gray-200 text-center">
+            <header className="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 p-8 rounded-xl border border-[#5c6f7e] text-center">
                 <BookOpenIcon className="w-16 h-16 text-blue-600 mx-auto mb-4" />
                 <h1 className="text-4xl font-extrabold text-gray-800 mb-2">Welcome to SFL Prompt Studio</h1>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
