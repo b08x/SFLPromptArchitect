@@ -25,10 +25,11 @@ class WorkflowExecutionController {
                 // Optimize: Only fetch the specific prompt if needed, instead of all prompts
                 let linkedPrompt;
                 if (task.promptId) {
-                    linkedPrompt = yield promptService_1.default.getPromptById(task.promptId);
-                    if (!linkedPrompt) {
+                    const foundPrompt = yield promptService_1.default.getPromptById(task.promptId);
+                    if (!foundPrompt) {
                         return res.status(404).json({ message: `Prompt with ID ${task.promptId} not found` });
                     }
+                    linkedPrompt = foundPrompt;
                 }
                 const result = yield workflowExecutionService_1.default.executeTask(task, dataStore, linkedPrompt);
                 res.status(200).json(result);
