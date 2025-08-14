@@ -53,7 +53,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onAddNewPrompt, onOpenWizard, onImportPrompts, onExportAllPrompts, onExportAllPromptsMarkdown, onOpenHelp }) => {
   return (
     <header className="mb-6 flex items-center justify-between">
-      <h1 className="text-3xl font-bold text-[#e2a32d]">SFL Prompt Architect</h1>
+      <h1 className="text-3xl font-bold text-[#e2a32d]">SFL Prompt Studio</h1>
       <div className="flex items-center space-x-3">
         <div className="flex space-x-2 border-r border-[#5c6f7e] pr-3 mr-1">
             <button

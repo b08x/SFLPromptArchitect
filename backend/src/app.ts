@@ -1,6 +1,6 @@
 /**
  * @file app.ts
- * @description Express application setup for the SFL-Prompt-Architect backend.
+ * @description Express application setup for the SFL-Prompt-Studio backend.
  * This file configures the Express app without starting the server,
  * making it suitable for testing and modular usage.
  */
@@ -15,7 +15,7 @@ app.use(express.json());
 app.use('/api', apiRoutes);
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('SFL Prompt Architect Backend is running!');
+  res.send('SFL Prompt Studio Backend is running!');
 });
 
 app.use(errorHandler);

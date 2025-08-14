@@ -1,6 +1,6 @@
 /**
  * @file Documentation.tsx
- * @description This component renders the main documentation page for the SFL Prompt Architect.
+ * @description This component renders the main documentation page for the SFL Prompt Studio.
  * It explains the core concepts of Systemic Functional Linguistics (SFL) and highlights the key features of the application.
  * It is composed of several sub-components: `FeatureCard`, `SFLConcept`, and `Step` to structure the information clearly.
  *
@@ -106,7 +106,7 @@ const Step: React.FC<{ icon: React.ReactNode; title: string; children: React.Rea
 
 /**
  * The main documentation component for the application.
- * It provides a comprehensive, user-friendly guide to using the SFL Prompt Architect.
+ * It provides a comprehensive, user-friendly guide to using the SFL Prompt Studio.
  * The page is structured into sections covering the SFL framework, key application features,
  * and a step-by-step guide on how to create and use prompts and workflows effectively.
  *
@@ -118,7 +118,7 @@ const Documentation: React.FC = () => {
             {/* Header */}
             <header className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-xl border border-gray-200 text-center">
                 <BookOpenIcon className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                <h1 className="text-4xl font-extrabold text-gray-800 mb-2">Welcome to SFL Prompt Architect</h1>
+                <h1 className="text-4xl font-extrabold text-gray-800 mb-2">Welcome to SFL Prompt Studio</h1>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                     This guide provides everything you need to know to harness the power of Systemic Functional Linguistics (SFL) for precise and effective AI prompt engineering.
                 </p>

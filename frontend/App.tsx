@@ -1,6 +1,6 @@
 /**
  * @file App.tsx
- * @description This is the root component of the SFL Prompt Architect application.
+ * @description This is the root component of the SFL Prompt Studio application.
  * It serves as the main controller, managing the application's core state, including the list of prompts,
  * active modals, filters, and the current page. It orchestrates all the main components like the Sidebar,
  * TopBar, and the main content area, and wires up all the event handling logic for prompt management,

@@ -1,10 +1,10 @@
-# SFL Prompt Architect
+# SFL Prompt Studio
 
-The SFL Prompt Architect is a full-stack application designed for systematic prompt engineering. Its core strength lies in the structured application of SFL theory to AI prompts, managed through a React-based frontend and a Node.js/Express backend. The system separates concerns, with the backend handling all business logic, database interactions, and secure communication with the Gemini AI API. The entire environment is containerized with Docker, ensuring consistent and reproducible deployments (docker-compose.yml).
+The SFL Prompt Studio is a full-stack application designed for systematic prompt engineering. Its core strength lies in the structured application of SFL theory to AI prompts, managed through a React-based frontend and a Node.js/Express backend. The system separates concerns, with the backend handling all business logic, database interactions, and secure communication with the Gemini AI API. The entire environment is containerized with Docker, ensuring consistent and reproducible deployments (docker-compose.yml).
 
-## What is SFL Prompt Architect?
+## What is SFL Prompt Studio?
 
-SFL Prompt Architect transforms the art of prompt engineering into a structured, linguistic science. By applying Systemic Functional Linguistics theory, it breaks down every prompt into three fundamental dimensions:
+SFL Prompt Studio transforms the art of prompt engineering into a structured, linguistic science. By applying Systemic Functional Linguistics theory, it breaks down every prompt into three fundamental dimensions:
 
 - **Field** (What's happening): The subject matter, domain, and task type
 - **Tenor** (Who's involved): The AI persona, target audience, and interpersonal dynamics  
@@ -59,7 +59,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
    ```bash
    git clone <repository-url>
-   cd sfl-prompt-architect
+   cd sfl-prompt-studio
    ```
 
 2. **Start all services with Docker**
@@ -80,7 +80,7 @@ This systematic approach ensures your prompts are not just functional, but optim
 
    ```bash
    git clone <repository-url>
-   cd sfl-prompt-architect
+   cd sfl-prompt-studio
    npm install  # Install root dependencies
    cd frontend && npm install  # Install frontend dependencies
    cd ../backend && npm install  # Install backend dependencies
@@ -100,7 +100,7 @@ This systematic approach ensures your prompts are not just functional, but optim
    ```bash
    cd backend
    cat > .env << EOF
-   DATABASE_URL=postgresql://user:password@localhost:5432/sfl_prompt_architect
+   DATABASE_URL=postgresql://user:password@localhost:5432/sfl_prompt_studio
    REDIS_URL=redis://localhost:6379
    NODE_ENV=development
    PORT=4000
@@ -252,7 +252,7 @@ View the documentation by opening `docs/index.html` in your browser.
 
 ## Why SFL Matters for Prompt Engineering
 
-Traditional prompt engineering often relies on trial and error. SFL Prompt Architect brings linguistic theory to bear on prompt design, ensuring:
+Traditional prompt engineering often relies on trial and error. SFL Prompt Studio brings linguistic theory to bear on prompt design, ensuring:
 
 1. **Completeness**: Every prompt addresses Field, Tenor, and Mode dimensions
 2. **Consistency**: Structured approach leads to reliable results
@@ -301,7 +301,7 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Archi
 
 ## Documentation System
 
-SFL Prompt Architect includes a comprehensive automated documentation system that generates unified API documentation for both frontend and backend components.
+SFL Prompt Studio includes a comprehensive automated documentation system that generates unified API documentation for both frontend and backend components.
 
 ### Features
 
@@ -361,4 +361,4 @@ This tool is designed to evolve with the prompt engineering community. Contribut
 
 ---
 
-*Transform your AI interactions from guesswork to precision with SFL Prompt Architect.*
+*Transform your AI interactions from guesswork to precision with SFL Prompt Studio.*
