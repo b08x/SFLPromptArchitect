@@ -1,6 +1,6 @@
 /**
  * @file index.tsx
- * @description This is the main entry point for the SFL Prompt Architect React application.
+ * @description This is the main entry point for the SFL Prompt Studio React application.
  * It identifies the root DOM element in the `index.html` file and uses `ReactDOM.createRoot`
  * to render the main `App` component into it. The application is wrapped in `React.StrictMode`
  * to enable additional checks and warnings during development.

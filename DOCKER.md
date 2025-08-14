@@ -1,8 +1,8 @@
-# **SFL Prompt Architect: Docker Deployment & Usage Manual**
+# **SFL Prompt Studio: Docker Deployment & Usage Manual**
 
 ## **1. Quick Start with Docker Compose**
 
-The fastest way to deploy SFL Prompt Architect is using Docker Compose, which orchestrates all services in isolated containers.
+The fastest way to deploy SFL Prompt Studio is using Docker Compose, which orchestrates all services in isolated containers.
 
 ### **1.1 Prerequisites**
 
@@ -16,8 +16,8 @@ The fastest way to deploy SFL Prompt Architect is using Docker Compose, which or
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-repo/sfl-prompt-architect.git
-   cd sfl-prompt-architect
+   git clone https://github.com/your-repo/sfl-prompt-studio.git
+   cd sfl-prompt-studio
    ```
 
 2. **Configure environment variables:**
@@ -86,7 +86,7 @@ The fastest way to deploy SFL Prompt Architect is using Docker Compose, which or
 
 ---
 
-## **3. Using SFL Prompt Architect**
+## **3. Using SFL Prompt Studio**
 
 ### **3.1 Core Workflow**
 
@@ -189,13 +189,13 @@ The fastest way to deploy SFL Prompt Architect is using Docker Compose, which or
 
 ```bash
 # Access PostgreSQL console
-docker-compose exec postgres psql -U postgres -d sfl_prompt_architect
+docker-compose exec postgres psql -U postgres -d sfl_prompt_studio
 
 # Backup database
-docker-compose exec postgres pg_dump -U postgres sfl_prompt_architect > backup.sql
+docker-compose exec postgres pg_dump -U postgres sfl_prompt_studio > backup.sql
 
 # Restore database
-cat backup.sql | docker-compose exec -T postgres psql -U postgres sfl_prompt_architect
+cat backup.sql | docker-compose exec -T postgres psql -U postgres sfl_prompt_studio
 ```
 
 ### **4.3 Updating the System**
@@ -240,7 +240,7 @@ GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models
 
 # Database
 POSTGRES_USER=prompt_user
-POSTGRES_DB=sfl_prompt_architect
+POSTGRES_DB=sfl_prompt_studio
 
 # Security
 SESSION_SECRET=your_strong_secret_here
@@ -495,7 +495,7 @@ docker-compose images
 mkdir -p backups/$(date +%Y%m%d)
 
 # Backup database
-docker-compose exec postgres pg_dump -U postgres sfl_prompt_architect > backups/$(date +%Y%m%d)/db.sql
+docker-compose exec postgres pg_dump -U postgres sfl_prompt_studio > backups/$(date +%Y%m%d)/db.sql
 
 # Backup redis
 docker-compose exec redis redis-cli SAVE
@@ -509,18 +509,18 @@ tar -czvf backups/$(date +%Y%m%d).tar.gz backups/$(date +%Y%m%d)
 
 ## **11. Uninstallation**
 
-To completely remove SFL Prompt Architect:
+To completely remove SFL Prompt Studio:
 
 ```bash
 # Stop and remove containers
 docker-compose down
 
 # Remove volumes (WARNING: this deletes all data)
-docker volume rm sfl-prompt-architect_postgres_data
-docker volume rm sfl-prompt-architect_redis_data
-docker volume rm sfl-prompt-architect_frontend_node_modules
+docker volume rm sfl-prompt-studio_postgres_data
+docker volume rm sfl-prompt-studio_redis_data
+docker volume rm sfl-prompt-studio_frontend_node_modules
 
 # Remove images
-docker rmi sfl-prompt-architect_frontend
-docker rmi sfl-prompt-architect_backend
+docker rmi sfl-prompt-studio_frontend
+docker rmi sfl-prompt-studio_backend
 ```

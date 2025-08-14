@@ -7,6 +7,7 @@
  *
  * @requires ../config/database
  * @requires ../types
+ * @since 0.5.1
  */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -25,13 +26,21 @@ const database_1 = __importDefault(require("../config/database"));
 /**
  * @class PromptService
  * @description A class to encapsulate all business logic for prompts.
+ * Provides methods for CRUD operations on prompts and handles data transformation
+ * between the SFL frontend format and the database schema.
+ *
+ * @since 0.5.1
  */
 class PromptService {
     /**
      * Maps the detailed `PromptSFL` format to the database `Prompt` format.
+     * Transforms the rich SFL structure into a flattened database record where SFL metadata
+     * is stored as JSON in the metadata column.
+     *
      * @param {PromptSFL | Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>} sflData - The SFL prompt data.
      * @returns {Omit<Prompt, 'id' | 'created_at' | 'updated_at'>} The prompt data formatted for the database.
      * @private
+     * @since 0.5.1
      */
     mapSFLToPrompt(sflData) {
         const metadata = {
@@ -51,9 +60,13 @@ class PromptService {
     }
     /**
      * Maps a database `Prompt` record to the `PromptSFL` format.
+     * Reconstructs the full SFL structure from the flattened database record,
+     * providing default values for missing SFL components.
+     *
      * @param {Prompt} dbPrompt - The prompt record from the database.
      * @returns {PromptSFL} The prompt data in the SFL format.
      * @private
+     * @since 0.5.1
      */
     mapPromptToSFL(dbPrompt) {
         const metadata = dbPrompt.metadata || {};
@@ -73,9 +86,24 @@ class PromptService {
     }
     /**
      * Creates a new prompt in the database.
+     * Validates required fields and transforms the SFL data before insertion.
+     *
      * @param {Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>} promptData - The SFL data for the new prompt.
      * @returns {Promise<PromptSFL>} A promise that resolves to the newly created prompt.
      * @throws {Error} If the title or prompt text is empty.
+     *
+     * @example
+     * ```typescript
+     * const newPromptData = {
+     *   title: "My New Prompt",
+     *   promptText: "Generate a summary of the following text: {{input}}",
+     *   sflField: { topic: "Text Summarization", taskType: "Summarization", ... },
+     *   // ... other SFL components
+     * };
+     * const createdPrompt = await promptService.createPrompt(newPromptData);
+     * ```
+     *
+     * @since 0.5.1
      */
     createPrompt(promptData) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -93,8 +121,18 @@ class PromptService {
     }
     /**
      * Retrieves all prompts from the database.
-     * @param {any} filters - An object containing filter criteria (currently unused).
-     * @returns {Promise<PromptSFL[]>} A promise that resolves to an array of prompts.
+     * Returns prompts ordered by most recently updated first.
+     *
+     * @param {any} filters - An object containing filter criteria (currently unused, reserved for future filtering functionality).
+     * @returns {Promise<PromptSFL[]>} A promise that resolves to an array of prompts in SFL format.
+     *
+     * @example
+     * ```typescript
+     * const allPrompts = await promptService.getPrompts({});
+     * console.log(`Found ${allPrompts.length} prompts`);
+     * ```
+     *
+     * @since 0.5.1
      */
     getPrompts(filters) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -104,8 +142,21 @@ class PromptService {
     }
     /**
      * Retrieves a single prompt by its ID.
-     * @param {string} id - The ID of the prompt to retrieve.
-     * @returns {Promise<PromptSFL | null>} A promise that resolves to the prompt, or null if not found.
+     *
+     * @param {string} id - The UUID of the prompt to retrieve.
+     * @returns {Promise<PromptSFL | null>} A promise that resolves to the prompt in SFL format, or null if not found.
+     *
+     * @example
+     * ```typescript
+     * const prompt = await promptService.getPromptById('123e4567-e89b-12d3-a456-426614174000');
+     * if (prompt) {
+     *   console.log(`Found prompt: ${prompt.title}`);
+     * } else {
+     *   console.log('Prompt not found');
+     * }
+     * ```
+     *
+     * @since 0.5.1
      */
     getPromptById(id) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -117,10 +168,24 @@ class PromptService {
     }
     /**
      * Updates an existing prompt in the database.
-     * @param {string} id - The ID of the prompt to update.
+     * Performs partial updates by merging the provided data with the existing prompt.
+     * Validates that title and promptText remain non-empty if they are being updated.
+     *
+     * @param {string} id - The UUID of the prompt to update.
      * @param {Partial<PromptSFL>} promptData - An object containing the fields to update.
      * @returns {Promise<PromptSFL | null>} A promise that resolves to the updated prompt, or null if not found.
      * @throws {Error} If the title or prompt text is being updated to an empty value.
+     *
+     * @example
+     * ```typescript
+     * const updates = {
+     *   title: "Updated Prompt Title",
+     *   sflField: { ...existingField, topic: "New Topic" }
+     * };
+     * const updatedPrompt = await promptService.updatePrompt(promptId, updates);
+     * ```
+     *
+     * @since 0.5.1
      */
     updatePrompt(id, promptData) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -143,8 +208,21 @@ class PromptService {
     }
     /**
      * Deletes a prompt from the database.
-     * @param {string} id - The ID of the prompt to delete.
-     * @returns {Promise<boolean>} A promise that resolves to true if the deletion was successful, false otherwise.
+     *
+     * @param {string} id - The UUID of the prompt to delete.
+     * @returns {Promise<boolean>} A promise that resolves to true if the deletion was successful, false if the prompt was not found.
+     *
+     * @example
+     * ```typescript
+     * const deleted = await promptService.deletePrompt('123e4567-e89b-12d3-a456-426614174000');
+     * if (deleted) {
+     *   console.log('Prompt successfully deleted');
+     * } else {
+     *   console.log('Prompt not found or could not be deleted');
+     * }
+     * ```
+     *
+     * @since 0.5.1
      */
     deletePrompt(id) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -153,4 +231,11 @@ class PromptService {
         });
     }
 }
+/**
+ * @exports {PromptService} promptService
+ * @description Singleton instance of the PromptService class, ready to be used across the application.
+ * This exported instance provides all prompt-related database operations and data transformations.
+ *
+ * @since 0.5.1
+ */
 exports.default = new PromptService();

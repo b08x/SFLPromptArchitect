@@ -1,7 +1,7 @@
 {
-  "name": "sfl-prompt-architect",
+  "name": "sfl-prompt-studio",
   "version": "0.5.1",
-  "description": "SFL Prompt Architect - Full-stack application for creating and managing prompts using Systemic Functional Linguistics",
+  "description": "SFL Prompt Studio - Full-stack application for creating and managing prompts using Systemic Functional Linguistics",
   "private": true,
   "scripts": {
     "docs:generate": "npm run docs --prefix frontend && npm run docs --prefix backend",

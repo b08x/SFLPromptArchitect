@@ -50,7 +50,7 @@ async function createMainIndex() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SFL Prompt Architect - Documentation</title>
+    <title>SFL Prompt Studio - Documentation</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -148,7 +148,7 @@ async function createMainIndex() {
 </head>
 <body>
     <div class="container">
-        <h1>📚 SFL Prompt Architect</h1>
+        <h1>📚 SFL Prompt Studio</h1>
         <p class="subtitle">Complete API Documentation & Technical Reference</p>
         
         <div class="tech-stack">
@@ -162,7 +162,7 @@ async function createMainIndex() {
         <div class="docs-grid">
             <div class="doc-card">
                 <h3>🎨 Frontend Documentation</h3>
-                <p>React components, hooks, services, and TypeScript interfaces for the SFL Prompt Architect user interface.</p>
+                <p>React components, hooks, services, and TypeScript interfaces for the SFL Prompt Studio user interface.</p>
                 <a href="./frontend/README.html" class="doc-link">View Frontend Docs</a>
             </div>
             
@@ -175,7 +175,7 @@ async function createMainIndex() {
         
         <div class="metadata">
             <p><strong>Documentation generated:</strong> ${buildTime}</p>
-            <p><strong>SFL Prompt Architect</strong> v0.5.0 - Full-stack application for creating and managing prompts using Systemic Functional Linguistics</p>
+            <p><strong>SFL Prompt Studio</strong> v0.5.0 - Full-stack application for creating and managing prompts using Systemic Functional Linguistics</p>
         </div>
     </div>
 </body>
@@ -200,7 +200,7 @@ async function createFrontendIndexHtml() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frontend Documentation - SFL Prompt Architect</title>
+    <title>Frontend Documentation - SFL Prompt Studio</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
@@ -286,7 +286,7 @@ async function generateDocumentationSummary() {
 
 async function combineDocs() {
     try {
-        console.log('🏗️  SFL Prompt Architect Documentation Builder');
+        console.log('🏗️  SFL Prompt Studio Documentation Builder');
         console.log('================================================\n');
         
         // Step 1: Generate documentation

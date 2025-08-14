@@ -1,5 +1,5 @@
 {
-  "name": "sfl-prompt-architect-backend",
+  "name": "sfl-prompt-studio-backend",
   "version": "0.5.1",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Backend API for SFL Prompt Architect",
+  "description": "Backend API for SFL Prompt Studio",
   "dependencies": {
     "@google/genai": "^1.12.0",
     "@types/express": "^5.0.3",

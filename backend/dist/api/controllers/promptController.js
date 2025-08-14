@@ -28,15 +28,7 @@ class PromptController {
      */
     createPrompt(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
             try {
-                // Validate required fields
-                if (!((_a = req.body.title) === null || _a === void 0 ? void 0 : _a.trim())) {
-                    return res.status(400).json({ message: 'Title is required' });
-                }
-                if (!((_b = req.body.promptText) === null || _b === void 0 ? void 0 : _b.trim())) {
-                    return res.status(400).json({ message: 'Prompt text is required' });
-                }
                 const prompt = yield promptService_1.default.createPrompt(req.body);
                 res.status(201).json(prompt);
             }
