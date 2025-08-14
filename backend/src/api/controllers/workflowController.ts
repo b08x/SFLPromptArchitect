@@ -1,18 +1,47 @@
+/**
+ * @file workflowController.ts
+ * @description Controller for handling HTTP requests related to workflows.
+ * Provides REST API endpoints for CRUD operations on workflow entities.
+ * All methods follow Express.js controller patterns and include proper error handling.
+ * 
+ * @requires express
+ * @requires ../../services/workflowService
+ * @since 0.5.1
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import WorkflowService from '../../services/workflowService';
 
 /**
  * @class WorkflowController
- * @description Controller for handling workflow-related requests.
+ * @description Controller for handling workflow-related HTTP requests.
+ * Provides REST API endpoints for creating, reading, updating, and deleting workflows.
+ * Each method handles request validation, service calls, and appropriate HTTP responses.
+ * 
+ * @since 0.5.1
  */
 class WorkflowController {
   /**
-   * @method createWorkflow
-   * @description Creates a new workflow.
+   * Creates a new workflow from the request body.
+   * Expects workflow data including name, user_id, and graph_data in the request body.
+   * 
    * @param {Request} req - The Express request object, containing the workflow data in the body.
    * @param {Response} res - The Express response object.
-   * @param {NextFunction} next - The Express next middleware function.
-   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   * @param {NextFunction} next - The Express next middleware function for error handling.
+   * @returns {Promise<void>} A promise that resolves when the response is sent.
+   * 
+   * @throws {Error} Passes validation or database errors to the error handler middleware.
+   * 
+   * @example
+   * POST /api/workflows
+   * Content-Type: application/json
+   * {
+   *   "user_id": "123e4567-e89b-12d3-a456-426614174000",
+   *   "name": "Document Processing Workflow",
+   *   "graph_data": { "tasks": [...], "connections": [...] }
+   * }
+   * 
+   * @since 0.5.1
    */
   async createWorkflow(req: Request, res: Response, next: NextFunction) {
     try {
@@ -24,12 +53,30 @@ class WorkflowController {
   }
 
   /**
-   * @method getWorkflows
-   * @description Retrieves a list of all workflows.
+   * Retrieves all workflows from the database.
+   * Returns workflows ordered by most recently updated first.
+   * 
    * @param {Request} req - The Express request object.
    * @param {Response} res - The Express response object.
-   * @param {NextFunction} next - The Express next middleware function.
-   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   * @param {NextFunction} next - The Express next middleware function for error handling.
+   * @returns {Promise<void>} A promise that resolves when the response is sent.
+   * 
+   * @throws {Error} Passes database errors to the error handler middleware.
+   * 
+   * @example
+   * GET /api/workflows
+   * Response: 200 OK
+   * [
+   *   {
+   *     "id": "123e4567-e89b-12d3-a456-426614174000",
+   *     "name": "Workflow 1",
+   *     "graph_data": {...},
+   *     "created_at": "2024-01-01T00:00:00Z",
+   *     "updated_at": "2024-01-01T00:00:00Z"
+   *   }
+   * ]
+   * 
+   * @since 0.5.1
    */
   async getWorkflows(req: Request, res: Response, next: NextFunction) {
     try {
@@ -41,12 +88,26 @@ class WorkflowController {
   }
 
   /**
-   * @method getWorkflowById
-   * @description Retrieves a single workflow by its ID.
+   * Retrieves a single workflow by its UUID.
+   * Returns 404 if the workflow is not found.
+   * 
    * @param {Request} req - The Express request object, containing the workflow ID as a URL parameter.
    * @param {Response} res - The Express response object.
-   * @param {NextFunction} next - The Express next middleware function.
-   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   * @param {NextFunction} next - The Express next middleware function for error handling.
+   * @returns {Promise<void>} A promise that resolves when the response is sent.
+   * 
+   * @throws {Error} Passes database errors to the error handler middleware.
+   * 
+   * @example
+   * GET /api/workflows/123e4567-e89b-12d3-a456-426614174000
+   * Response: 200 OK
+   * {
+   *   "id": "123e4567-e89b-12d3-a456-426614174000",
+   *   "name": "My Workflow",
+   *   "graph_data": {...}
+   * }
+   * 
+   * @since 0.5.1
    */
   async getWorkflowById(req: Request, res: Response, next: NextFunction) {
     try {
@@ -61,12 +122,26 @@ class WorkflowController {
   }
 
   /**
-   * @method updateWorkflow
-   * @description Updates an existing workflow.
+   * Updates an existing workflow with partial data.
+   * Performs a partial update, merging the request body with existing workflow data.
+   * Returns 404 if the workflow is not found.
+   * 
    * @param {Request} req - The Express request object, containing the workflow ID as a URL parameter and the update data in the body.
    * @param {Response} res - The Express response object.
-   * @param {NextFunction} next - The Express next middleware function.
-   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   * @param {NextFunction} next - The Express next middleware function for error handling.
+   * @returns {Promise<void>} A promise that resolves when the response is sent.
+   * 
+   * @throws {Error} Passes validation or database errors to the error handler middleware.
+   * 
+   * @example
+   * PUT /api/workflows/123e4567-e89b-12d3-a456-426614174000
+   * Content-Type: application/json
+   * {
+   *   "name": "Updated Workflow Name",
+   *   "graph_data": { "tasks": [...] }
+   * }
+   * 
+   * @since 0.5.1
    */
   async updateWorkflow(req: Request, res: Response, next: NextFunction) {
     try {
@@ -81,12 +156,22 @@ class WorkflowController {
   }
 
   /**
-   * @method deleteWorkflow
-   * @description Deletes a workflow by its ID.
+   * Deletes a workflow by its UUID.
+   * Returns 404 if the workflow is not found, otherwise returns 204 No Content.
+   * 
    * @param {Request} req - The Express request object, containing the workflow ID as a URL parameter.
    * @param {Response} res - The Express response object.
-   * @param {NextFunction} next - The Express next middleware function.
-   * @returns {Promise<void>} - A promise that resolves when the response is sent.
+   * @param {NextFunction} next - The Express next middleware function for error handling.
+   * @returns {Promise<void>} A promise that resolves when the response is sent.
+   * 
+   * @throws {Error} Passes database errors to the error handler middleware.
+   * 
+   * @example
+   * DELETE /api/workflows/123e4567-e89b-12d3-a456-426614174000
+   * Response: 204 No Content (if successful)
+   * Response: 404 Not Found (if workflow doesn't exist)
+   * 
+   * @since 0.5.1
    */
   async deleteWorkflow(req: Request, res: Response, next: NextFunction) {
     try {
@@ -101,4 +186,11 @@ class WorkflowController {
   }
 }
 
+/**
+ * @exports {WorkflowController} workflowController
+ * @description Singleton instance of the WorkflowController class, ready to be used in route definitions.
+ * This exported instance provides all workflow-related HTTP request handlers.
+ * 
+ * @since 0.5.1
+ */
 export default new WorkflowController();

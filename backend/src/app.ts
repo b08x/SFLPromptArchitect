@@ -15,7 +15,7 @@ app.use(express.json());
 app.use('/api', apiRoutes);
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('SFL-Prompt-Architect Backend is running!');
+  res.send('SFL Prompt Architect Backend is running!');
 });
 
 app.use(errorHandler);

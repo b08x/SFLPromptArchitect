@@ -7,6 +7,7 @@
  * @requires react
  * @requires ../types
  * @requires ../constants
+ * @since 0.5.1
  */
 
 import { useState, useEffect, useCallback } from 'react';

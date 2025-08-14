@@ -3,6 +3,9 @@
  * @description This file exports constant values used throughout the frontend application.
  * This includes predefined lists for SFL parameters, initial state objects for prompts and workflows,
  * and other shared constants to ensure consistency and avoid magic strings.
+ * 
+ * @requires ./types
+ * @since 0.5.1
  */
 
 import { SFLField, SFLTenor, SFLMode, PromptSFL } from './types';

@@ -16,14 +16,6 @@ class PromptController {
    */
   async createPrompt(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validate required fields
-      if (!req.body.title?.trim()) {
-        return res.status(400).json({ message: 'Title is required' });
-      }
-      if (!req.body.promptText?.trim()) {
-        return res.status(400).json({ message: 'Prompt text is required' });
-      }
-
       const prompt = await PromptService.createPrompt(req.body);
       res.status(201).json(prompt);
     } catch (error) {

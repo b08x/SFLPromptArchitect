@@ -1,6 +1,6 @@
 {
   "name": "sfl-prompt-architect",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "SFL Prompt Architect - Full-stack application for creating and managing prompts using Systemic Functional Linguistics",
   "private": true,
   "scripts": {
