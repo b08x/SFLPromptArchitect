@@ -11,6 +11,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import WorkflowService from '../../services/workflowService';
+import OrchestratorService from '../../services/orchestratorService';
 
 /**
  * @class WorkflowController
@@ -180,6 +181,94 @@ class WorkflowController {
         return res.status(404).json({ message: 'Workflow not found' });
       }
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Orchestrates a new workflow from a high-level user request using AI.
+   * Takes a natural language description and automatically generates a complete,
+   * executable workflow with proper task dependencies and data flow.
+   * 
+   * @param {Request} req - The Express request object, containing the user request in the body.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function for error handling.
+   * @returns {Promise<void>} A promise that resolves when the response is sent.
+   * 
+   * @throws {Error} Passes orchestration or validation errors to the error handler middleware.
+   * 
+   * @example
+   * POST /api/workflows/orchestrate
+   * Content-Type: application/json
+   * {
+   *   "request": "Analyze customer feedback for sentiment and generate a summary report"
+   * }
+   * 
+   * Response: 200 OK
+   * {
+   *   "success": true,
+   *   "workflow": {
+   *     "id": "orchestrated-1234567890-abcdef",
+   *     "name": "Customer Feedback Analysis",
+   *     "description": "Analyzes customer feedback for sentiment...",
+   *     "tasks": [...]
+   *   }
+   * }
+   * 
+   * @since 2.1.0
+   */
+  async orchestrateWorkflow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { request } = req.body;
+
+      // Validate input
+      if (!request || typeof request !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Request body must contain a "request" field with a string description of the desired workflow.'
+        });
+      }
+
+      if (request.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'The request description cannot be empty.'
+        });
+      }
+
+      if (request.length > 2000) {
+        return res.status(400).json({
+          success: false,
+          error: 'The request description is too long. Please limit to 2000 characters.'
+        });
+      }
+
+      // Check if orchestrator service is configured
+      if (!OrchestratorService.isConfigured()) {
+        return res.status(503).json({
+          success: false,
+          error: 'AI orchestration service is not properly configured. Please check the GEMINI_API_KEY environment variable.'
+        });
+      }
+
+      // Generate workflow using orchestrator service
+      const result = await OrchestratorService.generateWorkflow(request.trim());
+
+      if (!result.success) {
+        return res.status(422).json({
+          success: false,
+          error: result.error || 'Failed to generate workflow',
+          validationErrors: result.validationErrors
+        });
+      }
+
+      // Return the generated workflow
+      res.status(200).json({
+        success: true,
+        workflow: result.workflow
+      });
+
     } catch (error) {
       next(error);
     }
