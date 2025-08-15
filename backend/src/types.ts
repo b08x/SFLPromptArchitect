@@ -132,12 +132,15 @@ export interface Task {
   dependencies: string[];
   inputKeys: string[];
   outputKey: string;
+  inputs?: Record<string, { nodeId: string; outputName: string; }>;
   promptId?: string;
   promptTemplate?: string;
   agentConfig?: AgentConfig;
   functionBody?: string;
   staticValue?: any;
   dataKey?: string;
+  positionX?: number;
+  positionY?: number;
 }
 
 /**
@@ -145,3 +148,21 @@ export interface Task {
  * @description Represents the data store for a workflow run, which is a key-value map.
  */
 export type DataStore = Record<string, any>;
+
+/**
+ * @interface WorkflowExecution
+ * @description Represents a workflow execution record in the database.
+ */
+export interface WorkflowExecution {
+  id: string;
+  workflow_id: string;
+  job_id?: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  result?: Record<string, any>;
+  user_input?: Record<string, any>;
+  error_message?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
