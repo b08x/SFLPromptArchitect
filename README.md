@@ -44,6 +44,35 @@ This systematic approach ensures your prompts are not just functional, but optim
 - Persistent storage with localStorage
 - Import/export functionality for sharing prompt libraries
 
+### 🪄 **AI Agent Orchestrator** ✨ *NEW!*
+
+Transform natural language descriptions into complete, executable workflows instantly! The Magic Wand feature uses advanced AI orchestration to automatically generate multi-step workflows with proper task dependencies and data flow.
+
+```
+🎯 User Input: "Analyze customer feedback for sentiment and generate a summary report"
+
+     ↓ ✨ Magic Wand AI Orchestration ↓
+
+📋 Generated Workflow:
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│   📥 Capture    │  😊 Analyze     │  📝 Extract     │  📊 Generate    │
+│   Feedback      │  Sentiment      │  Themes         │  Report         │
+│                 │                 │                 │                 │
+│ • Get user text │ • Classify      │ • Find key      │ • Combine all   │
+│ • Stage input   │   emotion       │   topics        │   analysis      │
+│                 │ • Rate          │ • List main     │ • Format as     │
+│                 │   confidence    │   points        │   report        │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+```
+
+**Key Benefits:**
+- 🚀 **Instant Workflow Creation**: No manual task design needed
+- 🧠 **Intelligent Dependencies**: AI figures out optimal task order
+- 🔄 **Data Flow Mapping**: Automatic variable connections between tasks
+- ⚡ **Ready to Execute**: Generated workflows run immediately
+
+👉 **[See detailed visualizations and examples below ↓](#-ai-agent-orchestration-from-idea-to-execution)**
+
 ## Getting Started
 
 ### Prerequisites
@@ -250,6 +279,228 @@ View the documentation by opening `docs/index.html` in your browser.
 
 **Use**: Lisa creates template prompts with variables, then generates campaigns for different products and demographics, building a repository of tested concepts.
 
+## 🪄 AI Agent Orchestration: From Idea to Execution
+
+The Magic Wand feature revolutionizes workflow creation by transforming natural language descriptions into fully executable, multi-task workflows. Here's how it works:
+
+### 🎭 The Orchestration Process
+
+```mermaid
+graph TD
+    A[🎯 Natural Language Input] --> B[🧠 AI Orchestrator]
+    B --> C[📝 Task Decomposition]
+    C --> D[🔗 Dependency Analysis]
+    D --> E[📊 Data Flow Mapping]
+    E --> F[⚡ Executable Workflow]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style F fill:#e8f5e8
+```
+
+### 🎨 Visual Workflow Examples
+
+#### Example 1: Data Analysis Pipeline
+
+**Input**: *"Process sales data to find trends and create a visualization"*
+
+```
+🏭 AI-Generated Workflow Architecture:
+
+    📊 Raw Data        📈 Trend Analysis      📉 Visualization
+   ┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
+   │ DATA_INPUT  │───▶│ GEMINI_PROMPT   │───▶│ DISPLAY_CHART   │
+   │             │    │                 │    │                 │
+   │ • Load CSV  │    │ • Analyze       │    │ • Generate      │
+   │ • Validate  │    │   patterns      │    │   chart data    │
+   │ • Clean     │    │ • Find trends   │    │ • Format for    │
+   └─────────────┘    │ • Summarize     │    │   visualization │
+                      └─────────────────┘    └─────────────────┘
+                             │                        ▲
+                             ▼                        │
+                    ┌─────────────────┐               │
+                    │ TEXT_MANIPULATION│──────────────┘
+                    │                 │
+                    │ • Format output │
+                    │ • Structure     │
+                    │   results       │
+                    └─────────────────┘
+```
+
+#### Example 2: Content Creation Workflow
+
+**Input**: *"Take a research paper and create social media posts about it"*
+
+```
+📰 Multi-Channel Content Pipeline:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          🔄 PARALLEL PROCESSING                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  📄 Source Document                                                     │
+│ ┌─────────────────┐                                                     │
+│ │   DATA_INPUT    │                                                     │
+│ │ • Upload PDF    │                                                     │
+│ │ • Extract text  │───┬─────────────────────────────────────────────┐   │
+│ └─────────────────┘   │                                             │   │
+│                       │                                             │   │
+│  🎯 Content Branches  │                                             │   │
+│                       ▼                                             ▼   │
+│ ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│ │  📱 Twitter     │  │  📘 Facebook    │  │  💼 LinkedIn    │  │  📸 Instagram  │
+│ │   GEMINI_PROMPT │  │   GEMINI_PROMPT │  │   GEMINI_PROMPT │  │   GEMINI_PROMPT │
+│ │                 │  │                 │  │                 │  │                 │
+│ │ • 280 chars     │  │ • Casual tone   │  │ • Professional  │  │ • Visual focus │
+│ │ • Hashtags      │  │ • Longer form   │  │ • Industry      │  │ • Story format │
+│ │ • Thread ready  │  │ • Engagement    │  │   insights      │  │ • Call to      │
+│ └─────────────────┘  └─────────────────┘  └─────────────────┘  │   action       │
+│         │                      │                      │          └─────────────────┘
+│         └──────────────────────┼──────────────────────┼─────────────────┘
+│                                │                      │
+│                                ▼                      ▼
+│                        ┌─────────────────────────────────┐
+│                        │      TEXT_MANIPULATION         │
+│                        │   • Compile all posts          │
+│                        │   • Add publishing schedule    │
+│                        │   • Format for export          │
+│                        └─────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 🎯 Orchestration Patterns
+
+The AI Orchestrator recognizes common workflow patterns and automatically applies them:
+
+#### 🔀 **Sequential Pattern**
+```
+Input → Process → Transform → Output
+  📥      🔄         🔧        📤
+```
+
+#### 🌟 **Fan-Out Pattern**  
+```
+        Input
+         📥
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+   🔄₁  🔄₂  🔄₃
+    │    │    │
+    └────┼────┘
+         ▼
+       Merge
+        📤
+```
+
+#### 🔄 **Pipeline Pattern**
+```
+📥 → [🔧₁] → [🔧₂] → [🔧₃] → [🔧₄] → 📤
+     Clean   Analyze  Transform  Format
+```
+
+### ✨ Magic Wand User Experience
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SFL Prompt Studio - User Input Area                   │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  📝 Text Input:                                         │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │ Create a customer satisfaction analysis workflow    │ │
+│  │ that processes survey responses, calculates        │ │
+│  │ scores, identifies pain points, and generates      │ │
+│  │ an executive summary with recommendations          │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│  ┌──────────────────┐  ┌──────────────────────────────┐ │
+│  │ 📊 Stage Input   │  │ 🪄 Magic Wand ✨            │ │
+│  │  for Workflow    │  │   Generate Workflow          │ │
+│  └──────────────────┘  └──────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+
+                          ↓ User clicks Magic Wand ↓
+
+┌─────────────────────────────────────────────────────────┐
+│  🪄 AI Orchestration in Progress...                     │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  ⚡ Analyzing request...                            │ │
+│  │  🧠 Identifying task types...                       │ │
+│  │  🔗 Mapping dependencies...                         │ │
+│  │  📊 Optimizing workflow...                          │ │
+│  │  ✨ Generating executable tasks...                  │ │
+│  └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+
+                          ↓ 3 seconds later ↓
+
+┌─────────────────────────────────────────────────────────┐
+│  ✅ Workflow Generated: "Customer Satisfaction Analysis"│
+│                                                         │
+│  🎯 5 Tasks Created:                                    │
+│  • Survey Data Input                                   │
+│  • Score Calculation                                   │  
+│  • Pain Point Analysis                                 │
+│  • Executive Summary                                   │
+│  • Recommendation Engine                              │
+│                                                         │
+│  📊 Ready for execution on workflow canvas!            │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 🔬 Technical Architecture
+
+The Magic Wand orchestration leverages advanced prompt engineering and few-shot learning:
+
+```
+🎭 Orchestrator Components:
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     🧠 AI Orchestrator Engine                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  📝 Master Prompt Template                                      │
+│  ├─ Task Decomposition Instructions                             │
+│  ├─ Dependency Analysis Guidelines                              │  
+│  ├─ Data Flow Mapping Rules                                     │
+│  └─ JSON Output Schema Validation                               │
+│                                                                 │
+│  🎯 Few-Shot Learning Examples                                  │
+│  ├─ Customer Feedback Analysis                                  │
+│  ├─ Product Image to E-commerce                                 │
+│  ├─ Research Paper Processing                                   │
+│  └─ Multi-Channel Content Creation                              │
+│                                                                 │
+│  ⚙️  Validation Engine                                          │
+│  ├─ Schema Compliance Check                                     │
+│  ├─ Circular Dependency Detection                               │
+│  ├─ Task Type Validation                                        │
+│  └─ Data Flow Integrity                                         │
+│                                                                 │
+│  🔧 Task Type Support                                           │
+│  ├─ 📥 DATA_INPUT: User input & static values                   │
+│  ├─ 🤖 GEMINI_PROMPT: AI text generation                        │
+│  ├─ 🖼️  IMAGE_ANALYSIS: Visual content processing               │
+│  ├─ ⚙️  TEXT_MANIPULATION: Custom transformations               │
+│  ├─ 📊 DISPLAY_CHART: Data visualization prep                   │
+│  └─ 🔍 GEMINI_GROUNDED: Real-time data queries                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 🚀 Get Started with Magic Wand
+
+1. **Open the Lab**: Navigate to the Prompt Lab page
+2. **Describe Your Goal**: Enter a natural language description in the text area
+3. **Click Magic Wand**: Let AI orchestrate your workflow
+4. **Inspect & Execute**: Review the generated workflow and run it instantly!
+
+**Example Prompts to Try:**
+- *"Analyze product reviews and create a competitive analysis report"*
+- *"Process meeting transcripts to extract action items and create follow-up emails"*  
+- *"Take survey data and generate insights with visualizations"*
+- *"Create a social media campaign from a product description"*
+
 ## Why SFL Matters for Prompt Engineering
 
 Traditional prompt engineering often relies on trial and error. SFL Prompt Studio brings linguistic theory to bear on prompt design, ensuring:
@@ -272,9 +523,11 @@ Traditional prompt engineering often relies on trial and error. SFL Prompt Studi
 
 ### AI & Integration
 
-- **AI Integration**: Google Gemini API integration
+- **AI Integration**: Google Gemini API integration for prompt testing and orchestration
 - **Vector Search**: pgvector for document similarity search
 - **Workflow Engine**: Task-based workflow execution with dependency management
+- **AI Orchestration**: Advanced prompt engineering with few-shot learning for automated workflow generation
+- **Magic Wand Feature**: Natural language to executable workflow transformation
 
 ### Development & Documentation
 
