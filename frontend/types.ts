@@ -179,12 +179,15 @@ export interface AgentConfig {
  * @property {string[]} dependencies - An array of task IDs that must be completed before this task can run.
  * @property {string[]} inputKeys - An array of keys (using dot-notation) to retrieve values from the `DataStore`.
  * @property {string} outputKey - The key under which this task's result will be saved in the `DataStore`.
+ * @property {Record<string, { nodeId: string; outputName: string; }>} [inputs] - Input mappings defining data dependencies between tasks.
  * @property {string} [promptId] - The ID of an SFL prompt from the library to be used by this task.
  * @property {string} [promptTemplate] - A manual prompt template, used if `promptId` is not set.
  * @property {AgentConfig} [agentConfig] - Configuration for the AI model, if applicable.
  * @property {string} [functionBody] - The JavaScript code for a `TEXT_MANIPULATION` task.
  * @property {*} [staticValue] - A static value for a `DATA_INPUT` task.
  * @property {string} [dataKey] - The key in the `DataStore` to use for a `DISPLAY_CHART` task.
+ * @property {number} [positionX] - X coordinate for UI positioning in the workflow canvas.
+ * @property {number} [positionY] - Y coordinate for UI positioning in the workflow canvas.
  */
 export interface Task {
   id: string;
@@ -194,12 +197,15 @@ export interface Task {
   dependencies: string[];
   inputKeys: string[];
   outputKey: string;
+  inputs?: Record<string, { nodeId: string; outputName: string; }>;
   promptId?: string;
   promptTemplate?: string;
   agentConfig?: AgentConfig;
   functionBody?: string;
   staticValue?: any;
   dataKey?: string;
+  positionX?: number;
+  positionY?: number;
 }
 
 /**
@@ -268,4 +274,33 @@ export interface StagedUserInput {
         name: string;
         content: string;
     }
+}
+
+/**
+ * @interface WorkflowExecution
+ * @description Represents a workflow execution record, tracking the status and results of asynchronous workflow runs.
+ * @property {string} id - Unique identifier for the execution.
+ * @property {string} workflowId - ID of the workflow being executed.
+ * @property {string} [jobId] - BullMQ job ID for tracking the background execution.
+ * @property {'pending' | 'running' | 'completed' | 'failed'} status - Current execution status.
+ * @property {Record<string, any>} [result] - Final execution results when completed.
+ * @property {Record<string, any>} [userInput] - Initial user input provided for the execution.
+ * @property {string} [errorMessage] - Error details if the execution failed.
+ * @property {string} [startedAt] - ISO timestamp when execution started.
+ * @property {string} [completedAt] - ISO timestamp when execution completed or failed.
+ * @property {string} createdAt - ISO timestamp when the execution record was created.
+ * @property {string} updatedAt - ISO timestamp when the execution record was last updated.
+ */
+export interface WorkflowExecution {
+    id: string;
+    workflowId: string;
+    jobId?: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    result?: Record<string, any>;
+    userInput?: Record<string, any>;
+    errorMessage?: string;
+    startedAt?: string;
+    completedAt?: string;
+    createdAt: string;
+    updatedAt: string;
 }

@@ -63,6 +63,9 @@ export const testPromptWithGemini = async (promptText: string): Promise<string> 
  * // newPrompt can now be used to populate the prompt editor form.
  */
 export const generateSFLFromGoal = async (goal: string, sourceDocContent?: string): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> => {
+  console.log(`Making request to: ${API_BASE_URL}/generate-sfl`);
+  console.log('Request payload:', { goal, sourceDocContent: sourceDocContent ? '[provided]' : undefined });
+  
   const response = await fetch(`${API_BASE_URL}/generate-sfl`, {
     method: 'POST',
     headers: {
@@ -71,11 +74,35 @@ export const generateSFLFromGoal = async (goal: string, sourceDocContent?: strin
     body: JSON.stringify({ goal, sourceDocContent }),
   });
 
+  console.log('Response status:', response.status);
+  console.log('Response headers:', [...response.headers.entries()]);
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to generate SFL from goal');
+    const responseText = await response.text();
+    console.error('Error response text:', responseText.substring(0, 500));
+    
+    // Try to parse as JSON, but fallback to text message
+    try {
+      const errorData = JSON.parse(responseText);
+      throw new Error(errorData.message || 'Failed to generate SFL from goal');
+    } catch (parseError) {
+      // Response is not JSON, likely HTML error page
+      if (responseText.includes('<html>')) {
+        throw new Error('Server returned HTML instead of JSON. Check if backend server is running and proxy is configured correctly.');
+      }
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+    }
   }
-  return response.json();
+  
+  const responseText = await response.text();
+  console.log('Success response text:', responseText.substring(0, 200));
+  
+  try {
+    return JSON.parse(responseText);
+  } catch (parseError) {
+    console.error('Failed to parse success response as JSON:', parseError);
+    throw new Error('Server returned invalid JSON response');
+  }
 };
 
 /**
