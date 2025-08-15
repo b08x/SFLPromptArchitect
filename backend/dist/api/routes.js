@@ -28,6 +28,8 @@ router.get('/workflows/:id', workflowController_1.default.getWorkflowById);
 router.put('/workflows/:id', workflowController_1.default.updateWorkflow);
 router.delete('/workflows/:id', workflowController_1.default.deleteWorkflow);
 router.post('/workflows/run-task', workflowExecutionController_1.default.runTask);
+router.post('/workflows/execute', workflowExecutionController_1.default.executeWorkflow);
+router.get('/workflows/jobs/:jobId/status', workflowExecutionController_1.default.getJobStatus);
 // Model routes
 router.get('/models', modelController_1.default.getModels);
 // Gemini routes

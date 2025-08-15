@@ -27,6 +27,8 @@ router.get('/workflows/:id', WorkflowController.getWorkflowById);
 router.put('/workflows/:id', WorkflowController.updateWorkflow);
 router.delete('/workflows/:id', WorkflowController.deleteWorkflow);
 router.post('/workflows/run-task', WorkflowExecutionController.runTask);
+router.post('/workflows/execute', WorkflowExecutionController.executeWorkflow);
+router.get('/workflows/jobs/:jobId/status', WorkflowExecutionController.getJobStatus);
 
 // Model routes
 router.get('/models', ModelController.getModels);

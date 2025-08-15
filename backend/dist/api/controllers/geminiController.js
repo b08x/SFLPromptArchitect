@@ -32,14 +32,20 @@ class GeminiController {
     generateSFLFromGoal(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log('POST /api/gemini/generate-sfl received');
+                console.log('Request body:', JSON.stringify(req.body, null, 2));
                 const { goal, sourceDocContent } = req.body;
                 if (!goal) {
+                    console.log('Error: Goal is required but not provided');
                     return res.status(400).json({ message: 'Goal is required' });
                 }
+                console.log('Calling GeminiService.generateSFLFromGoal...');
                 const result = yield geminiService_1.default.generateSFLFromGoal(goal, sourceDocContent);
+                console.log('Generated SFL result:', JSON.stringify(result, null, 2));
                 res.status(200).json(result);
             }
             catch (error) {
+                console.error('Error in generateSFLFromGoal controller:', error);
                 next(error);
             }
         });
