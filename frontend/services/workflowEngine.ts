@@ -7,7 +7,7 @@
  * @requires ../types
  */
 
-import { Task, DataStore, PromptSFL } from '../types';
+import { Task, DataStore, PromptSFL, Workflow } from '../types';
 
 /**
  * @constant {string} API_BASE_URL - The base URL for the workflow-related API endpoints.
@@ -312,4 +312,80 @@ export const deleteWorkflow = async (id: string): Promise<void> => {
     if (!response.ok) {
         throw new Error('Failed to delete workflow');
     }
+};
+
+/**
+ * @interface OrchestrateResponse
+ * @description Represents the response from the AI orchestration API
+ */
+interface OrchestrateResponse {
+    success: boolean;
+    workflow?: Workflow;
+    error?: string;
+    validationErrors?: string[];
+}
+
+/**
+ * Orchestrates a new workflow from a high-level user request using AI.
+ * This function sends a natural language description to the backend AI orchestrator,
+ * which automatically generates a complete, executable workflow with proper task
+ * dependencies and data flow.
+ *
+ * @param {string} userRequest - A natural language description of what the user wants to accomplish
+ * @returns {Promise<Workflow>} A promise that resolves to the generated workflow
+ * @throws {Error} Throws an error if the API request fails or orchestration is unsuccessful
+ * 
+ * @example
+ * ```typescript
+ * try {
+ *   const workflow = await orchestrateWorkflow(
+ *     "Analyze customer feedback for sentiment and generate a summary report"
+ *   );
+ *   console.log(`Generated "${workflow.name}" with ${workflow.tasks.length} tasks`);
+ * } catch (error) {
+ *   console.error('Orchestration failed:', error.message);
+ * }
+ * ```
+ */
+export const orchestrateWorkflow = async (userRequest: string): Promise<Workflow> => {
+    if (!userRequest?.trim()) {
+        throw new Error('User request cannot be empty');
+    }
+
+    if (userRequest.length > 2000) {
+        throw new Error('Request description is too long. Please limit to 2000 characters.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/orchestrate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ request: userRequest.trim() }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        if (response.status === 400) {
+            throw new Error(errorData.error || 'Invalid request format');
+        } else if (response.status === 422) {
+            const validationMsg = errorData.validationErrors 
+                ? `Workflow validation failed: ${errorData.validationErrors.join('; ')}`
+                : 'Generated workflow failed validation';
+            throw new Error(validationMsg);
+        } else if (response.status === 503) {
+            throw new Error('AI orchestration service is temporarily unavailable');
+        } else {
+            throw new Error(errorData.error || `Failed to orchestrate workflow (${response.status})`);
+        }
+    }
+
+    const result: OrchestrateResponse = await response.json();
+    
+    if (!result.success || !result.workflow) {
+        throw new Error(result.error || 'Failed to generate workflow');
+    }
+
+    return result.workflow;
 };

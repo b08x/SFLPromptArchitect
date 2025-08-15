@@ -96,7 +96,7 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
                     onDeleteWorkflow={deleteWorkflow}
                     onImportWorkflows={handleImportWorkflows}
                 />
-                <UserInputArea onStageInput={setStagedInput} />
+                <UserInputArea onStageInput={setStagedInput} onWorkflowGenerated={handleSaveWorkflow} />
             </aside>
             
             <main className="flex-1 flex flex-col overflow-hidden">
