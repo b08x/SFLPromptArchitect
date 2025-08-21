@@ -140,6 +140,47 @@ class JobService {
   }
 
   /**
+   * Stops a specific job
+   * @param jobId - The job ID to stop
+   * @returns Promise resolving to success status
+   */
+  async stopJob(jobId: string): Promise<boolean> {
+    if (!this.queue) {
+      throw new Error('Job service not initialized - Redis connection not available');
+    }
+
+    const job = await this.queue.getJob(jobId);
+    if (!job) {
+      return false;
+    }
+
+    const jobState = await job.getState();
+    
+    // Can only stop jobs that are waiting, active, or delayed
+    if (['waiting', 'active', 'delayed'].includes(jobState)) {
+      try {
+        // Remove the job from the queue
+        await job.remove();
+        
+        // Broadcast stop message to WebSocket clients
+        webSocketService.broadcastToJob(jobId, {
+          type: 'workflow_stopped',
+          workflowId: job.data.workflowId,
+          status: 'stopped',
+          reason: 'user_cancelled',
+        });
+        
+        return true;
+      } catch (error) {
+        console.error(`Failed to stop job ${jobId}:`, error);
+        return false;
+      }
+    }
+    
+    return false; // Job is already completed or failed
+  }
+
+  /**
    * Processes a workflow execution job
    * @param job - The BullMQ job to process
    * @returns Promise resolving to the workflow execution result
@@ -174,6 +215,13 @@ class JobService {
         const task = tasks[i];
         
         try {
+          // Check if job has been cancelled before processing each task
+          const currentJob = await this.queue?.getJob(job.id!);
+          if (!currentJob) {
+            // Job was removed (cancelled)
+            throw new Error('Workflow execution was cancelled');
+          }
+
           // Update progress for current task
           await job.updateProgress({
             status: 'active',
@@ -191,6 +239,13 @@ class JobService {
           // Execute the task
           const result = await workflowExecutionService.executeTask(task, dataStore, linkedPrompt);
           
+          // Check again for cancellation after task execution
+          const jobAfterExecution = await this.queue?.getJob(job.id!);
+          if (!jobAfterExecution) {
+            // Job was removed (cancelled) during execution
+            throw new Error('Workflow execution was cancelled');
+          }
+          
           // Store result in dataStore for next tasks
           dataStore[task.outputKey] = result;
           results[task.id] = result;
@@ -204,6 +259,12 @@ class JobService {
           } as WorkflowJobProgress);
 
         } catch (error) {
+          // Check if this is a cancellation error
+          if (error instanceof Error && error.message === 'Workflow execution was cancelled') {
+            // Don't update progress for cancelled tasks, just throw
+            throw error;
+          }
+
           // Update progress for failed task
           await job.updateProgress({
             status: 'failed',

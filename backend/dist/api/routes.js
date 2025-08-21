@@ -31,6 +31,7 @@ router.post('/workflows/orchestrate', workflowController_1.default.orchestrateWo
 router.post('/workflows/run-task', workflowExecutionController_1.default.runTask);
 router.post('/workflows/execute', workflowExecutionController_1.default.executeWorkflow);
 router.get('/workflows/jobs/:jobId/status', workflowExecutionController_1.default.getJobStatus);
+router.post('/workflows/stop/:jobId', workflowExecutionController_1.default.stopWorkflow);
 // Model routes
 router.get('/models', modelController_1.default.getModels);
 // Gemini routes

@@ -33,6 +33,13 @@ class MockJobService {
             };
         });
     }
+    stopJob(jobId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Mock JobService: Would stop job', jobId);
+            // Always return true for mock (job stopped successfully)
+            return true;
+        });
+    }
     // Add other methods as needed to match the real JobService interface
     shutdown() {
         console.log('Mock JobService: Shutdown called');

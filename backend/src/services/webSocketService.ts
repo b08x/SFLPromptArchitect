@@ -13,7 +13,7 @@ import logger from '../config/logger';
  * @description Structure of messages sent over WebSocket
  */
 export interface WebSocketMessage {
-  type: 'workflow_progress' | 'task_status' | 'workflow_complete' | 'workflow_failed';
+  type: 'workflow_progress' | 'task_status' | 'workflow_complete' | 'workflow_failed' | 'workflow_stopped';
   jobId: string;
   workflowId?: string;
   taskId?: string;
@@ -21,6 +21,7 @@ export interface WebSocketMessage {
   status?: string;
   result?: any;
   error?: string;
+  reason?: string;
   progress?: number;
   timestamp?: string;
 }

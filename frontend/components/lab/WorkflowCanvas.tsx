@@ -20,6 +20,7 @@ import { useWorkflowRunner } from '../../hooks/useWorkflowRunner';
 import TaskNode from './TaskNode';
 import DataStoreViewer from './DataStoreViewer';
 import PlayIcon from '../icons/PlayIcon';
+import StopIcon from '../icons/StopIcon';
 import ArrowPathIcon from '../icons/ArrowPathIcon';
 import TaskDetailModal from './modals/TaskDetailModal';
 
@@ -49,6 +50,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
         taskStates, 
         isRunning, 
         run, 
+        stop, 
         reset, 
         runFeedback, 
         currentExecution, 
@@ -99,14 +101,23 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                         <ArrowPathIcon className="w-5 h-5" />
                         <span>Reset</span>
                     </button>
-                    <button
-                        onClick={() => run(stagedInput)}
-                        disabled={isRunning}
-                        className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
-                    >
-                        {isRunning ? <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div> : <PlayIcon className="w-5 h-5" />}
-                        <span>{isRunning ? 'Running...' : `Run ${executionMode === 'async' ? 'Async' : 'Local'}`}</span>
-                    </button>
+                    {isRunning ? (
+                        <button
+                            onClick={() => stop()}
+                            className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                        >
+                            <StopIcon className="w-5 h-5" />
+                            <span>Stop</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => run(stagedInput)}
+                            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm"
+                        >
+                            <PlayIcon className="w-5 h-5" />
+                            <span>{`Run ${executionMode === 'async' ? 'Async' : 'Local'}`}</span>
+                        </button>
+                    )}
                 </div>
             </header>
 

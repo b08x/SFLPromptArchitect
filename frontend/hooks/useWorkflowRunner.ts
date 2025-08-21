@@ -95,6 +95,12 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
     const wsRef = useRef<WebSocket | null>(null);
 
     /**
+     * @ref
+     * @description Cancellation token for stopping workflow execution
+     */
+    const cancellationRef = useRef<{ cancelled: boolean }>({ cancelled: false });
+
+    /**
      * @function
      * @description Connects to WebSocket for real-time updates
      */
@@ -185,6 +191,11 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
                 setIsRunning(false);
                 setRunFeedback(prev => [...prev, `Workflow failed: ${message.error}`]);
                 break;
+            
+            case 'workflow_stopped':
+                setIsRunning(false);
+                setRunFeedback(prev => [...prev, `Workflow stopped: ${message.reason || 'User cancelled'}`]);
+                break;
         }
     }, [workflow]);
 
@@ -227,10 +238,40 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
 
     /**
      * @function
+     * @description Stops the currently running workflow execution
+     */
+    const stop = useCallback(async () => {
+        if (!isRunning) return;
+        
+        // Set cancellation flag for local execution
+        cancellationRef.current.cancelled = true;
+        
+        // For async execution, send stop request to backend
+        if (executionMode === 'async' && currentExecution?.jobId) {
+            try {
+                await fetch(`/api/workflows/stop/${currentExecution.jobId}`, {
+                    method: 'POST',
+                });
+            } catch (error) {
+                console.error('Failed to send stop request:', error);
+                setRunFeedback(prev => [...prev, 'Failed to send stop request to server']);
+            }
+        }
+        
+        // Update UI state immediately for better user experience
+        setIsRunning(false);
+        setRunFeedback(prev => [...prev, 'Stop requested...']);
+    }, [isRunning, executionMode, currentExecution]);
+
+    /**
+     * @function
      * @description Resets the entire workflow execution state, setting all tasks to PENDING
      * and clearing the data store.
      */
     const reset = useCallback(() => {
+        // Reset cancellation flag
+        cancellationRef.current.cancelled = false;
+        
         disconnectWebSocket();
         setCurrentExecution(null);
         
@@ -316,6 +357,8 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             return;
         }
         
+        // Reset cancellation flag and start execution
+        cancellationRef.current.cancelled = false;
         setIsRunning(true);
         initializeStates(workflow.tasks);
 
@@ -331,6 +374,14 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
         setDataStore(initialDataStore);
 
         for (const task of sortedTasks) {
+            // Check for cancellation before processing each task
+            if (cancellationRef.current.cancelled) {
+                setTaskStates(prev => ({...prev, [task.id]: { status: TaskStatus.SKIPPED, error: 'Workflow cancelled by user.' }}));
+                setRunFeedback(prev => [...prev, 'Workflow execution cancelled by user']);
+                setIsRunning(false);
+                return;
+            }
+
             const hasSkippedDependency = task.dependencies.some(depId => taskStates[depId]?.status === TaskStatus.FAILED || taskStates[depId]?.status === TaskStatus.SKIPPED);
             
             if (hasSkippedDependency) {
@@ -343,6 +394,14 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             try {
                 const currentDataStore = await new Promise<DataStore>(resolve => setDataStore(current => { resolve(current); return current; }));
                 const result = await executeTask(task, currentDataStore, prompts);
+
+                // Check for cancellation after task execution
+                if (cancellationRef.current.cancelled) {
+                    setTaskStates(prev => ({...prev, [task.id]: { status: TaskStatus.SKIPPED, error: 'Workflow cancelled by user.', endTime: Date.now() }}));
+                    setRunFeedback(prev => [...prev, 'Workflow execution cancelled by user']);
+                    setIsRunning(false);
+                    return;
+                }
 
                 setDataStore(prev => ({ ...prev, [task.outputKey]: result }));
                 setTaskStates(prev => ({
@@ -368,6 +427,7 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
         taskStates, 
         isRunning, 
         run, 
+        stop, 
         reset, 
         runFeedback,
         currentExecution,
