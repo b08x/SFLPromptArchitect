@@ -1,50 +1,88 @@
 # SFL Prompt Studio
 
-The SFL Prompt Studio is a full-stack application designed for systematic prompt engineering. Its core strength lies in the structured application of SFL theory to AI prompts, managed through a React-based frontend and a Node.js/Express backend. The system separates concerns, with the backend handling all business logic, database interactions, and secure communication with the Gemini AI API. The entire environment is containerized with Docker, ensuring consistent and reproducible deployments (docker-compose.yml).
+<div align="center">
 
-## What is SFL Prompt Studio?
+**Transform AI prompt engineering from art to science with Systemic Functional Linguistics**
 
-SFL Prompt Studio transforms the art of prompt engineering into a structured, linguistic science. By applying Systemic Functional Linguistics theory, it breaks down every prompt into three fundamental dimensions:
+[![React](https://img.shields.io/badge/React-19.1.0-61dafb.svg?style=flat&logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue.svg?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-green.svg?style=flat&logo=node.js)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg?style=flat&logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](#license)
 
-- **Field** (What's happening): The subject matter, domain, and task type
-- **Tenor** (Who's involved): The AI persona, target audience, and interpersonal dynamics  
-- **Mode** (How it's communicated): Output format, structure, and textual directives
+</div>
 
-This systematic approach ensures your prompts are not just functional, but optimally crafted for their intended purpose.
+## 🎯 What is SFL Prompt Studio?
 
-## Key Features
+SFL Prompt Studio revolutionizes prompt engineering by applying **Systemic Functional Linguistics** (SFL) theory to create structured, optimized AI prompts. Instead of trial-and-error approaches, it provides a systematic framework that breaks down every prompt into three fundamental dimensions:
+
+- **🏗️ Field** (What's happening): Subject matter, domain, task type, and keywords
+- **👥 Tenor** (Who's involved): AI persona, target audience, tone, and interpersonal dynamics  
+- **📝 Mode** (How it's communicated): Output format, structure, length, and textual directives
+
+This linguistic approach ensures your prompts are not just functional, but **optimally crafted** for their intended purpose.
+
+## ✨ Key Features
+
+### 🤖 **Multi-Provider AI Integration** ✨ *NEW!*
+
+Universal AI provider support with seamless switching between:
+
+- **🔵 Google Gemini**: Advanced reasoning and multimodal capabilities
+- **🟢 OpenAI GPT**: Industry-leading language models (GPT-4o, GPT-4o-mini, o1)
+- **🔗 OpenRouter**: Access to 100+ models from multiple providers
+- **🛠️ Custom Endpoints**: Support for self-hosted and enterprise AI services
+
+**Key Benefits:**
+- 🚀 **One-Click Provider Switching**: Change AI providers instantly without reconfiguration
+- 🔐 **Secure API Key Management**: Local storage with validation and testing
+- 🎯 **Dynamic Model Discovery**: Automatically fetch available models for each provider
+- ⚡ **Real-Time Validation**: Instant feedback on API key validity
+- 💡 **Cost Optimization**: Choose the most cost-effective model for your use case
+
+```typescript
+// Unified interface across all providers
+const providers = ['google', 'openai', 'openrouter'];
+const models = await listModels(selectedProvider, apiKey);
+const validation = await validateApiKey(provider, apiKey);
+```
 
 ### 🏗️ **Structured Prompt Creation**
 
 - Create prompts using the SFL framework with guided fields
 - Choose from predefined options or customize your own
 - Ensure consistency and completeness in prompt design
+- Template system with `{{variable}}` support for dynamic content
 
 ### 🧙‍♂️ **AI-Powered Prompt Wizard**
 
 - Describe your goal in natural language
-- Let Gemini AI generate a complete SFL-structured prompt
-- Refine and customize the AI-generated suggestions
+- AI generates complete SFL-structured prompts automatically
+- Refine and customize AI suggestions with iterative improvement
+- Source document integration for stylistic reference
 
-### 🧪 **Live Prompt Testing**
+### 🧪 **Universal Prompt Testing**
 
-- Test prompts directly with Google Gemini API
-- Support for dynamic variables using `{{variable}}` syntax
-- View responses in real-time to iterate and improve
+- Test prompts with any configured AI provider
+- Support for dynamic variables using `{{variable}}` syntax  
+- Real-time response comparison across different models
+- Response caching and history tracking
 
 ### 🔍 **Advanced Search & Organization**
 
 - Filter by topic, task type, AI persona, and output format
 - Full-text search across all prompt components
-- Organize your prompt library efficiently
+- Tag-based organization with popular tags
+- Advanced filtering with multiple criteria
 
-### 📁 **Export & Management**
+### 📁 **Import/Export & Management**
 
-- Export individual prompts as JSON files
-- Persistent storage with localStorage
-- Import/export functionality for sharing prompt libraries
+- Export individual prompts or entire libraries as JSON/Markdown
+- Persistent storage with automatic backup
+- Cross-platform sharing and collaboration
+- Version history and change tracking
 
-### 🪄 **AI Agent Orchestrator** ✨ *NEW!*
+### 🪄 **AI Agent Orchestrator** ✨
 
 Transform natural language descriptions into complete, executable workflows instantly! The Magic Wand feature uses advanced AI orchestration to automatically generate multi-step workflows with proper task dependencies and data flow.
 
@@ -65,67 +103,60 @@ Transform natural language descriptions into complete, executable workflows inst
 └─────────────────┴─────────────────┴─────────────────┴─────────────────┘
 ```
 
-**Key Benefits:**
-- 🚀 **Instant Workflow Creation**: No manual task design needed
-- 🧠 **Intelligent Dependencies**: AI figures out optimal task order
-- 🔄 **Data Flow Mapping**: Automatic variable connections between tasks
-- ⚡ **Ready to Execute**: Generated workflows run immediately
-
-👉 **[See detailed visualizations and examples below ↓](#-ai-agent-orchestration-from-idea-to-execution)**
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- Docker and Docker Compose (recommended)
-- Google Gemini API key
-- PostgreSQL (if not using Docker)
+- **Node.js** 16+ and npm
+- **Docker & Docker Compose** (recommended)
+- **AI Provider API Keys** (Google Gemini, OpenAI, or OpenRouter)
+- **PostgreSQL** (if not using Docker)
 
-### Quick Start with Docker (Recommended)
+### 🐳 Quick Start with Docker (Recommended)
 
-1. **Clone the repository**
-
+1. **Clone and Launch**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/your-username/sfl-prompt-studio.git
    cd sfl-prompt-studio
-   ```
-
-2. **Start all services with Docker**
-
-   ```bash
    docker-compose up
    ```
 
-   This starts:
-   - Frontend (React) on <http://localhost:80>
-   - Backend (Express.js) on <http://localhost:4000>
-   - PostgreSQL database on port 5432
-   - Redis cache on port 6379
+2. **Access the Application**
+   - Frontend: http://localhost:80
+   - Backend API: http://localhost:4000
+   - Database: PostgreSQL on port 5432
 
-### Manual Installation
+3. **Configure AI Providers**
+   - Navigate to Settings → Provider Setup
+   - Add your API keys for Google Gemini, OpenAI, or OpenRouter
+   - Test and validate your configuration
 
-1. **Clone and install dependencies**
+### 🛠️ Manual Installation
 
+1. **Install Dependencies**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/your-username/sfl-prompt-studio.git
    cd sfl-prompt-studio
-   npm install  # Install root dependencies
-   cd frontend && npm install  # Install frontend dependencies
-   cd ../backend && npm install  # Install backend dependencies
+   
+   # Install root dependencies
+   npm install
+   
+   # Install frontend dependencies
+   cd frontend && npm install
+   
+   # Install backend dependencies
+   cd ../backend && npm install
    ```
 
-2. **Set up environment variables**
-
+2. **Environment Configuration**
+   
    **Frontend** (`.env.local`):
-
    ```bash
    cd frontend
-   echo "VITE_GEMINI_API_KEY=your_api_key_here" > .env.local
+   echo "VITE_API_BASE_URL=http://localhost:4000" > .env.local
    ```
 
    **Backend** (`.env`):
-
    ```bash
    cd backend
    cat > .env << EOF
@@ -133,155 +164,126 @@ Transform natural language descriptions into complete, executable workflows inst
    REDIS_URL=redis://localhost:6379
    NODE_ENV=development
    PORT=4000
+   GEMINI_API_KEY=your_gemini_api_key_here
    EOF
    ```
 
-3. **Set up the database**
-
+3. **Database Setup**
    ```bash
    cd backend
-   npm run migrate:up  # Run database migrations
+   npm run migrate:up
+   npm run seed
    ```
 
-4. **Start development servers**
-
+4. **Start Development Servers**
    ```bash
    # Terminal 1 - Backend
    npm run dev:backend
-
+   
    # Terminal 2 - Frontend  
    npm run dev:frontend
    ```
 
-### Production Build
+## 🎨 Usage Examples
 
-```bash
-npm run build  # Builds both frontend and backend
+### 1. Multi-Provider Content Creation
+
+```javascript
+// Switch between providers for different tasks
+const creativeTask = {
+  provider: 'openai',
+  model: 'gpt-4o',
+  prompt: 'Write a creative story about...'
+};
+
+const analyticalTask = {
+  provider: 'google', 
+  model: 'gemini-1.5-pro',
+  prompt: 'Analyze the following data...'
+};
+
+const economicTask = {
+  provider: 'openrouter',
+  model: 'anthropic/claude-3-sonnet',
+  prompt: 'Provide cost-effective analysis...'
+};
 ```
 
-### Documentation
+### 2. SFL-Structured Prompt Example
 
-Generate complete API documentation:
+**Field (What):** Content Creation, Blog Writing, Technology Domain  
+**Tenor (Who):** Expert Blogger → Tech Professionals, Informative Tone  
+**Mode (How):** Markdown format, Tutorial structure, 800-1000 words  
 
-```bash
-npm run docs  # Generates unified documentation
+**Generated Prompt:**
+```
+As an expert technology blogger, write a comprehensive tutorial about {{topic}} 
+for software developers and tech professionals. Structure it with clear headings, 
+code examples, and practical applications. Use an informative yet engaging tone. 
+Format: Markdown, Length: 800-1000 words, Include: Introduction, Implementation 
+steps, Best practices, Conclusion.
 ```
 
-View the documentation by opening `docs/index.html` in your browser.
+### 3. Provider Comparison Workflow
 
-## Illustrative Use Cases
+```typescript
+// Test the same prompt across multiple providers
+const promptText = "Explain quantum computing in simple terms";
 
-### 1. **Content Creator: Educational Explainer**
+const results = await Promise.all([
+  testPrompt('google', 'gemini-1.5-flash', promptText),
+  testPrompt('openai', 'gpt-4o-mini', promptText),
+  testPrompt('openrouter', 'meta-llama/llama-3.1-8b', promptText)
+]);
 
-**Scenario**: Sarah creates educational content for her YouTube channel about science topics.
-
-**SFL Breakdown**:
-
-- **Field**: Astrophysics, Explanation task, Simple analogies needed
-- **Tenor**: Friendly Teacher persona, Children (5-7 years) audience, Engaging tone
-- **Mode**: Plain text, Analogy-first structure, Short paragraph (~50 words)
-
-**Example Prompt Created**:
-
-```shell
-"Explain what a black hole is in simple terms that a 5-year-old can understand. Use an analogy that relates to everyday objects they know. Keep it engaging and wonder-filled."
+// Compare quality, cost, and response time
+compareResults(results);
 ```
 
-**Use**: Sarah tests this prompt, gets: *"Imagine a super-duper vacuum cleaner in space that's so strong it can suck up everything, even light! That's kind of like a black hole."*
+## 🏗️ Architecture
 
-### 2. **Software Developer: Code Generation**
-
-**Scenario**: Alex needs to generate Python functions for various algorithmic problems.
-
-**SFL Breakdown**:
-
-- **Field**: Programming, Code Generation, Python/Algorithms
-- **Tenor**: Expert Coder persona, Software Developers audience, Concise/Technical tone
-- **Mode**: Python Code format, Function definition structure, Include type hints
-
-**Example Prompt Created**:
-
-```shell
-"Write a Python function called `{{function_name}}` that {{task_description}}. Include proper type hints, docstring, and handle edge cases. Make it production-ready."
+### Multi-Provider Integration
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SFL Prompt Studio                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  🖥️ Frontend (React + TypeScript)                               │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Provider Setup │ Prompt Editor │ Testing Lab │ Library    │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                │                                │
+│                                ▼                                │
+│  🔧 AI Service Layer (Direct HTTP Calls)                       │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ validateApiKey() │ listModels() │ Unified Interface        │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                │                                │
+│        ┌───────────────────────┼───────────────────────┐        │
+│        ▼                       ▼                       ▼        │
+│   🔵 Google Gemini        🟢 OpenAI API         🔗 OpenRouter   │
+│   generativelanguage.     api.openai.com       openrouter.ai   │
+│   googleapis.com                                               │
+│                                                                 │
+│  ⚙️ Backend (Node.js + Express)                                 │
+│  ├─ PostgreSQL Database                                        │
+│  ├─ Redis Cache                                                │
+│  └─ Workflow Engine                                            │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Use**: Alex creates templates with variables, then generates specific functions by filling in `{{function_name}}` and `{{task_description}}`.
+### Technology Stack
 
-### 3. **Business Analyst: Report Summarization**
-
-**Scenario**: Maria needs to summarize complex market research reports for executive briefings.
-
-**SFL Breakdown**:
-
-- **Field**: Business Analysis, Summarization, Market Research
-- **Tenor**: Neutral Reporter persona, Business Professionals audience, Objective tone
-- **Mode**: Bullet Points format, Key findings structure, Executive summary length
-
-**Example Prompt Created**:
-
-```shell
-"Summarize the following market research report for C-level executives. Focus on key findings, market trends, and actionable insights. Present as bullet points with clear categories: Market Size, Competition, Opportunities, Risks."
-```
-
-**Use**: Maria tests with sample reports, refines the prompt until it consistently produces executive-ready summaries.
-
-### 4. **Creative Writer: Character Development**
-
-**Scenario**: David writes fantasy novels and needs help developing consistent character personalities.
-
-**SFL Breakdown**:
-
-- **Field**: Creative Writing, Character Development, Fantasy genre
-- **Tenor**: Creative Muse persona, Writers audience, Imaginative tone
-- **Mode**: Detailed description format, Character profile structure, Multiple paragraphs
-
-**Example Prompt Created**:
-
-```shell
-"Create a detailed character profile for a {{character_type}} in a fantasy setting. Include personality traits, backstory, motivations, fears, and how they speak. Make them feel authentic and three-dimensional with internal contradictions that create depth."
-```
-
-**Use**: David uses variables like `{{character_type}}` to generate profiles for different roles (warrior, mage, merchant), building a consistent world.
-
-### 5. **Researcher: Literature Review**
-
-**Scenario**: Dr. Chen conducts academic research and needs help analyzing research papers.
-
-**SFL Breakdown**:
-
-- **Field**: Academic Research, Analysis, Literature Review
-- **Tenor**: Expert persona, Academic Researchers audience, Formal tone
-- **Mode**: Structured report format, Critical analysis structure, Detailed analysis
-
-**Example Prompt Created**:
-
-```shell
-"Analyze the following research paper and provide a critical review covering: methodology strengths/weaknesses, contribution to the field, limitations, and potential future research directions. Maintain academic rigor and cite specific examples from the text."
-```
-
-**Use**: Dr. Chen tests with various paper types, adjusts the prompt to ensure consistent analytical depth across different research domains.
-
-### 6. **Marketing Professional: Campaign Brainstorming**
-
-**Scenario**: Lisa needs fresh ideas for marketing campaigns across different demographics.
-
-**SFL Breakdown**:
-
-- **Field**: Marketing, Brainstorming, Campaign Development
-- **Tenor**: Creative Muse persona, Business Professionals audience, Enthusiastic tone
-- **Mode**: Bullet Points format, Campaign concept structure, Multiple ideas
-
-**Example Prompt Created**:
-
-```shell
-"Generate 5 creative marketing campaign ideas for {{product_type}} targeting {{target_demographic}}. For each idea, include: core concept, key message, channel strategy, and what makes it unique. Think outside the box while staying brand-appropriate."
-```
-
-**Use**: Lisa creates template prompts with variables, then generates campaigns for different products and demographics, building a repository of tested concepts.
+- **Frontend**: React 19, TypeScript 5.8, Vite 6, Tailwind CSS 3.4
+- **Backend**: Express.js, TypeScript, Winston logging, Bull Queue
+- **Database**: PostgreSQL 16 with pgvector extension
+- **Cache**: Redis 7 Alpine  
+- **AI Integration**: Direct HTTP calls to provider APIs (no SDK dependencies)
+- **Deployment**: Docker Compose with Nginx proxy
 
 ## 🪄 AI Agent Orchestration: From Idea to Execution
 
-The Magic Wand feature revolutionizes workflow creation by transforming natural language descriptions into fully executable, multi-task workflows. Here's how it works:
+The Magic Wand feature revolutionizes workflow creation by transforming natural language descriptions into fully executable, multi-task workflows.
 
 ### 🎭 The Orchestration Process
 
@@ -298,9 +300,7 @@ graph TD
     style F fill:#e8f5e8
 ```
 
-### 🎨 Visual Workflow Examples
-
-#### Example 1: Data Analysis Pipeline
+### Example: Data Analysis Pipeline
 
 **Input**: *"Process sales data to find trends and create a visualization"*
 
@@ -316,61 +316,9 @@ graph TD
    │ • Clean     │    │ • Find trends   │    │ • Format for    │
    └─────────────┘    │ • Summarize     │    │   visualization │
                       └─────────────────┘    └─────────────────┘
-                             │                        ▲
-                             ▼                        │
-                    ┌─────────────────┐               │
-                    │ TEXT_MANIPULATION│──────────────┘
-                    │                 │
-                    │ • Format output │
-                    │ • Structure     │
-                    │   results       │
-                    └─────────────────┘
 ```
 
-#### Example 2: Content Creation Workflow
-
-**Input**: *"Take a research paper and create social media posts about it"*
-
-```
-📰 Multi-Channel Content Pipeline:
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          🔄 PARALLEL PROCESSING                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  📄 Source Document                                                     │
-│ ┌─────────────────┐                                                     │
-│ │   DATA_INPUT    │                                                     │
-│ │ • Upload PDF    │                                                     │
-│ │ • Extract text  │───┬─────────────────────────────────────────────┐   │
-│ └─────────────────┘   │                                             │   │
-│                       │                                             │   │
-│  🎯 Content Branches  │                                             │   │
-│                       ▼                                             ▼   │
-│ ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│ │  📱 Twitter     │  │  📘 Facebook    │  │  💼 LinkedIn    │  │  📸 Instagram  │
-│ │   GEMINI_PROMPT │  │   GEMINI_PROMPT │  │   GEMINI_PROMPT │  │   GEMINI_PROMPT │
-│ │                 │  │                 │  │                 │  │                 │
-│ │ • 280 chars     │  │ • Casual tone   │  │ • Professional  │  │ • Visual focus │
-│ │ • Hashtags      │  │ • Longer form   │  │ • Industry      │  │ • Story format │
-│ │ • Thread ready  │  │ • Engagement    │  │   insights      │  │ • Call to      │
-│ └─────────────────┘  └─────────────────┘  └─────────────────┘  │   action       │
-│         │                      │                      │          └─────────────────┘
-│         └──────────────────────┼──────────────────────┼─────────────────┘
-│                                │                      │
-│                                ▼                      ▼
-│                        ┌─────────────────────────────────┐
-│                        │      TEXT_MANIPULATION         │
-│                        │   • Compile all posts          │
-│                        │   • Add publishing schedule    │
-│                        │   • Format for export          │
-│                        └─────────────────────────────────┘
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### 🎯 Orchestration Patterns
-
-The AI Orchestrator recognizes common workflow patterns and automatically applies them:
+### Orchestration Patterns
 
 #### 🔀 **Sequential Pattern**
 ```
@@ -393,225 +341,199 @@ Input → Process → Transform → Output
         📤
 ```
 
-#### 🔄 **Pipeline Pattern**
-```
-📥 → [🔧₁] → [🔧₂] → [🔧₃] → [🔧₄] → 📤
-     Clean   Analyze  Transform  Format
-```
+## 📊 Provider Comparison
 
-### ✨ Magic Wand User Experience
+| Provider | Strengths | Use Cases | Cost | Speed |
+|----------|-----------|-----------|------|-------|
+| **Google Gemini** | Multimodal, Latest models | Research, Analysis | 💰💰 | ⚡⚡⚡ |
+| **OpenAI GPT** | Reliability, Quality | Content, Coding | 💰💰💰 | ⚡⚡ |
+| **OpenRouter** | Model Variety, Cost | Experimentation | 💰 | ⚡ |
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  SFL Prompt Studio - User Input Area                   │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  📝 Text Input:                                         │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ Create a customer satisfaction analysis workflow    │ │
-│  │ that processes survey responses, calculates        │ │
-│  │ scores, identifies pain points, and generates      │ │
-│  │ an executive summary with recommendations          │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                                                         │
-│  ┌──────────────────┐  ┌──────────────────────────────┐ │
-│  │ 📊 Stage Input   │  │ 🪄 Magic Wand ✨            │ │
-│  │  for Workflow    │  │   Generate Workflow          │ │
-│  └──────────────────┘  └──────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
+## 🎯 Illustrative Use Cases
 
-                          ↓ User clicks Magic Wand ↓
-
-┌─────────────────────────────────────────────────────────┐
-│  🪄 AI Orchestration in Progress...                     │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │  ⚡ Analyzing request...                            │ │
-│  │  🧠 Identifying task types...                       │ │
-│  │  🔗 Mapping dependencies...                         │ │
-│  │  📊 Optimizing workflow...                          │ │
-│  │  ✨ Generating executable tasks...                  │ │
-│  └─────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-
-                          ↓ 3 seconds later ↓
-
-┌─────────────────────────────────────────────────────────┐
-│  ✅ Workflow Generated: "Customer Satisfaction Analysis"│
-│                                                         │
-│  🎯 5 Tasks Created:                                    │
-│  • Survey Data Input                                   │
-│  • Score Calculation                                   │  
-│  • Pain Point Analysis                                 │
-│  • Executive Summary                                   │
-│  • Recommendation Engine                              │
-│                                                         │
-│  📊 Ready for execution on workflow canvas!            │
-└─────────────────────────────────────────────────────────┘
+### Content Creator: Multi-Platform Strategy
+```typescript
+const contentStrategy = {
+  // Use OpenAI for creative content
+  creative: { provider: 'openai', model: 'gpt-4o' },
+  
+  // Use Gemini for research and analysis  
+  research: { provider: 'google', model: 'gemini-1.5-pro' },
+  
+  // Use OpenRouter for cost-effective bulk content
+  bulk: { provider: 'openrouter', model: 'mistral-7b' }
+};
 ```
 
-### 🔬 Technical Architecture
-
-The Magic Wand orchestration leverages advanced prompt engineering and few-shot learning:
-
-```
-🎭 Orchestrator Components:
-
-┌─────────────────────────────────────────────────────────────────┐
-│                     🧠 AI Orchestrator Engine                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  📝 Master Prompt Template                                      │
-│  ├─ Task Decomposition Instructions                             │
-│  ├─ Dependency Analysis Guidelines                              │  
-│  ├─ Data Flow Mapping Rules                                     │
-│  └─ JSON Output Schema Validation                               │
-│                                                                 │
-│  🎯 Few-Shot Learning Examples                                  │
-│  ├─ Customer Feedback Analysis                                  │
-│  ├─ Product Image to E-commerce                                 │
-│  ├─ Research Paper Processing                                   │
-│  └─ Multi-Channel Content Creation                              │
-│                                                                 │
-│  ⚙️  Validation Engine                                          │
-│  ├─ Schema Compliance Check                                     │
-│  ├─ Circular Dependency Detection                               │
-│  ├─ Task Type Validation                                        │
-│  └─ Data Flow Integrity                                         │
-│                                                                 │
-│  🔧 Task Type Support                                           │
-│  ├─ 📥 DATA_INPUT: User input & static values                   │
-│  ├─ 🤖 GEMINI_PROMPT: AI text generation                        │
-│  ├─ 🖼️  IMAGE_ANALYSIS: Visual content processing               │
-│  ├─ ⚙️  TEXT_MANIPULATION: Custom transformations               │
-│  ├─ 📊 DISPLAY_CHART: Data visualization prep                   │
-│  └─ 🔍 GEMINI_GROUNDED: Real-time data queries                  │
-└─────────────────────────────────────────────────────────────────┘
+### Developer: Code Generation Across Languages
+```typescript
+const codeGeneration = {
+  // Python data science - use Gemini
+  python: { provider: 'google', model: 'gemini-1.5-flash' },
+  
+  // JavaScript/React - use OpenAI
+  javascript: { provider: 'openai', model: 'gpt-4o-mini' },
+  
+  // Cost-sensitive scripting - use OpenRouter
+  scripting: { provider: 'openrouter', model: 'codellama-34b' }
+};
 ```
 
-### 🚀 Get Started with Magic Wand
+## 📚 Documentation
 
-1. **Open the Lab**: Navigate to the Prompt Lab page
-2. **Describe Your Goal**: Enter a natural language description in the text area
-3. **Click Magic Wand**: Let AI orchestrate your workflow
-4. **Inspect & Execute**: Review the generated workflow and run it instantly!
-
-**Example Prompts to Try:**
-- *"Analyze product reviews and create a competitive analysis report"*
-- *"Process meeting transcripts to extract action items and create follow-up emails"*  
-- *"Take survey data and generate insights with visualizations"*
-- *"Create a social media campaign from a product description"*
-
-## Why SFL Matters for Prompt Engineering
-
-Traditional prompt engineering often relies on trial and error. SFL Prompt Studio brings linguistic theory to bear on prompt design, ensuring:
-
-1. **Completeness**: Every prompt addresses Field, Tenor, and Mode dimensions
-2. **Consistency**: Structured approach leads to reliable results
-3. **Optimization**: Understanding context helps craft more effective prompts
-4. **Reusability**: Well-structured prompts can be adapted and reused
-5. **Collaboration**: Shared framework enables team prompt development
-
-## Technical Architecture
-
-### Full-Stack Application
-
-- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
-- **Backend**: Express.js + TypeScript + Winston logging
-- **Database**: PostgreSQL 16 with pgvector extension for embeddings
-- **Cache**: Redis 7 Alpine
-- **Deployment**: Docker Compose with nginx proxy
-
-### AI & Integration
-
-- **AI Integration**: Google Gemini API integration for prompt testing and orchestration
-- **Vector Search**: pgvector for document similarity search
-- **Workflow Engine**: Task-based workflow execution with dependency management
-- **AI Orchestration**: Advanced prompt engineering with few-shot learning for automated workflow generation
-- **Magic Wand Feature**: Natural language to executable workflow transformation
-
-### Development & Documentation
-
-- **Documentation**: Automated TypeDoc generation for frontend and backend
-- **Type Safety**: Shared TypeScript interfaces between frontend/backend
-- **API Design**: RESTful endpoints with consistent error handling
-- **Testing**: Manual testing through UI and API endpoints
-
-### Key Features
-
-- **SFL Framework**: Three-dimensional prompt structure (Field, Tenor, Mode)
-- **Variable Substitution**: `{{variable}}` syntax with regex replacement
-- **Export/Import**: JSON format with metadata preservation
-- **Workflow Management**: Complex task dependency resolution
-- **Real-time Features**: Workflow status updates, prompt testing feedback
-
-### Available Scripts
-
-- `npm run docs` - Generate complete unified documentation
-- `npm run dev:frontend` - Start frontend development server
-- `npm run dev:backend` - Start backend development server  
-- `npm run build` - Build both frontend and backend
-- `docker-compose up` - Start all services with Docker
-
-## Documentation System
-
-SFL Prompt Studio includes a comprehensive automated documentation system that generates unified API documentation for both frontend and backend components.
-
-### Features
-
-- **Automated Generation**: Single command generates complete documentation
-- **Unified Interface**: Professional main page with navigation to all sections
-- **TypeDoc Integration**: Full TypeScript API documentation
-- **Multiple Formats**: HTML for backend, Markdown for frontend
-- **GitHub Pages Ready**: Includes `.nojekyll` and proper structure for deployment
-
-### Usage
-
+### Generate Complete Documentation
 ```bash
-# Generate complete documentation
-npm run docs
-
-# Generate only (without combining)
-npm run docs:generate
-
-# Combine existing documentation
-npm run docs:combine
+npm run docs  # Generates unified TypeDoc documentation
 ```
 
 ### Documentation Structure
-
-```shell
+```
 docs/
 ├── index.html              # Main documentation homepage
-├── frontend/               # Frontend TypeDoc (Markdown)
-│   ├── README.html        # Frontend overview
-│   ├── types/             # TypeScript interfaces
-│   └── components/        # Component documentation
-├── backend/               # Backend TypeDoc (HTML)
-│   ├── index.html         # Backend API overview
-│   └── modules/           # API endpoint documentation
-├── docs-summary.json      # Build metadata
+├── frontend/               # Frontend component docs
+├── backend/               # Backend API documentation  
 └── .nojekyll             # GitHub Pages compatibility
 ```
 
-### Accessing Documentation
+## 🛠️ Development
 
-- **Local**: Open `docs/index.html` in your browser
-- **GitHub Pages**: Deploy the `docs/` folder to GitHub Pages
-- **CI/CD**: Integrate `npm run docs` into your build pipeline
+### Available Scripts
 
-## Contributing
+| Command | Description |
+|---------|-------------|
+| `npm run dev:frontend` | Start frontend development server |
+| `npm run dev:backend` | Start backend development server |
+| `npm run build` | Build both frontend and backend |
+| `npm run docs` | Generate complete documentation |
+| `docker-compose up` | Start all services with Docker |
 
-This tool is designed to evolve with the prompt engineering community. Contributions welcome for:
+### Testing Provider Integration
 
-- New SFL categories and options
-- Additional AI provider integrations
-- Export format extensions
-- UI/UX improvements
+```typescript
+// Test API key validation
+const validation = await validateApiKey('google', 'your-api-key');
+console.log(validation.success); // true/false
 
-## License
+// List available models
+const models = await listModels('openai', 'your-api-key');
+console.log(models); // ['gpt-4o', 'gpt-4o-mini', ...]
 
-[Add your license information here]
+// Test with custom endpoint
+const customModels = await listModels('openai', 'key', { 
+  baseURL: 'https://your-custom-endpoint.com' 
+});
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+**Frontend** (`.env.local`):
+```bash
+VITE_API_BASE_URL=http://localhost:4000
+VITE_ENABLE_MULTI_PROVIDER=true
+```
+
+**Backend** (`.env`):
+```bash
+DATABASE_URL=postgresql://user:password@localhost:5432/sfl_prompt_studio
+REDIS_URL=redis://localhost:6379
+NODE_ENV=development
+PORT=4000
+
+# Optional: Default API keys (users can override in UI)
+GEMINI_API_KEY=your_gemini_key
+OPENAI_API_KEY=your_openai_key
+OPENROUTER_API_KEY=your_openrouter_key
+```
+
+### Docker Configuration
+
+```yaml
+# docker-compose.yml
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:4000
+  
+  backend:
+    build: ./backend  
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/sfl_prompt_studio
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### Areas for Contribution
+- **New AI Providers**: Add support for additional AI services
+- **SFL Categories**: Expand Field, Tenor, Mode options
+- **Export Formats**: New import/export capabilities
+- **UI/UX**: Interface improvements and accessibility
+- **Documentation**: Examples, tutorials, and guides
+
+### Development Setup
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Follow the development setup above
+4. Make your changes with proper TypeScript typing
+5. Test with multiple AI providers
+6. Submit a pull request
+
+### Code Standards
+- **TypeScript**: Strict typing required
+- **ESLint**: Follow existing code style
+- **Testing**: Include tests for new functionality
+- **Documentation**: Update README and inline docs
+
+## 📝 Why SFL Matters for Prompt Engineering
+
+Traditional prompt engineering relies on trial and error. SFL Prompt Studio brings linguistic theory to create:
+
+1. **🎯 Completeness**: Every prompt addresses Field, Tenor, and Mode
+2. **🔄 Consistency**: Structured approach yields reliable results  
+3. **⚡ Optimization**: Context understanding enables better prompts
+4. **🔁 Reusability**: Well-structured prompts adapt across use cases
+5. **👥 Collaboration**: Shared framework enables team development
+6. **🤖 Provider Flexibility**: Same structured approach across all AI providers
+
+## 🚀 Roadmap
+
+### Version 0.6.0 - Enhanced Multi-Provider
+- [ ] **Anthropic Claude Integration**: Direct API support
+- [ ] **Azure OpenAI**: Enterprise-grade deployment support  
+- [ ] **Custom Model Configuration**: Fine-tuned model support
+- [ ] **Cost Tracking**: Usage monitoring across providers
+- [ ] **Batch Processing**: Multi-provider bulk operations
+
+### Version 0.7.0 - Advanced Features  
+- [ ] **A/B Testing**: Compare prompts across providers
+- [ ] **Performance Analytics**: Response quality metrics
+- [ ] **Team Collaboration**: Shared prompt libraries
+- [ ] **API Marketplace**: Community prompt sharing
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Systemic Functional Linguistics**: M.A.K. Halliday's foundational work
+- **AI Community**: Open source AI tooling ecosystem
+- **Contributors**: Everyone who helps improve this tool
 
 ---
 
-*Transform your AI interactions from guesswork to precision with SFL Prompt Studio.*
+<div align="center">
+
+**Transform your AI interactions from guesswork to precision with SFL Prompt Studio** 🎯
+
+[Get Started](#-getting-started) • [Documentation](#-documentation) • [Examples](#-illustrative-use-cases) • [Contributing](#-contributing)
+
+</div>
