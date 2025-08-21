@@ -29,6 +29,12 @@ class MockJobService {
     };
   }
 
+  async stopJob(jobId: string): Promise<boolean> {
+    console.log('Mock JobService: Would stop job', jobId);
+    // Always return true for mock (job stopped successfully)
+    return true;
+  }
+
   // Add other methods as needed to match the real JobService interface
   shutdown(): void {
     console.log('Mock JobService: Shutdown called');

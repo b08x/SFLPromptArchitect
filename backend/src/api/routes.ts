@@ -30,6 +30,7 @@ router.post('/workflows/orchestrate', WorkflowController.orchestrateWorkflow);
 router.post('/workflows/run-task', WorkflowExecutionController.runTask);
 router.post('/workflows/execute', WorkflowExecutionController.executeWorkflow);
 router.get('/workflows/jobs/:jobId/status', WorkflowExecutionController.getJobStatus);
+router.post('/workflows/stop/:jobId', WorkflowExecutionController.stopWorkflow);
 
 // Model routes
 router.get('/models', ModelController.getModels);

@@ -91,5 +91,26 @@ class WorkflowExecutionController {
             }
         });
     }
+    stopWorkflow(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { jobId } = req.params;
+                if (!jobId) {
+                    return res.status(400).json({ message: 'Job ID is required' });
+                }
+                const success = yield JobService.stopJob(jobId);
+                if (!success) {
+                    return res.status(404).json({ message: 'Job not found or already completed' });
+                }
+                res.status(200).json({
+                    message: 'Workflow stop requested successfully',
+                    jobId
+                });
+            }
+            catch (error) {
+                next(error);
+            }
+        });
+    }
 }
 exports.default = new WorkflowExecutionController();

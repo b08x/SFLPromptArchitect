@@ -88,6 +88,29 @@ class WorkflowExecutionController {
       next(error);
     }
   }
+
+  async stopWorkflow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+      
+      if (!jobId) {
+        return res.status(400).json({ message: 'Job ID is required' });
+      }
+
+      const success = await JobService.stopJob(jobId);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Job not found or already completed' });
+      }
+
+      res.status(200).json({
+        message: 'Workflow stop requested successfully',
+        jobId
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new WorkflowExecutionController();
