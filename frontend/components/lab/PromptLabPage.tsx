@@ -85,8 +85,8 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
     }
 
     return (
-        <div className="flex h-full bg-[#212934] font-sans">
-            <aside className="w-[350px] bg-[#333e48] border-r border-[#5c6f7e] flex flex-col p-4 space-y-4 overflow-y-auto">
+        <div className="flex h-full bg-app-bg font-sans">
+            <aside className="w-[350px] bg-surface border-r border-border-primary flex flex-col p-4 space-y-4 overflow-y-auto">
                 <WorkflowControls
                     workflows={workflows}
                     activeWorkflow={activeWorkflow}
@@ -108,9 +108,9 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
                         prompts={prompts}
                     />
                 ) : (
-                    <div className="flex items-center justify-center h-full text-center text-gray-500">
+                    <div className="flex items-center justify-center h-full text-center text-text-secondary">
                         <div>
-                            <h2 className="text-xl font-semibold">No Workflow Selected</h2>
+                            <h2 className="text-xl font-semibold text-text-primary">No Workflow Selected</h2>
                             <p>Please select a workflow from the sidebar, or create a new one.</p>
                         </div>
                     </div>

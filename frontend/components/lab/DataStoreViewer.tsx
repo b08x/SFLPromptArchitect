@@ -23,10 +23,10 @@ const JsonViewer: React.FC<{ data: any; level?: number }> = ({ data, level = 0 }
     const [isCollapsed, setIsCollapsed] = useState(level > 0);
 
     if (data === null || data === undefined) {
-        return <span className="text-gray-400">null</span>;
+        return <span className="text-text-tertiary">null</span>;
     }
     if (typeof data !== 'object') {
-        return <span className={typeof data === 'string' ? 'text-green-600' : 'text-blue-600'}>{JSON.stringify(data)}</span>;
+        return <span className={typeof data === 'string' ? 'text-success' : 'text-info'}>{JSON.stringify(data)}</span>;
     }
 
     const entries = Object.entries(data);
@@ -36,16 +36,16 @@ const JsonViewer: React.FC<{ data: any; level?: number }> = ({ data, level = 0 }
     return (
         <div>
             <button onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer">
-                <span className="text-gray-500">{prefix}</span>
-                {isCollapsed && <span className="text-gray-400 mx-1">...</span>}
-                <span className="text-gray-500">{suffix}</span>
-                <span className="text-xs text-gray-400 ml-1">{entries.length} items</span>
+                <span className="text-text-secondary">{prefix}</span>
+                {isCollapsed && <span className="text-text-tertiary mx-1">...</span>}
+                <span className="text-text-secondary">{suffix}</span>
+                <span className="text-xs text-text-tertiary ml-1">{entries.length} items</span>
             </button>
             {!isCollapsed && (
-                <div style={{ paddingLeft: `${(level + 1) * 15}px` }} className="border-l border-gray-200 ml-1.5">
+                <div style={{ paddingLeft: `${(level + 1) * 15}px` }} className="border-l border-border-primary ml-1.5">
                     {entries.map(([key, value]) => (
                         <div key={key} className="flex text-sm">
-                            {!Array.isArray(data) && <span className="text-purple-600 mr-1">"{key}":</span>}
+                            {!Array.isArray(data) && <span className="text-accent-primary mr-1">"{key}":</span>}
                             <JsonViewer data={value} level={level + 1} />
                         </div>
                     ))}
@@ -78,20 +78,20 @@ const DataStoreViewer: React.FC<{ dataStore: DataStore }> = ({ dataStore }) => {
     return (
         <div className="p-4 h-full font-mono">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Data Store</h3>
+                <h3 className="text-lg font-semibold text-text-primary">Data Store</h3>
                 <button
                     onClick={handleCopy}
-                    className="p-1.5 bg-gray-100 rounded-md text-gray-500 hover:text-gray-800 transition-colors border border-gray-200"
+                    className="p-1.5 bg-surface-hover rounded-md text-text-tertiary hover:text-text-primary transition-colors border border-border-primary"
                     title="Copy DataStore JSON"
                 >
                     {copied ? <span className="text-xs">Copied!</span> : <ClipboardIcon className="w-4 h-4" />}
                 </button>
             </div>
-            <div className="bg-gray-50 p-3 rounded-md text-sm border border-gray-200 h-[calc(100%-50px)] overflow-auto">
+            <div className="bg-surface p-3 rounded-md text-sm border border-border-primary h-[calc(100%-50px)] overflow-auto">
                 {Object.keys(dataStore).length > 0 ? (
                     <JsonViewer data={dataStore} />
                 ) : (
-                    <p className="text-gray-400 text-xs">Data Store is empty. Run a workflow to populate it.</p>
+                    <p className="text-text-tertiary text-xs">Data Store is empty. Run a workflow to populate it.</p>
                 )}
             </div>
         </div>

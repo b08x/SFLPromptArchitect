@@ -103,8 +103,8 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
             onClick={() => setActiveTab(tabId)}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 ${
                 activeTab === tabId
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-accent-primary text-accent-primary'
+                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-secondary'
             }`}
         >
             {children}
@@ -112,9 +112,9 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
     );
 
     return (
-        <div className="flex-grow flex flex-col p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">User Input</h2>
-            <div className="border-b border-gray-200 -mx-4 px-4">
+        <div className="flex-grow flex flex-col p-4 bg-surface rounded-lg border border-border-primary">
+            <h2 className="text-lg font-bold text-text-primary mb-2">User Input</h2>
+            <div className="border-b border-border-primary -mx-4 px-4">
                 <nav className="-mb-px flex space-x-4">
                     <TabButton tabId="text">Text</TabButton>
                     <TabButton tabId="image">Image</TabButton>
@@ -127,7 +127,7 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Paste article text or other content here..."
-                        className="w-full h-full p-2 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="input-field w-full h-full resize-none"
                     />
                 )}
                 {activeTab === 'image' && (
@@ -135,14 +135,14 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
                         <input type="file" id="image-upload" className="hidden" accept="image/*" onChange={handleImageUpload} />
                         {image ? (
                             <div className="text-center">
-                                <img src={image.preview} alt={image.name} className="max-h-40 rounded-md border border-gray-300" />
-                                <p className="text-xs mt-2 text-gray-600 truncate">{image.name}</p>
-                                <button onClick={() => setImage(null)} className="text-xs text-red-500 mt-1">Remove</button>
+                                <img src={image.preview} alt={image.name} className="max-h-40 rounded-md border border-border-primary" />
+                                <p className="text-xs mt-2 text-text-secondary truncate">{image.name}</p>
+                                <button onClick={() => setImage(null)} className="text-xs text-error mt-1">Remove</button>
                             </div>
                         ) : (
-                            <label htmlFor="image-upload" className="cursor-pointer p-6 border-2 border-dashed border-gray-300 rounded-md text-center hover:bg-gray-100">
-                                <PaperClipIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                                <span className="text-sm text-gray-600">Click to upload image</span>
+                            <label htmlFor="image-upload" className="cursor-pointer p-6 border-2 border-dashed border-border-secondary rounded-md text-center hover:bg-surface-hover">
+                                <PaperClipIcon className="w-8 h-8 mx-auto text-text-tertiary mb-2" />
+                                <span className="text-sm text-text-secondary">Click to upload image</span>
                             </label>
                         )}
                     </div>
@@ -152,14 +152,14 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
                         <input type="file" id="file-upload" className="hidden" accept=".txt,.md" onChange={handleFileUpload} />
                         {file ? (
                             <div className="text-center">
-                                <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-500"/>
-                                <p className="text-sm mt-2 text-gray-700">{file.name}</p>
-                                <button onClick={() => setFile(null)} className="text-xs text-red-500 mt-1">Remove</button>
+                                <DocumentTextIcon className="w-12 h-12 mx-auto text-text-tertiary"/>
+                                <p className="text-sm mt-2 text-text-primary">{file.name}</p>
+                                <button onClick={() => setFile(null)} className="text-xs text-error mt-1">Remove</button>
                             </div>
                         ) : (
-                             <label htmlFor="file-upload" className="cursor-pointer p-6 border-2 border-dashed border-gray-300 rounded-md text-center hover:bg-gray-100">
-                                <PaperClipIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                                <span className="text-sm text-gray-600">Click to upload text file</span>
+                             <label htmlFor="file-upload" className="cursor-pointer p-6 border-2 border-dashed border-border-secondary rounded-md text-center hover:bg-surface-hover">
+                                <PaperClipIcon className="w-8 h-8 mx-auto text-text-tertiary mb-2" />
+                                <span className="text-sm text-text-secondary">Click to upload text file</span>
                             </label>
                         )}
                     </div>
@@ -168,14 +168,14 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
             <div className="mt-4 flex gap-2">
                 <button
                     onClick={handleStage}
-                    className="flex-1 bg-[#4A69E2] text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
+                    className="btn-primary flex-1 py-2 rounded-md font-semibold"
                 >
                     Stage Input for Workflow
                 </button>
                 <button
                     onClick={handleOrchestrate}
                     disabled={isOrchestrating || !text.trim()}
-                    className="flex-1 bg-purple-600 text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 bg-accent-secondary text-white py-2 rounded-md font-semibold hover:bg-accent-tertiary transition-colors disabled:bg-text-disabled disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     title={!text.trim() ? "Enter a description in the Text tab to generate a workflow" : "Generate workflow from description using AI"}
                 >
                     <MagicWandIcon className="w-4 h-4" />

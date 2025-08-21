@@ -35,8 +35,8 @@ const DetailItem: React.FC<{ label: string; value?: any; isCode?: boolean }> = (
     
     return (
         <div>
-            <h4 className="text-sm font-semibold text-gray-500 mb-1">{label}</h4>
-            <pre className={`p-3 rounded-md text-sm whitespace-pre-wrap break-all border ${isCode ? 'bg-gray-50 border-gray-200 text-gray-800' : 'bg-blue-50 border-blue-200 text-blue-800'}`}>
+            <h4 className="text-sm font-semibold text-text-secondary mb-1">{label}</h4>
+            <pre className={`p-3 rounded-md text-sm whitespace-pre-wrap break-all border ${isCode ? 'bg-surface border-border-primary text-text-primary' : 'bg-info-bg border-info text-info'}`}>
                 {displayValue}
             </pre>
         </div>
@@ -51,7 +51,7 @@ const DetailItem: React.FC<{ label: string; value?: any; isCode?: boolean }> = (
  */
 const ChartRenderer: React.FC<{data: any[]}> = ({data}) => {
     if (!Array.isArray(data) || data.length === 0) {
-        return <p className="text-sm text-gray-500">No data available for chart.</p>;
+        return <p className="text-sm text-text-tertiary">No data available for chart.</p>;
     }
     const sample = data[0];
     if (typeof sample !== 'object' || !sample.name || !sample.value) {
@@ -67,7 +67,7 @@ const ChartRenderer: React.FC<{data: any[]}> = ({data}) => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="value" fill="#4A69E2" />
+                    <Bar dataKey="value" fill="var(--color-accent-primary)" />
                 </BarChart>
             </ResponsiveContainer>
         </div>
@@ -104,7 +104,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
         <ModalShell isOpen={isOpen} onClose={onClose} title={`Task Details: ${task.name}`} size="3xl">
             <div className="space-y-6">
                 <section>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2 border-b pb-2">Configuration</h3>
+                    <h3 className="text-lg font-bold text-text-primary mb-2 border-b border-border-primary pb-2">Configuration</h3>
                     <div className="space-y-3 mt-2 text-sm">
                         <p><strong>ID:</strong> {task.id}</p>
                         <p><strong>Description:</strong> {task.description}</p>
@@ -122,7 +122,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
                 
                 {taskState && (
                      <section>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2 border-b pb-2">Execution State</h3>
+                        <h3 className="text-lg font-bold text-text-primary mb-2 border-b border-border-primary pb-2">Execution State</h3>
                          <div className="space-y-3 mt-2 text-sm">
                             <p><strong>Status:</strong> {taskState.status}</p>
                             {taskState.startTime && <p><strong>Start Time:</strong> {new Date(taskState.startTime).toLocaleString()}</p>}
@@ -131,7 +131,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
                             
                             {task.type === TaskType.DISPLAY_CHART && taskState.result ? (
                                 <div>
-                                    <h4 className="text-sm font-semibold text-gray-500 mb-1">Chart</h4>
+                                    <h4 className="text-sm font-semibold text-text-secondary mb-1">Chart</h4>
                                     <ChartRenderer data={taskState.result} />
                                 </div>
                             ) : (
@@ -142,8 +142,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ isOpen, onClose, task
                          </div>
                     </section>
                 )}
-                 <div className="flex justify-end pt-4 border-t border-gray-200">
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Close</button>
+                 <div className="flex justify-end pt-4 border-t border-border-primary">
+                    <button onClick={onClose} className="btn-secondary">Close</button>
                 </div>
             </div>
         </ModalShell>

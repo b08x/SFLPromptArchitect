@@ -82,17 +82,17 @@ const TaskEditor: React.FC<{
         handleChange('promptId', promptId || undefined);
     };
     
-    const commonInputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2]";
-    const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
+    const commonInputClasses = "input-field w-full";
+    const labelClasses = "block text-sm font-medium text-text-secondary mb-1";
 
     return (
-        <details className="border border-gray-300 rounded-lg p-4 bg-white" open>
+        <details className="border border-border-primary rounded-lg p-4 bg-surface" open>
             <summary className="font-semibold text-lg cursor-pointer flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                     <span>{task.name}</span>
-                    {task.promptId && <LinkIcon className="w-4 h-4 text-gray-400" />}
+                    {task.promptId && <LinkIcon className="w-4 h-4 text-text-tertiary" />}
                 </div>
-                <button type="button" onClick={removeTask} className="text-red-500 hover:text-red-700"><TrashIcon className="w-5 h-5"/></button>
+                <button type="button" onClick={removeTask} className="text-error hover:text-error/80"><TrashIcon className="w-5 h-5"/></button>
             </summary>
             <div className="mt-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -110,8 +110,8 @@ const TaskEditor: React.FC<{
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-2 border rounded-md max-h-32 overflow-y-auto">
                         {availableDependencies.map(dep => (
                             <div key={dep.id} className="flex items-center">
-                                <input type="checkbox" id={`dep-${task.id}-${dep.id}`} checked={task.dependencies.includes(dep.id)} onChange={() => handleDependencyChange(dep.id)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"/>
-                                <label htmlFor={`dep-${task.id}-${dep.id}`} className="ml-2 text-sm text-gray-700 truncate">{dep.name}</label>
+                                <input type="checkbox" id={`dep-${task.id}-${dep.id}`} checked={task.dependencies.includes(dep.id)} onChange={() => handleDependencyChange(dep.id)} className="h-4 w-4 rounded border-border-primary text-accent-primary focus:ring-accent-primary"/>
+                                <label htmlFor={`dep-${task.id}-${dep.id}`} className="ml-2 text-sm text-text-primary truncate">{dep.name}</label>
                             </div>
                         ))}
                     </div>
@@ -123,7 +123,7 @@ const TaskEditor: React.FC<{
                 </div>
 
                 {task.type === TaskType.GEMINI_PROMPT && (
-                    <div className="p-3 border border-dashed border-gray-300 rounded-md space-y-3 bg-gray-50/50">
+                    <div className="p-3 border border-dashed border-border-secondary rounded-md space-y-3 bg-surface-hover/50">
                         <div>
                             <label className={labelClasses}>Link Library Prompt</label>
                             <select value={task.promptId || ''} onChange={handlePromptLinkChange} className={commonInputClasses}>
@@ -239,13 +239,13 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
         onSave(workflow);
     };
     
-    const commonInputClasses = "w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2]";
-    const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
+    const commonInputClasses = "input-field w-full";
+    const labelClasses = "block text-sm font-medium text-text-secondary mb-1";
 
     return (
         <ModalShell isOpen={isOpen} onClose={onClose} title={workflowToEdit && !workflowToEdit.isDefault ? 'Edit Workflow' : 'Create Workflow'} size="4xl">
             <div className="space-y-6">
-                <div className="p-4 border border-gray-200 rounded-lg space-y-4 bg-gray-50">
+                <div className="p-4 border border-border-primary rounded-lg space-y-4 bg-surface">
                      <div><label className={labelClasses}>Workflow Name</label><input type="text" value={workflow.name} onChange={(e) => handleWorkflowChange('name', e.target.value)} className={commonInputClasses} /></div>
                      <div><label className={labelClasses}>Workflow Description</label><textarea value={workflow.description} onChange={(e) => handleWorkflowChange('description', e.target.value)} rows={2} className={commonInputClasses} /></div>
                 </div>
@@ -262,15 +262,15 @@ const WorkflowEditorModal: React.FC<WorkflowEditorModalProps> = ({ isOpen, onClo
                             prompts={prompts}
                         />
                     ))}
-                    <button type="button" onClick={addTask} className="w-full flex items-center justify-center space-x-2 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:bg-gray-100">
+                    <button type="button" onClick={addTask} className="w-full flex items-center justify-center space-x-2 py-2 border-2 border-dashed border-border-secondary rounded-lg text-text-tertiary hover:bg-surface-hover">
                         <PlusIcon className="w-5 h-5"/>
                         <span>Add Task</span>
                     </button>
                 </div>
 
-                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6">
-                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                    <button type="button" onClick={handleSubmit} className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90">Save Workflow</button>
+                 <div className="flex justify-end space-x-3 pt-4 border-t border-border-primary mt-6">
+                    <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                    <button type="button" onClick={handleSubmit} className="btn-primary">Save Workflow</button>
                 </div>
             </div>
         </ModalShell>

@@ -76,18 +76,18 @@ const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClo
             case 'input':
                 return (
                     <div className="space-y-4">
-                        <p className="text-gray-600">Describe the multi-step process you want to automate. The AI will generate a structured workflow with all the necessary tasks, inputs, and outputs.</p>
+                        <p className="text-text-secondary">Describe the multi-step process you want to automate. The AI will generate a structured workflow with all the necessary tasks, inputs, and outputs.</p>
                         <textarea
                             value={goal}
                             onChange={(e) => setGoal(e.target.value)}
                             rows={5}
                             placeholder="e.g., 'Take a user-provided article URL, fetch its content, summarize it, and then translate the summary into Spanish.'"
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="input-field w-full"
                         />
-                        {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+                        {errorMessage && <p className="text-error text-sm">{errorMessage}</p>}
                         <div className="flex justify-end space-x-2">
-                             <button onClick={handleCloseAndReset} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                             <button onClick={handleGenerate} className="px-4 py-2 text-sm font-medium text-white bg-[#4A69E2] rounded-md hover:bg-opacity-90">Generate Workflow</button>
+                             <button onClick={handleCloseAndReset} className="btn-secondary">Cancel</button>
+                             <button onClick={handleGenerate} className="btn-primary">Generate Workflow</button>
                         </div>
                     </div>
                 );
@@ -95,7 +95,7 @@ const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClo
                  return (
                     <div className="flex flex-col items-center justify-center p-8 text-center h-48">
                         <div className="spinner mb-4"></div>
-                        <p className="text-lg text-gray-800">Generating workflow...</p>
+                        <p className="text-lg text-text-primary">Generating workflow...</p>
                     </div>
                 );
             case 'refinement':
@@ -110,10 +110,10 @@ const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClo
                 );
             case 'error':
                  return (
-                    <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="font-semibold text-red-700">Generation Failed</p>
-                        <p className="text-red-600 text-sm mt-1">{errorMessage}</p>
-                        <button onClick={() => setStep('input')} className="mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Try Again</button>
+                    <div className="text-center p-4 bg-error-bg border border-error rounded-lg">
+                        <p className="font-semibold text-error">Generation Failed</p>
+                        <p className="text-error text-sm mt-1">{errorMessage}</p>
+                        <button onClick={() => setStep('input')} className="btn-secondary mt-4">Try Again</button>
                     </div>
                  );
         }

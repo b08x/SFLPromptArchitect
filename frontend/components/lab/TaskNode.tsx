@@ -46,11 +46,11 @@ const TaskIcon: React.FC<{ type: TaskType }> = ({ type }) => {
  * A configuration object that maps task statuses to specific CSS classes for styling.
  */
 const statusConfig = {
-    [TaskStatus.PENDING]: { bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-500', iconBg: 'bg-gray-200' },
-    [TaskStatus.RUNNING]: { bg: 'bg-blue-50', border: 'border-blue-400 ring-2 ring-blue-200', text: 'text-blue-700', iconBg: 'bg-blue-200' },
-    [TaskStatus.COMPLETED]: { bg: 'bg-green-50', border: 'border-green-400', text: 'text-green-700', iconBg: 'bg-green-200' },
-    [TaskStatus.FAILED]: { bg: 'bg-red-50', border: 'border-red-400', text: 'text-red-700', iconBg: 'bg-red-200' },
-    [TaskStatus.SKIPPED]: { bg: 'bg-yellow-50', border: 'border-yellow-400', text: 'text-yellow-700', iconBg: 'bg-yellow-200' },
+    [TaskStatus.PENDING]: { bg: 'bg-surface', border: 'border-border-primary', text: 'text-text-tertiary', iconBg: 'bg-surface-hover' },
+    [TaskStatus.RUNNING]: { bg: 'bg-info-bg', border: 'border-info ring-2 ring-info/20', text: 'text-info', iconBg: 'bg-info/20' },
+    [TaskStatus.COMPLETED]: { bg: 'bg-success-bg', border: 'border-success', text: 'text-success', iconBg: 'bg-success/20' },
+    [TaskStatus.FAILED]: { bg: 'bg-error-bg', border: 'border-error', text: 'text-error', iconBg: 'bg-error/20' },
+    [TaskStatus.SKIPPED]: { bg: 'bg-warning-bg', border: 'border-warning', text: 'text-warning', iconBg: 'bg-warning/20' },
 };
 
 /**
@@ -96,37 +96,37 @@ const TaskNode: React.FC<TaskNodeProps> = ({ task, state, onClick }) => {
                         <TaskIcon type={task.type} />
                     </div>
                     <div className="flex items-center space-x-2">
-                        <h3 className="font-semibold text-gray-800">{task.name}</h3>
-                        {task.promptId && <span title="Linked to SFL Prompt Library"><LinkIcon className="w-4 h-4 text-gray-400" /></span>}
+                        <h3 className="font-semibold text-text-primary">{task.name}</h3>
+                        {task.promptId && <span title="Linked to SFL Prompt Library"><LinkIcon className="w-4 h-4 text-text-tertiary" /></span>}
                     </div>
                 </div>
                 <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
                     {state.status}
                 </span>
             </div>
-            <p className="text-xs text-gray-500 mt-2 h-8 overflow-hidden">{task.description}</p>
+            <p className="text-xs text-text-tertiary mt-2 h-8 overflow-hidden">{task.description}</p>
             
-            <div className="mt-3 pt-3 border-t border-gray-200 text-xs space-y-1">
-                <p><span className="font-medium text-gray-600">Inputs:</span> <span className="text-gray-500 truncate">{task.inputKeys.join(', ') || 'None'}</span></p>
-                <p><span className="font-medium text-gray-600">Output:</span> <span className="text-gray-500">{task.outputKey}</span></p>
+            <div className="mt-3 pt-3 border-t border-border-primary text-xs space-y-1">
+                <p><span className="font-medium text-text-secondary">Inputs:</span> <span className="text-text-tertiary truncate">{task.inputKeys.join(', ') || 'None'}</span></p>
+                <p><span className="font-medium text-text-secondary">Output:</span> <span className="text-text-tertiary">{task.outputKey}</span></p>
             </div>
             
              {state.status === TaskStatus.COMPLETED && (
-                <div className="mt-2 pt-2 border-t border-gray-200 text-xs">
-                    <p className="font-medium text-green-700">Result:</p>
-                    <p className="text-gray-600 break-words h-6 overflow-hidden">{getResultSummary()}</p>
+                <div className="mt-2 pt-2 border-t border-border-primary text-xs">
+                    <p className="font-medium text-success">Result:</p>
+                    <p className="text-text-secondary break-words h-6 overflow-hidden">{getResultSummary()}</p>
                 </div>
             )}
             
             {state.status === TaskStatus.FAILED && state.error && (
-                <div className="mt-2 pt-2 border-t border-gray-200 text-xs">
-                    <p className="font-medium text-red-700">Error:</p>
-                    <p className="text-red-600 break-words h-6 overflow-hidden">{state.error}</p>
+                <div className="mt-2 pt-2 border-t border-border-primary text-xs">
+                    <p className="font-medium text-error">Error:</p>
+                    <p className="text-error break-words h-6 overflow-hidden">{state.error}</p>
                 </div>
             )}
             
             {duration && (
-                <div className="text-right text-xs text-gray-400 mt-2">
+                <div className="text-right text-xs text-text-tertiary mt-2">
                     {duration}
                 </div>
             )}

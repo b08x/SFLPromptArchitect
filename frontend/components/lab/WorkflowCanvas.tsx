@@ -68,19 +68,19 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
 
     return (
         <div className="flex-1 flex flex-col h-full">
-            <header className="flex-shrink-0 bg-[#333e48]/80 backdrop-blur-lg border-b border-[#5c6f7e] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+            <header className="flex-shrink-0 bg-surface-elevated/80 backdrop-blur-lg border-b border-border-primary px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800">{workflow.name}</h2>
-                    <p className="text-sm text-gray-500">{workflow.description}</p>
+                    <h2 className="text-xl font-bold text-text-primary">{workflow.name}</h2>
+                    <p className="text-sm text-text-secondary">{workflow.description}</p>
                 </div>
                 <div className="flex items-center space-x-3">
                     <div className="flex items-center space-x-2">
-                        <label className="text-sm text-gray-600">Mode:</label>
+                        <label className="text-sm text-text-secondary">Mode:</label>
                         <select
                             value={executionMode}
                             onChange={(e) => setExecutionMode(e.target.value as 'local' | 'async')}
                             disabled={isRunning}
-                            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white disabled:opacity-50"
+                            className="text-sm border border-border-primary rounded px-2 py-1 bg-surface text-text-primary disabled:opacity-50"
                         >
                             <option value="local">Local</option>
                             <option value="async">Async</option>
@@ -88,7 +88,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                     </div>
                     
                     {currentExecution && (
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-text-secondary">
                             Job: <span className="font-mono text-xs">{currentExecution.jobId?.slice(-8)}</span>
                         </div>
                     )}
@@ -96,7 +96,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                     <button
                         onClick={() => reset()}
                         disabled={isRunning}
-                        className="flex items-center space-x-2 bg-[#333e48] text-gray-200 border border-[#5c6f7e] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#212934] transition-colors shadow-sm disabled:opacity-50"
+                        className="btn-secondary flex items-center space-x-2 text-sm font-semibold disabled:opacity-50"
                     >
                         <ArrowPathIcon className="w-5 h-5" />
                         <span>Reset</span>
@@ -104,7 +104,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                     {isRunning ? (
                         <button
                             onClick={() => stop()}
-                            className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                            className="flex items-center space-x-2 bg-error text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-error/90 transition-colors shadow-sm"
                         >
                             <StopIcon className="w-5 h-5" />
                             <span>Stop</span>
@@ -112,7 +112,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                     ) : (
                         <button
                             onClick={() => run(stagedInput)}
-                            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm"
+                            className="flex items-center space-x-2 bg-success text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-success/90 transition-colors shadow-sm"
                         >
                             <PlayIcon className="w-5 h-5" />
                             <span>{`Run ${executionMode === 'async' ? 'Async' : 'Local'}`}</span>
@@ -124,7 +124,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
             <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 overflow-y-auto p-6">
                      {runFeedback.length > 0 && (
-                        <div className="mb-4 p-3 bg-yellow-900/20 border-l-4 border-yellow-600 text-yellow-400 text-xs rounded-r-lg">
+                        <div className="mb-4 p-3 bg-warning-bg border-l-4 border-warning text-warning text-xs rounded-r-lg">
                             <p className="font-bold">Execution Notes:</p>
                             <ul className="list-disc list-inside">
                                 {runFeedback.map((fb, i) => <li key={i}>{fb}</li>)}
@@ -143,7 +143,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                     </div>
                 </div>
                 
-                <aside className="w-[400px] bg-[#333e48] border-l border-[#5c6f7e] overflow-y-auto">
+                <aside className="w-[400px] bg-surface border-l border-border-primary overflow-y-auto">
                     <DataStoreViewer dataStore={dataStore} />
                 </aside>
             </div>

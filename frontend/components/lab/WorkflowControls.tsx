@@ -98,18 +98,18 @@ const WorkflowControls: React.FC<WorkflowControlsProps> = ({
     };
 
     return (
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
-            <h2 className="text-lg font-bold text-gray-800">Workflow Controls</h2>
+        <div className="p-4 bg-surface rounded-lg border border-border-primary space-y-4">
+            <h2 className="text-lg font-bold text-text-primary">Workflow Controls</h2>
             
             <input type="file" ref={importFileRef} onChange={handleFileImport} className="hidden" accept=".json" />
 
             <div>
-                <label htmlFor="workflow-select" className="block text-sm font-medium text-gray-700 mb-1">Select Workflow</label>
+                <label htmlFor="workflow-select" className="block text-sm font-medium text-text-secondary mb-1">Select Workflow</label>
                 <select
                     id="workflow-select"
                     value={activeWorkflow?.id || ''}
                     onChange={(e) => onSelectWorkflow(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4A69E2] focus:border-[#4A69E2]"
+                    className="input-field w-full"
                 >
                     <optgroup label="Default Workflows">
                         {workflows.filter(w => w.isDefault).map(wf => <option key={wf.id} value={wf.id}>{wf.name}</option>)}
@@ -121,17 +121,17 @@ const WorkflowControls: React.FC<WorkflowControlsProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-                <button onClick={onOpenEditor} className="flex items-center justify-center space-x-2 text-sm bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-100"><PlusIcon className="w-4 h-4"/><span>New</span></button>
-                <button onClick={onOpenWizard} className="flex items-center justify-center space-x-2 text-sm bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-100"><MagicWandIcon className="w-4 h-4"/><span>Wizard</span></button>
+                <button onClick={onOpenEditor} className="btn-secondary flex items-center justify-center space-x-2 text-sm"><PlusIcon className="w-4 h-4"/><span>New</span></button>
+                <button onClick={onOpenWizard} className="btn-secondary flex items-center justify-center space-x-2 text-sm"><MagicWandIcon className="w-4 h-4"/><span>Wizard</span></button>
             </div>
             
             {activeWorkflow && (
-                <div className="border-t border-gray-200 pt-4 space-y-2">
-                     <p className="text-xs text-gray-500">{activeWorkflow.description}</p>
+                <div className="border-t border-border-primary pt-4 space-y-2">
+                     <p className="text-xs text-text-tertiary">{activeWorkflow.description}</p>
                     <div className="grid grid-cols-2 gap-2">
                         <button 
                             onClick={onOpenEditor} 
-                            className="flex items-center justify-center space-x-2 text-sm bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-100"
+                            className="btn-secondary flex items-center justify-center space-x-2 text-sm"
                             title={activeWorkflow.isDefault ? "Clone to edit" : "Edit this workflow"}
                         >
                             <PencilIcon className="w-4 h-4"/>
@@ -144,16 +144,16 @@ const WorkflowControls: React.FC<WorkflowControlsProps> = ({
                                 }
                             }}
                             disabled={activeWorkflow.isDefault}
-                            className="flex items-center justify-center space-x-2 text-sm bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn-secondary flex items-center justify-center space-x-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <TrashIcon className="w-4 h-4"/>
                             <span>Delete</span>
                         </button>
-                        <button onClick={handleImportClick} className="flex items-center justify-center space-x-2 text-sm bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-100">
+                        <button onClick={handleImportClick} className="btn-secondary flex items-center justify-center space-x-2 text-sm">
                             <ArrowUpTrayIcon className="w-4 h-4"/>
                             <span>Import</span>
                         </button>
-                        <button onClick={handleExport} className="flex items-center justify-center space-x-2 text-sm bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-100">
+                        <button onClick={handleExport} className="btn-secondary flex items-center justify-center space-x-2 text-sm">
                            <ArrowDownTrayIcon className="w-4 h-4"/>
                            <span>Export</span>
                         </button>
