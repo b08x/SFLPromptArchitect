@@ -10,9 +10,11 @@
  */
 
 import React, { useState } from 'react';
-import { StagedUserInput } from '../../types';
+import { StagedUserInput, Workflow } from '../../types';
 import PaperClipIcon from '../icons/PaperClipIcon';
 import DocumentTextIcon from '../icons/DocumentTextIcon';
+import MagicWandIcon from '../icons/MagicWandIcon';
+import { orchestrateWorkflow } from '../../services/workflowEngine';
 
 type Tab = 'text' | 'image' | 'file';
 
@@ -20,23 +22,27 @@ type Tab = 'text' | 'image' | 'file';
  * @interface UserInputAreaProps
  * @description Defines the props for the UserInputArea component.
  * @property {(input: StagedUserInput) => void} onStageInput - Callback function to stage the user's input for the workflow.
+ * @property {(workflow: Workflow) => void} onWorkflowGenerated - Callback function when AI generates a workflow from user input.
  */
 interface UserInputAreaProps {
     onStageInput: (input: StagedUserInput) => void;
+    onWorkflowGenerated: (workflow: Workflow) => void;
 }
 
 /**
  * A component that allows users to provide various types of input for a workflow.
  * It features tabs for text, image, and file inputs and a button to stage the data.
+ * Also includes AI orchestration functionality for generating workflows from natural language descriptions.
  *
  * @param {UserInputAreaProps} props - The props for the component.
  * @returns {JSX.Element} The rendered user input area.
  */
-const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput }) => {
+const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowGenerated }) => {
     const [activeTab, setActiveTab] = useState<Tab>('text');
     const [text, setText] = useState('');
     const [image, setImage] = useState<{ name: string; type: string; base64: string, preview: string } | null>(null);
     const [file, setFile] = useState<{ name: string; content: string } | null>(null);
+    const [isOrchestrating, setIsOrchestrating] = useState(false);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const uploadedFile = e.target.files?.[0];
@@ -65,6 +71,31 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput }) => {
     const handleStage = () => {
         onStageInput({ text, image, file });
         alert('Input has been staged for the workflow.');
+    };
+
+    const handleOrchestrate = async () => {
+        if (!text.trim()) {
+            alert('Please enter a text description in the Text tab to generate a workflow.');
+            setActiveTab('text');
+            return;
+        }
+
+        if (text.length > 2000) {
+            alert('Request description is too long. Please limit to 2000 characters.');
+            return;
+        }
+
+        setIsOrchestrating(true);
+        try {
+            const generatedWorkflow = await orchestrateWorkflow(text.trim());
+            onWorkflowGenerated(generatedWorkflow);
+            alert(`Successfully generated workflow: "${generatedWorkflow.name}" with ${generatedWorkflow.tasks.length} tasks!`);
+        } catch (error: any) {
+            console.error('Workflow orchestration failed:', error);
+            alert(`Failed to generate workflow: ${error.message}`);
+        } finally {
+            setIsOrchestrating(false);
+        }
     };
 
     const TabButton: React.FC<{ tabId: Tab, children: React.ReactNode }> = ({ tabId, children }) => (
@@ -134,12 +165,23 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput }) => {
                     </div>
                 )}
             </div>
-            <button
-                onClick={handleStage}
-                className="w-full mt-4 bg-[#4A69E2] text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
-            >
-                Stage Input for Workflow
-            </button>
+            <div className="mt-4 flex gap-2">
+                <button
+                    onClick={handleStage}
+                    className="flex-1 bg-[#4A69E2] text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
+                >
+                    Stage Input for Workflow
+                </button>
+                <button
+                    onClick={handleOrchestrate}
+                    disabled={isOrchestrating || !text.trim()}
+                    className="flex-1 bg-purple-600 text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    title={!text.trim() ? "Enter a description in the Text tab to generate a workflow" : "Generate workflow from description using AI"}
+                >
+                    <MagicWandIcon className="w-4 h-4" />
+                    {isOrchestrating ? 'Generating...' : 'Magic Wand'}
+                </button>
+            </div>
         </div>
     );
 };

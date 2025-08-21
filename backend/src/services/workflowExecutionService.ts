@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse, Part } from "@google/genai";
-import { Task, DataStore, AgentConfig, PromptSFL } from '../types';
+import { Task, DataStore, AgentConfig, PromptSFL, Workflow } from '../types';
 
 const API_KEY = process.env.GEMINI_API_KEY;
 
@@ -97,21 +97,134 @@ const executeTextManipulation = (funcBody: string, inputs: Record<string, any>):
     }
 };
 
-class WorkflowExecutionService {
-    async executeTask(task: Task, dataStore: DataStore, prompt?: PromptSFL): Promise<any> {
-        const inputs: Record<string, any> = {};
-        for (const key of task.inputKeys) {
-            inputs[key] = getNested(dataStore, key);
-            if (inputs[key] === undefined) {
-                 throw new Error(`Missing required input key "${key}" in data store for task "${task.name}".`);
+/**
+ * Performs topological sort on workflow tasks using Kahn's algorithm
+ * @param tasks Array of tasks to sort
+ * @returns Object containing sorted tasks and any error feedback
+ */
+const topologicalSort = (tasks: Task[]): { sortedTasks: Task[], feedback: string[] } => {
+    const feedback: string[] = [];
+    
+    // Create adjacency list and in-degree count
+    const adjList = new Map<string, string[]>();
+    const inDegree = new Map<string, number>();
+    const taskMap = new Map<string, Task>();
+    
+    // Initialize all tasks
+    for (const task of tasks) {
+        taskMap.set(task.id, task);
+        adjList.set(task.id, []);
+        inDegree.set(task.id, 0);
+    }
+    
+    // Build dependency graph
+    for (const task of tasks) {
+        for (const depId of task.dependencies) {
+            if (!taskMap.has(depId)) {
+                feedback.push(`Task "${task.name}" depends on non-existent task ID: ${depId}`);
+                continue;
+            }
+            
+            // Add edge from dependency to current task
+            adjList.get(depId)!.push(task.id);
+            inDegree.set(task.id, inDegree.get(task.id)! + 1);
+        }
+    }
+    
+    // Kahn's algorithm
+    const queue: string[] = [];
+    const result: Task[] = [];
+    
+    // Find all nodes with no incoming edges
+    for (const [taskId, degree] of inDegree) {
+        if (degree === 0) {
+            queue.push(taskId);
+        }
+    }
+    
+    while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const currentTask = taskMap.get(currentId)!;
+        result.push(currentTask);
+        
+        // Remove this node from the graph
+        for (const neighborId of adjList.get(currentId)!) {
+            inDegree.set(neighborId, inDegree.get(neighborId)! - 1);
+            if (inDegree.get(neighborId) === 0) {
+                queue.push(neighborId);
             }
         }
+    }
+    
+    // Check for cycles
+    if (result.length !== tasks.length) {
+        feedback.push('Cycle detected in task dependencies - workflow cannot be executed');
+        return { sortedTasks: [], feedback };
+    }
+    
+    return { sortedTasks: result, feedback };
+};
+
+/**
+ * Resolves input dependencies and interpolates prompt templates
+ * @param task The task to process
+ * @param dataStore The current data store
+ * @returns The interpolated prompt template and resolved inputs
+ */
+const resolveTaskInputs = (task: Task, dataStore: DataStore): { resolvedInputs: Record<string, any>, interpolatedPrompt?: string } => {
+    const resolvedInputs: Record<string, any> = {};
+    
+    // Resolve inputs from data store using inputKeys
+    for (const key of task.inputKeys) {
+        const value = getNested(dataStore, key);
+        if (value === undefined) {
+            throw new Error(`Missing required input key "${key}" in data store for task "${task.name}"`);
+        }
         
-        const resolvedInputs = task.inputKeys.reduce((acc: Record<string, any>, key: string) => {
-            const simpleKey = key.split('.').pop() || key;
-            acc[simpleKey] = getNested(dataStore, key);
-            return acc;
-        }, {});
+        // Use simple key for the resolved inputs (remove dot notation)
+        const simpleKey = key.split('.').pop() || key;
+        resolvedInputs[simpleKey] = value;
+    }
+    
+    // If task has input mappings, resolve those as well
+    if (task.inputs) {
+        for (const [inputName, mapping] of Object.entries(task.inputs)) {
+            const { nodeId, outputName } = mapping;
+            
+            // Look for the output in the data store
+            const outputValue = dataStore[nodeId];
+            if (outputValue === undefined) {
+                throw new Error(`Task "${task.name}" depends on output from task "${nodeId}" which has not been executed`);
+            }
+            
+            // If outputName is specified, get that specific property
+            let resolvedValue = outputValue;
+            if (outputName && outputName !== nodeId) {
+                if (typeof outputValue === 'object' && outputValue !== null) {
+                    resolvedValue = outputValue[outputName];
+                    if (resolvedValue === undefined) {
+                        throw new Error(`Task "${task.name}" expects output "${outputName}" from task "${nodeId}" but it was not found`);
+                    }
+                }
+            }
+            
+            resolvedInputs[inputName] = resolvedValue;
+        }
+    }
+    
+    // Interpolate prompt template if present
+    let interpolatedPrompt: string | undefined;
+    if (task.promptTemplate) {
+        interpolatedPrompt = templateString(task.promptTemplate, { ...dataStore, ...resolvedInputs });
+    }
+    
+    return { resolvedInputs, interpolatedPrompt };
+};
+
+class WorkflowExecutionService {
+    async executeTask(task: Task, dataStore: DataStore, prompt?: PromptSFL): Promise<any> {
+        // Resolve task inputs and interpolate templates
+        const { resolvedInputs, interpolatedPrompt } = resolveTaskInputs(task, dataStore);
 
 
         switch (task.type) {
@@ -138,32 +251,31 @@ class WorkflowExecutionService {
                     
                     const systemInstruction = instructionParts.join(' ');
                     
-                    const finalPromptText = templateString(linkedPrompt.promptText, dataStore);
+                    // Use enhanced interpolation with resolved inputs
+                    const finalPromptText = templateString(linkedPrompt.promptText, { ...dataStore, ...resolvedInputs });
                     const finalAgentConfig = { ...task.agentConfig, systemInstruction };
                     
                     return executeGeminiPrompt(finalPromptText, finalAgentConfig);
 
                 } else {
-                     if (!task.promptTemplate) throw new Error("Prompt template is missing for non-linked prompt task.");
-                    const finalPrompt = templateString(task.promptTemplate, dataStore);
-                    return executeGeminiPrompt(finalPrompt, task.agentConfig);
+                    if (!interpolatedPrompt) throw new Error("Prompt template is missing for non-linked prompt task.");
+                    return executeGeminiPrompt(interpolatedPrompt, task.agentConfig);
                 }
             }
             
             case 'GEMINI_GROUNDED':
-                if (!task.promptTemplate) throw new Error("Prompt template is missing.");
-                const groundedPrompt = templateString(task.promptTemplate, dataStore);
-                return executeGroundedGeneration(groundedPrompt, task.agentConfig);
+                if (!interpolatedPrompt) throw new Error("Prompt template is missing.");
+                return executeGroundedGeneration(interpolatedPrompt, task.agentConfig);
 
             case 'IMAGE_ANALYSIS': {
-                if (!task.promptTemplate) throw new Error("Prompt template is missing.");
+                if (!interpolatedPrompt) throw new Error("Prompt template is missing.");
 
                 const imageInputKey = task.inputKeys[0];
                 if (!imageInputKey) {
                     throw new Error("IMAGE_ANALYSIS task must have at least one input key pointing to the image data.");
                 }
                 
-                const imageData = inputs[imageInputKey];
+                const imageData = resolvedInputs[imageInputKey.split('.').pop() || imageInputKey];
                 if (!imageData || typeof imageData.base64 !== 'string' || typeof imageData.type !== 'string') {
                     throw new Error(`Image data from key "${imageInputKey}" is missing, malformed, or not found in inputs.`);
                 }
@@ -175,8 +287,7 @@ class WorkflowExecutionService {
                     },
                 };
 
-                const analysisPrompt = templateString(task.promptTemplate, dataStore);
-                return executeImageAnalysis(analysisPrompt, imagePart, task.agentConfig);
+                return executeImageAnalysis(interpolatedPrompt, imagePart, task.agentConfig);
             }
 
             case 'TEXT_MANIPULATION':
@@ -186,6 +297,53 @@ class WorkflowExecutionService {
             default:
                 throw new Error(`Unsupported task type: ${task.type}`);
         }
+    }
+
+    /**
+     * Executes a complete workflow with proper dependency resolution
+     * @param workflow The workflow to execute
+     * @param userInput Initial user input
+     * @param prompts Array of available prompts
+     * @returns Execution results with data store and task results
+     */
+    async executeWorkflow(
+        workflow: Workflow, 
+        userInput: Record<string, any> = {}, 
+        prompts: PromptSFL[] = []
+    ): Promise<{ dataStore: DataStore, results: Record<string, any>, feedback: string[] }> {
+        // Perform topological sort to determine execution order
+        const { sortedTasks, feedback } = topologicalSort(workflow.tasks || []);
+        
+        if (sortedTasks.length === 0) {
+            throw new Error('Cannot execute workflow: ' + feedback.join(', '));
+        }
+
+        // Initialize data store with user input
+        const dataStore: DataStore = { userInput };
+        const results: Record<string, any> = {};
+
+        // Execute tasks in topologically sorted order
+        for (const task of sortedTasks) {
+            try {
+                // Find linked prompt if task has one
+                const linkedPrompt = task.promptId 
+                    ? prompts.find(p => p.id === task.promptId)
+                    : undefined;
+
+                // Execute the task
+                const result = await this.executeTask(task, dataStore, linkedPrompt);
+                
+                // Store result in data store for subsequent tasks
+                dataStore[task.outputKey] = result;
+                results[task.id] = result;
+
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                throw new Error(`Task "${task.name}" failed: ${errorMessage}`);
+            }
+        }
+
+        return { dataStore, results, feedback };
     }
 }
 

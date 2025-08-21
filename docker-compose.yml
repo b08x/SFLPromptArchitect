@@ -9,9 +9,8 @@ services:
     ports:
       - "4000:4000"
     volumes:
-      - ./backend:/app # Mount for live-reloading in dev
       - /app/node_modules # Avoids overwriting container node_modules
-    command: npm run dev
+    command: npm start
     depends_on:
       - migration
       - cache

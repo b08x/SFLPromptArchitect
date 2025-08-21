@@ -9,8 +9,8 @@
  * @requires ../services/workflowEngine
  */
 
-import { useState, useCallback } from 'react';
-import { Workflow, DataStore, TaskStateMap, TaskStatus, Task, PromptSFL } from '../types';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Workflow, DataStore, TaskStateMap, TaskStatus, Task, PromptSFL, WorkflowExecution } from '../types';
 import { topologicalSort, executeTask } from '../services/workflowEngine';
 
 /**
@@ -75,6 +75,139 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
      * @description An array of feedback messages generated during the workflow run, such as warnings about dependencies.
      */
     const [runFeedback, setRunFeedback] = useState<string[]>([]);
+
+    /**
+     * @state
+     * @description Current workflow execution information when running asynchronously
+     */
+    const [currentExecution, setCurrentExecution] = useState<WorkflowExecution | null>(null);
+
+    /**
+     * @state
+     * @description Execution mode - 'local' for client-side execution, 'async' for server-side async execution
+     */
+    const [executionMode, setExecutionMode] = useState<'local' | 'async'>('local');
+
+    /**
+     * @ref
+     * @description WebSocket connection for real-time updates
+     */
+    const wsRef = useRef<WebSocket | null>(null);
+
+    /**
+     * @function
+     * @description Connects to WebSocket for real-time updates
+     */
+    const connectWebSocket = useCallback((jobId: string) => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.close();
+        }
+
+        const wsUrl = `ws://localhost:4000/ws`;
+        wsRef.current = new WebSocket(wsUrl);
+
+        wsRef.current.onopen = () => {
+            console.log('WebSocket connected');
+            // Subscribe to job updates
+            wsRef.current?.send(JSON.stringify({
+                type: 'subscribe',
+                jobId: jobId
+            }));
+        };
+
+        wsRef.current.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            } catch (error) {
+                console.error('Failed to parse WebSocket message:', error);
+            }
+        };
+
+        wsRef.current.onclose = () => {
+            console.log('WebSocket disconnected');
+        };
+
+        wsRef.current.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    }, []);
+
+    /**
+     * @function
+     * @description Handles incoming WebSocket messages
+     */
+    const handleWebSocketMessage = useCallback((message: any) => {
+        switch (message.type) {
+            case 'workflow_progress':
+                if (message.status === 'running') {
+                    setIsRunning(true);
+                }
+                break;
+            
+            case 'task_status':
+                if (message.taskId) {
+                    setTaskStates(prev => ({
+                        ...prev,
+                        [message.taskId]: {
+                            status: message.status === 'active' ? TaskStatus.RUNNING :
+                                   message.status === 'completed' ? TaskStatus.COMPLETED :
+                                   message.status === 'failed' ? TaskStatus.FAILED :
+                                   TaskStatus.PENDING,
+                            result: message.result,
+                            error: message.error,
+                            startTime: message.status === 'active' ? Date.now() : prev[message.taskId]?.startTime,
+                            endTime: message.status === 'completed' || message.status === 'failed' ? Date.now() : undefined,
+                        }
+                    }));
+
+                    // Update data store if task completed
+                    if (message.status === 'completed' && message.result !== undefined) {
+                        setDataStore(prev => {
+                            const task = workflow?.tasks.find(t => t.id === message.taskId);
+                            if (task) {
+                                return { ...prev, [task.outputKey]: message.result };
+                            }
+                            return prev;
+                        });
+                    }
+                }
+                break;
+            
+            case 'workflow_complete':
+                setIsRunning(false);
+                if (message.result?.dataStore) {
+                    setDataStore(message.result.dataStore);
+                }
+                break;
+            
+            case 'workflow_failed':
+                setIsRunning(false);
+                setRunFeedback(prev => [...prev, `Workflow failed: ${message.error}`]);
+                break;
+        }
+    }, [workflow]);
+
+    /**
+     * @function
+     * @description Disconnects WebSocket
+     */
+    const disconnectWebSocket = useCallback(() => {
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+    }, []);
+
+    /**
+     * @function
+     * @description Cleanup WebSocket on unmount
+     */
+    useEffect(() => {
+        return () => {
+            disconnectWebSocket();
+        };
+    }, [disconnectWebSocket]);
     
     /**
      * @function
@@ -98,6 +231,9 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
      * and clearing the data store.
      */
     const reset = useCallback(() => {
+        disconnectWebSocket();
+        setCurrentExecution(null);
+        
         if (workflow) {
             initializeStates(workflow.tasks);
         } else {
@@ -105,7 +241,60 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             setDataStore({});
         }
         setIsRunning(false);
-    }, [workflow, initializeStates]);
+    }, [workflow, initializeStates, disconnectWebSocket]);
+
+    /**
+     * @function
+     * @description Executes workflow asynchronously on the server
+     */
+    const runAsync = useCallback(async (stagedUserInput: Record<string, any> = {}) => {
+        if (!workflow) {
+            setRunFeedback(['No workflow selected.']);
+            return;
+        }
+
+        try {
+            setIsRunning(true);
+            initializeStates(workflow.tasks);
+
+            // Send workflow to backend for async execution
+            const response = await fetch('/api/workflows/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    workflow,
+                    userInput: stagedUserInput,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.jobId) {
+                // Connect to WebSocket for real-time updates
+                connectWebSocket(result.jobId);
+                
+                setCurrentExecution({
+                    id: result.jobId,
+                    workflowId: workflow.id,
+                    jobId: result.jobId,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                });
+            }
+
+        } catch (error: any) {
+            console.error('Failed to start async workflow execution:', error);
+            setRunFeedback([`Failed to start execution: ${error.message}`]);
+            setIsRunning(false);
+        }
+    }, [workflow, initializeStates, connectWebSocket]);
 
     /**
      * @function
@@ -117,6 +306,11 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
      * @returns {Promise<void>} A promise that resolves when the workflow has finished running (either completed or failed).
      */
     const run = useCallback(async (stagedUserInput: Record<string, any> = {}) => {
+        if (executionMode === 'async') {
+            return runAsync(stagedUserInput);
+        }
+
+        // Local execution (original logic)
         if (!workflow) {
             setRunFeedback(['No workflow selected.']);
             return;
@@ -167,7 +361,17 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
         
         setIsRunning(false);
 
-    }, [workflow, initializeStates, taskStates, prompts]);
+    }, [workflow, initializeStates, taskStates, prompts, executionMode, runAsync]);
 
-    return { dataStore, taskStates, isRunning, run, reset, runFeedback };
+    return { 
+        dataStore, 
+        taskStates, 
+        isRunning, 
+        run, 
+        reset, 
+        runFeedback,
+        currentExecution,
+        executionMode,
+        setExecutionMode,
+    };
 };

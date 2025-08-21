@@ -11,6 +11,7 @@
 
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
 
 /**
  * Exports the Vite configuration.
@@ -26,6 +27,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
+    plugins: [react()],
     resolve: {
       /**
        * @property {object} alias - Defines path aliases for module resolution.
@@ -33,6 +35,19 @@ export default defineConfig(({ mode }) => {
        */
       alias: {
         '@': path.resolve(__dirname, '.'),
+      },
+    },
+    server: {
+      /**
+       * @property {object} proxy - Proxy configuration for development server.
+       * This forwards API requests to the backend server during development.
+       */
+      proxy: {
+        '/api': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
     define: {

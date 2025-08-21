@@ -44,7 +44,17 @@ interface WorkflowCanvasProps {
  * @returns {JSX.Element} The rendered workflow canvas.
  */
 const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, prompts }) => {
-    const { dataStore, taskStates, isRunning, run, reset, runFeedback } = useWorkflowRunner(workflow, prompts);
+    const { 
+        dataStore, 
+        taskStates, 
+        isRunning, 
+        run, 
+        reset, 
+        runFeedback, 
+        currentExecution, 
+        executionMode, 
+        setExecutionMode 
+    } = useWorkflowRunner(workflow, prompts);
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<string | null>(null);
 
     const handleTaskClick = (taskId: string) => {
@@ -62,6 +72,25 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                     <p className="text-sm text-gray-500">{workflow.description}</p>
                 </div>
                 <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                        <label className="text-sm text-gray-600">Mode:</label>
+                        <select
+                            value={executionMode}
+                            onChange={(e) => setExecutionMode(e.target.value as 'local' | 'async')}
+                            disabled={isRunning}
+                            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white disabled:opacity-50"
+                        >
+                            <option value="local">Local</option>
+                            <option value="async">Async</option>
+                        </select>
+                    </div>
+                    
+                    {currentExecution && (
+                        <div className="text-sm text-gray-600">
+                            Job: <span className="font-mono text-xs">{currentExecution.jobId?.slice(-8)}</span>
+                        </div>
+                    )}
+                    
                     <button
                         onClick={() => reset()}
                         disabled={isRunning}
@@ -76,7 +105,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
                         className="flex items-center space-x-2 bg-green-600 text-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
                     >
                         {isRunning ? <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div> : <PlayIcon className="w-5 h-5" />}
-                        <span>{isRunning ? 'Running...' : 'Run Workflow'}</span>
+                        <span>{isRunning ? 'Running...' : `Run ${executionMode === 'async' ? 'Async' : 'Local'}`}</span>
                     </button>
                 </div>
             </header>
