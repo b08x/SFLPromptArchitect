@@ -642,6 +642,8 @@ const App: React.FC = () => {
                             onViewPrompt={handleOpenDetailModal}
                             onEditPrompt={handleOpenEditModal}
                             onDeletePrompt={handleDeletePrompt}
+                            onExportJSON={handleExportSinglePrompt}
+                            onExportMarkdown={handleExportSinglePromptMarkdown}
                         />
                     </div>
                 </>
@@ -710,8 +712,6 @@ const App: React.FC = () => {
           onEdit={handleOpenEditModal}
           onDelete={handleDeletePrompt}
           onTestWithGemini={handleTestWithGemini}
-          onExportPrompt={handleExportSinglePrompt}
-          onExportPromptMarkdown={handleExportSinglePromptMarkdown}
         />
       )}
 

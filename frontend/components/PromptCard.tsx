@@ -27,6 +27,7 @@ import ArrowsRightLeftIcon from './icons/ArrowsRightLeftIcon';
 import GlobeAltIcon from './icons/GlobeAltIcon';
 import WrenchScrewdriverIcon from './icons/WrenchScrewdriverIcon';
 import AcademicCapIcon from './icons/AcademicCapIcon';
+import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 
 /**
  * @interface PromptCardProps
@@ -35,12 +36,16 @@ import AcademicCapIcon from './icons/AcademicCapIcon';
  * @property {(prompt: PromptSFL) => void} onView - Callback function invoked when the "View" action is selected from the menu.
  * @property {(prompt: PromptSFL) => void} onEdit - Callback function invoked when the "Edit" action is selected from the menu.
  * @property {(promptId: string) => void} onDelete - Callback function invoked when the "Delete" action is selected from the menu.
+ * @property {(prompt: PromptSFL) => void} onExportJSON - Callback function invoked when the "Export JSON" action is selected from the menu.
+ * @property {(prompt: PromptSFL) => void} onExportMarkdown - Callback function invoked when the "Export MD" action is selected from the menu.
  */
 interface PromptCardProps {
   prompt: PromptSFL;
   onView: (prompt: PromptSFL) => void;
   onEdit: (prompt: PromptSFL) => void;
   onDelete: (promptId: string) => void;
+  onExportJSON: (prompt: PromptSFL) => void;
+  onExportMarkdown: (prompt: PromptSFL) => void;
 }
 
 /**
@@ -73,7 +78,7 @@ const getTaskIcon = (taskType: string): React.ReactElement => {
  * @param {PromptCardProps} props - The props for the component.
  * @returns {JSX.Element} The rendered prompt card.
  */
-const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelete }) => {
+const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelete, onExportJSON, onExportMarkdown }) => {
   /**
    * @state {boolean} menuOpen - Manages the visibility of the dropdown actions menu.
    */
@@ -140,6 +145,14 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onEdit, onDelet
                     <div className="absolute right-0 mt-2 w-48 bg-[#333e48] rounded-md shadow-lg z-10 border border-[#5c6f7e]">
                     <button onClick={() => { onView(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-[#212934]">View Details</button>
                     <button onClick={() => { onEdit(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-[#212934]">Edit</button>
+                    <div className="border-t border-[#5c6f7e] my-1"></div>
+                    <button onClick={() => { onExportJSON(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-[#212934] flex items-center">
+                      <ArrowDownTrayIcon className="w-4 h-4 mr-2" /> Export JSON
+                    </button>
+                    <button onClick={() => { onExportMarkdown(prompt); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-[#212934] flex items-center">
+                      <DocumentTextIcon className="w-4 h-4 mr-2" /> Export MD
+                    </button>
+                    <div className="border-t border-[#5c6f7e] my-1"></div>
                     <button onClick={() => { onDelete(prompt.id); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-red-300 hover:bg-red-900/20">Delete</button>
                     </div>
                 )}

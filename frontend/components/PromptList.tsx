@@ -23,12 +23,16 @@ import ClipboardDocumentListIcon from './icons/ClipboardDocumentListIcon';
  * @property {(prompt: PromptSFL) => void} onViewPrompt - Callback function passed down to each `PromptCard` to handle viewing a prompt's details.
  * @property {(prompt: PromptSFL) => void} onEditPrompt - Callback function passed down to each `PromptCard` to handle editing a prompt.
  * @property {(promptId: string) => void} onDeletePrompt - Callback function passed down to each `PromptCard` to handle deleting a prompt.
+ * @property {(prompt: PromptSFL) => void} onExportJSON - Callback function passed down to each `PromptCard` to handle exporting a prompt as JSON.
+ * @property {(prompt: PromptSFL) => void} onExportMarkdown - Callback function passed down to each `PromptCard` to handle exporting a prompt as Markdown.
  */
 interface PromptListProps {
   prompts: PromptSFL[];
   onViewPrompt: (prompt: PromptSFL) => void;
   onEditPrompt: (prompt: PromptSFL) => void;
   onDeletePrompt: (promptId: string) => void;
+  onExportJSON: (prompt: PromptSFL) => void;
+  onExportMarkdown: (prompt: PromptSFL) => void;
 }
 
 /**
@@ -39,7 +43,7 @@ interface PromptListProps {
  * @param {PromptListProps} props - The props for the component.
  * @returns {JSX.Element} The rendered list of prompts as a grid, or an empty state message.
  */
-const PromptList: React.FC<PromptListProps> = ({ prompts, onViewPrompt, onEditPrompt, onDeletePrompt }) => {
+const PromptList: React.FC<PromptListProps> = ({ prompts, onViewPrompt, onEditPrompt, onDeletePrompt, onExportJSON, onExportMarkdown }) => {
   if (prompts.length === 0) {
     return (
       <div className="text-center py-10 bg-[#333e48] rounded-lg border border-[#5c6f7e]">
@@ -59,6 +63,8 @@ const PromptList: React.FC<PromptListProps> = ({ prompts, onViewPrompt, onEditPr
           onView={onViewPrompt}
           onEdit={onEditPrompt}
           onDelete={onDeletePrompt}
+          onExportJSON={onExportJSON}
+          onExportMarkdown={onExportMarkdown}
         />
       ))}
     </div>

@@ -21,8 +21,6 @@ import ModalShell from './ModalShell';
 import SparklesIcon from './icons/SparklesIcon';
 import PencilIcon from './icons/PencilIcon';
 import TrashIcon from './icons/TrashIcon';
-import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
-import DocumentTextIcon from './icons/DocumentTextIcon';
 import ClipboardIcon from './icons/ClipboardIcon';
 
 /**
@@ -34,8 +32,6 @@ import ClipboardIcon from './icons/ClipboardIcon';
  * @property {(prompt: PromptSFL) => void} onEdit - Callback to trigger the editing mode for the current prompt.
  * @property {(promptId: string) => void} onDelete - Callback to trigger the deletion of the current prompt.
  * @property {(prompt: PromptSFL, variables: Record<string, string>) => void} onTestWithGemini - Callback to test the prompt with the Gemini API, passing any interpolated variable values.
- * @property {(prompt: PromptSFL) => void} onExportPrompt - Callback to export the prompt as a JSON file.
- * @property {(prompt: PromptSFL) => void} onExportPromptMarkdown - Callback to export the prompt as a Markdown file.
  */
 interface PromptDetailModalProps {
   isOpen: boolean;
@@ -44,8 +40,6 @@ interface PromptDetailModalProps {
   onEdit: (prompt: PromptSFL) => void;
   onDelete: (promptId: string) => void;
   onTestWithGemini: (prompt: PromptSFL, variables: Record<string, string>) => void;
-  onExportPrompt: (prompt: PromptSFL) => void;
-  onExportPromptMarkdown: (prompt: PromptSFL) => void;
 }
 
 /**
@@ -83,7 +77,7 @@ const DetailItem: React.FC<{ label: string; value?: string | null; isCode?: bool
  * @param {PromptDetailModalProps} props - The props for the component.
  * @returns {JSX.Element | null} The rendered modal, or `null` if no prompt is provided or `isOpen` is false.
  */
-const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, prompt, onEdit, onDelete, onTestWithGemini, onExportPrompt, onExportPromptMarkdown }) => {
+const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, prompt, onEdit, onDelete, onTestWithGemini }) => {
   if (!prompt) return null;
 
   /**
@@ -253,20 +247,6 @@ const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, onClose, 
         )}
 
         <div className="flex flex-wrap justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
-          <button
-            onClick={() => onExportPrompt(prompt)}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
-            aria-label="Export this prompt as JSON"
-          >
-            <ArrowDownTrayIcon className="w-5 h-5 mr-2"/> Export JSON
-          </button>
-          <button
-            onClick={() => onExportPromptMarkdown(prompt)}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
-            aria-label="Export this prompt as Markdown"
-          >
-            <DocumentTextIcon className="w-5 h-5 mr-2"/> Export MD
-          </button>
           <button
             onClick={() => onTestWithGemini(prompt, variableValues)}
             disabled={prompt.isTesting}
