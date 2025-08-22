@@ -11,9 +11,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
+const tempAuth_1 = __importDefault(require("./middleware/tempAuth"));
 const routes_1 = __importDefault(require("./api/routes"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+// Temporary authentication middleware - replace with real auth
+app.use('/api', tempAuth_1.default);
 app.use('/api', routes_1.default);
 app.get('/', (req, res) => {
     res.send('SFL Prompt Studio Backend is running!');

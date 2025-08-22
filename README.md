@@ -34,6 +34,7 @@ Universal AI provider support with seamless switching between:
 - **🛠️ Custom Endpoints**: Support for self-hosted and enterprise AI services
 
 **Key Benefits:**
+
 - 🚀 **One-Click Provider Switching**: Change AI providers instantly without reconfiguration
 - 🔐 **Secure API Key Management**: Local storage with validation and testing
 - 🎯 **Dynamic Model Discovery**: Automatically fetch available models for each provider
@@ -86,7 +87,7 @@ const validation = await validateApiKey(provider, apiKey);
 
 Transform natural language descriptions into complete, executable workflows instantly! The Magic Wand feature uses advanced AI orchestration to automatically generate multi-step workflows with proper task dependencies and data flow.
 
-```
+```shell
 🎯 User Input: "Analyze customer feedback for sentiment and generate a summary report"
 
      ↓ ✨ Magic Wand AI Orchestration ↓
@@ -115,6 +116,7 @@ Transform natural language descriptions into complete, executable workflows inst
 ### 🐳 Quick Start with Docker (Recommended)
 
 1. **Clone and Launch**
+
    ```bash
    git clone https://github.com/your-username/sfl-prompt-studio.git
    cd sfl-prompt-studio
@@ -122,8 +124,8 @@ Transform natural language descriptions into complete, executable workflows inst
    ```
 
 2. **Access the Application**
-   - Frontend: http://localhost:80
-   - Backend API: http://localhost:4000
+   - Frontend: <http://localhost:80>
+   - Backend API: <http://localhost:4000>
    - Database: PostgreSQL on port 5432
 
 3. **Configure AI Providers**
@@ -134,6 +136,7 @@ Transform natural language descriptions into complete, executable workflows inst
 ### 🛠️ Manual Installation
 
 1. **Install Dependencies**
+
    ```bash
    git clone https://github.com/your-username/sfl-prompt-studio.git
    cd sfl-prompt-studio
@@ -149,14 +152,16 @@ Transform natural language descriptions into complete, executable workflows inst
    ```
 
 2. **Environment Configuration**
-   
+
    **Frontend** (`.env.local`):
+
    ```bash
    cd frontend
    echo "VITE_API_BASE_URL=http://localhost:4000" > .env.local
    ```
 
    **Backend** (`.env`):
+
    ```bash
    cd backend
    cat > .env << EOF
@@ -169,6 +174,7 @@ Transform natural language descriptions into complete, executable workflows inst
    ```
 
 3. **Database Setup**
+
    ```bash
    cd backend
    npm run migrate:up
@@ -176,6 +182,7 @@ Transform natural language descriptions into complete, executable workflows inst
    ```
 
 4. **Start Development Servers**
+
    ```bash
    # Terminal 1 - Backend
    npm run dev:backend
@@ -216,6 +223,7 @@ const economicTask = {
 **Mode (How):** Markdown format, Tutorial structure, 800-1000 words  
 
 **Generated Prompt:**
+
 ```
 As an expert technology blogger, write a comprehensive tutorial about {{topic}} 
 for software developers and tech professionals. Structure it with clear headings, 
@@ -243,7 +251,8 @@ compareResults(results);
 ## 🏗️ Architecture
 
 ### Multi-Provider Integration
-```
+
+```shell
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SFL Prompt Studio                           │
 ├─────────────────────────────────────────────────────────────────┤
@@ -304,7 +313,7 @@ graph TD
 
 **Input**: *"Process sales data to find trends and create a visualization"*
 
-```
+```shell
 🏭 AI-Generated Workflow Architecture:
 
     📊 Raw Data        📈 Trend Analysis      📉 Visualization
@@ -321,13 +330,15 @@ graph TD
 ### Orchestration Patterns
 
 #### 🔀 **Sequential Pattern**
-```
+
+```shell
 Input → Process → Transform → Output
   📥      🔄         🔧        📤
 ```
 
 #### 🌟 **Fan-Out Pattern**  
-```
+
+```shell
         Input
          📥
          │
@@ -352,6 +363,7 @@ Input → Process → Transform → Output
 ## 🎯 Illustrative Use Cases
 
 ### Content Creator: Multi-Platform Strategy
+
 ```typescript
 const contentStrategy = {
   // Use OpenAI for creative content
@@ -366,6 +378,7 @@ const contentStrategy = {
 ```
 
 ### Developer: Code Generation Across Languages
+
 ```typescript
 const codeGeneration = {
   // Python data science - use Gemini
@@ -382,12 +395,14 @@ const codeGeneration = {
 ## 📚 Documentation
 
 ### Generate Complete Documentation
+
 ```bash
 npm run docs  # Generates unified TypeDoc documentation
 ```
 
 ### Documentation Structure
-```
+
+```shell
 docs/
 ├── index.html              # Main documentation homepage
 ├── frontend/               # Frontend component docs
@@ -429,12 +444,14 @@ const customModels = await listModels('openai', 'key', {
 ### Environment Variables
 
 **Frontend** (`.env.local`):
+
 ```bash
 VITE_API_BASE_URL=http://localhost:4000
 VITE_ENABLE_MULTI_PROVIDER=true
 ```
 
 **Backend** (`.env`):
+
 ```bash
 DATABASE_URL=postgresql://user:password@localhost:5432/sfl_prompt_studio
 REDIS_URL=redis://localhost:6379
@@ -472,6 +489,7 @@ services:
 We welcome contributions! Here's how you can help:
 
 ### Areas for Contribution
+
 - **New AI Providers**: Add support for additional AI services
 - **SFL Categories**: Expand Field, Tenor, Mode options
 - **Export Formats**: New import/export capabilities
@@ -479,6 +497,7 @@ We welcome contributions! Here's how you can help:
 - **Documentation**: Examples, tutorials, and guides
 
 ### Development Setup
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Follow the development setup above
@@ -487,6 +506,7 @@ We welcome contributions! Here's how you can help:
 6. Submit a pull request
 
 ### Code Standards
+
 - **TypeScript**: Strict typing required
 - **ESLint**: Follow existing code style
 - **Testing**: Include tests for new functionality
@@ -506,6 +526,7 @@ Traditional prompt engineering relies on trial and error. SFL Prompt Studio brin
 ## 🚀 Roadmap
 
 ### Version 0.6.0 - Enhanced Multi-Provider
+
 - [ ] **Anthropic Claude Integration**: Direct API support
 - [ ] **Azure OpenAI**: Enterprise-grade deployment support  
 - [ ] **Custom Model Configuration**: Fine-tuned model support
@@ -513,6 +534,7 @@ Traditional prompt engineering relies on trial and error. SFL Prompt Studio brin
 - [ ] **Batch Processing**: Multi-provider bulk operations
 
 ### Version 0.7.0 - Advanced Features  
+
 - [ ] **A/B Testing**: Compare prompts across providers
 - [ ] **Performance Analytics**: Response quality metrics
 - [ ] **Team Collaboration**: Shared prompt libraries

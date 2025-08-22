@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const promptService_1 = __importDefault(require("../../services/promptService"));
+require("../../types/express");
 /**
  * @class PromptController
  * @description Controller for handling prompt-related requests.
@@ -21,15 +22,19 @@ class PromptController {
     /**
      * @method createPrompt
      * @description Creates a new prompt.
-     * @param {Request} req - The Express request object, containing the prompt data in the body.
+     * @param {Request} req - The Express request object, containing the prompt data in the body and user info.
      * @param {Response} res - The Express response object.
      * @param {NextFunction} next - The Express next middleware function.
      * @returns {Promise<void>} - A promise that resolves when the response is sent.
      */
     createPrompt(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
-                const prompt = yield promptService_1.default.createPrompt(req.body);
+                if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.id)) {
+                    return res.status(401).json({ message: 'Authentication required' });
+                }
+                const prompt = yield promptService_1.default.createPrompt(req.body, req.user.id);
                 res.status(201).json(prompt);
             }
             catch (error) {
@@ -87,15 +92,19 @@ class PromptController {
     /**
      * @method updatePrompt
      * @description Updates an existing prompt.
-     * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter and the update data in the body.
+     * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter, update data in the body, and user info.
      * @param {Response} res - The Express response object.
      * @param {NextFunction} next - The Express next middleware function.
      * @returns {Promise<void>} - A promise that resolves when the response is sent.
      */
     updatePrompt(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
-                const prompt = yield promptService_1.default.updatePrompt(req.params.id, req.body);
+                if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.id)) {
+                    return res.status(401).json({ message: 'Authentication required' });
+                }
+                const prompt = yield promptService_1.default.updatePrompt(req.params.id, req.body, req.user.id);
                 if (!prompt) {
                     return res.status(404).json({ message: 'Prompt not found' });
                 }

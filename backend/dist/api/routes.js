@@ -9,6 +9,7 @@ const workflowController_1 = __importDefault(require("./controllers/workflowCont
 const modelController_1 = __importDefault(require("./controllers/modelController"));
 const geminiController_1 = __importDefault(require("./controllers/geminiController"));
 const workflowExecutionController_1 = __importDefault(require("./controllers/workflowExecutionController"));
+const providerController_1 = __importDefault(require("./controllers/providerController"));
 /**
  * @file defines the routes for the application's API
  * @author Your Name
@@ -39,4 +40,10 @@ router.post('/gemini/test-prompt', geminiController_1.default.testPrompt);
 router.post('/gemini/generate-sfl', geminiController_1.default.generateSFLFromGoal);
 router.post('/gemini/regenerate-sfl', geminiController_1.default.regenerateSFLFromSuggestion);
 router.post('/gemini/generate-workflow', geminiController_1.default.generateWorkflowFromGoal);
+// Provider validation routes
+router.get('/providers/status', providerController_1.default.getProviderStatus);
+router.get('/providers/available', providerController_1.default.getAvailableProviders);
+router.get('/providers/health', providerController_1.default.checkProviderHealth);
+router.get('/providers/preferred', providerController_1.default.getPreferredProvider);
+router.post('/providers/validate', providerController_1.default.validateProvider);
 exports.default = router;
