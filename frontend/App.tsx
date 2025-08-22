@@ -188,6 +188,11 @@ const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>(requiresSetup ? 'settings' : 'dashboard');
   
   /**
+   * @state {boolean} hasUserNavigated - Tracks if user has manually navigated to prevent auto-redirects
+   */
+  const [hasUserNavigated, setHasUserNavigated] = useState<boolean>(false);
+  
+  /**
    * @ref {HTMLInputElement} importFileRef - A ref to a hidden file input element, used to trigger the file import dialog programmatically.
    */
   const importFileRef = useRef<HTMLInputElement>(null);
@@ -208,17 +213,18 @@ const App: React.FC = () => {
 
   /**
    * @effect Handles routing based on provider validation status
+   * Only auto-redirects on initial load, not after manual navigation
    */
   useEffect(() => {
     if (!providersLoading) {
       if (requiresSetup) {
         setActivePage('settings');
-      } else if (activePage === 'settings' && providersReady) {
-        // Redirect to dashboard if on settings page but providers are now ready
+      } else if (activePage === 'settings' && providersReady && !hasUserNavigated) {
+        // Only redirect to dashboard if this is initial load (user hasn't manually navigated)
         setActivePage('dashboard');
       }
     }
-  }, [providersLoading, requiresSetup, providersReady, activePage]);
+  }, [providersLoading, requiresSetup, providersReady, activePage, hasUserNavigated]);
 
   /**
    * @effect Fetches the initial list of prompts from the API when providers are ready.
@@ -244,6 +250,9 @@ const App: React.FC = () => {
    * @param {Page} page - The page to navigate to.
    */
   const handleNavigate = useCallback(async (page: Page) => {
+    // Mark that user has manually navigated to prevent auto-redirects
+    setHasUserNavigated(true);
+    
     // If user tries to navigate away from settings, check if setup is complete
     if (page !== 'settings' && requiresSetup) {
       const setupComplete = await checkSetupComplete();

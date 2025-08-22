@@ -12,16 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const geminiService_1 = __importDefault(require("../../services/geminiService"));
+const unifiedAIService_1 = __importDefault(require("../../services/unifiedAIService"));
 class GeminiController {
     testPrompt(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { promptText } = req.body;
+                const { promptText, provider, model, parameters, apiKey, baseUrl } = req.body;
                 if (!promptText) {
                     return res.status(400).json({ message: 'promptText is required' });
                 }
-                const result = yield geminiService_1.default.testPrompt(promptText);
+                // Create provider configuration from request
+                const providerConfig = {
+                    provider: provider,
+                    model,
+                    parameters,
+                    apiKey,
+                    baseUrl
+                };
+                const result = yield unifiedAIService_1.default.testPrompt(promptText, providerConfig);
                 res.status(200).json({ text: result });
             }
             catch (error) {
@@ -34,13 +42,21 @@ class GeminiController {
             try {
                 console.log('POST /api/gemini/generate-sfl received');
                 console.log('Request body:', JSON.stringify(req.body, null, 2));
-                const { goal, sourceDocContent } = req.body;
+                const { goal, sourceDocContent, provider, model, parameters, apiKey, baseUrl } = req.body;
                 if (!goal) {
                     console.log('Error: Goal is required but not provided');
                     return res.status(400).json({ message: 'Goal is required' });
                 }
-                console.log('Calling GeminiService.generateSFLFromGoal...');
-                const result = yield geminiService_1.default.generateSFLFromGoal(goal, sourceDocContent);
+                // Create provider configuration from request
+                const providerConfig = {
+                    provider: provider,
+                    model,
+                    parameters,
+                    apiKey,
+                    baseUrl
+                };
+                console.log('Calling UnifiedAIService.generateSFLFromGoal...');
+                const result = yield unifiedAIService_1.default.generateSFLFromGoal(goal, sourceDocContent, providerConfig);
                 console.log('Generated SFL result:', JSON.stringify(result, null, 2));
                 res.status(200).json(result);
             }
@@ -53,11 +69,19 @@ class GeminiController {
     regenerateSFLFromSuggestion(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { currentPrompt, suggestion } = req.body;
+                const { currentPrompt, suggestion, provider, model, parameters, apiKey, baseUrl } = req.body;
                 if (!currentPrompt || !suggestion) {
                     return res.status(400).json({ message: 'Current prompt and suggestion are required' });
                 }
-                const result = yield geminiService_1.default.regenerateSFLFromSuggestion(currentPrompt, suggestion);
+                // Create provider configuration from request
+                const providerConfig = {
+                    provider: provider,
+                    model,
+                    parameters,
+                    apiKey,
+                    baseUrl
+                };
+                const result = yield unifiedAIService_1.default.regenerateSFLFromSuggestion(currentPrompt, suggestion, providerConfig);
                 res.status(200).json(result);
             }
             catch (error) {
@@ -68,11 +92,19 @@ class GeminiController {
     generateWorkflowFromGoal(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { goal } = req.body;
+                const { goal, provider, model, parameters, apiKey, baseUrl } = req.body;
                 if (!goal) {
                     return res.status(400).json({ message: 'Goal is required' });
                 }
-                const result = yield geminiService_1.default.generateWorkflowFromGoal(goal);
+                // Create provider configuration from request
+                const providerConfig = {
+                    provider: provider,
+                    model,
+                    parameters,
+                    apiKey,
+                    baseUrl
+                };
+                const result = yield unifiedAIService_1.default.generateWorkflowFromGoal(goal, providerConfig);
                 res.status(200).json(result);
             }
             catch (error) {
