@@ -1,0 +1,89 @@
+{
+  "info": {
+    "_postman_id": "sfl-prompt-studio-collection",
+    "name": "SFL Prompt Studio API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Prompts",
+      "item": [
+        {
+          "name": "Create Prompt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Temp-Auth",
+                "value": "YOUR_TEMP_AUTH_TOKEN"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"goal\": \"Generate a marketing campaign\",\n    \"tenor\": \"Professional\",\n    \"mode\": \"Analytical\",\n    \"fields\": [\n        {\"name\": \"target_audience\", \"value\": \"Tech Professionals\", \"type\": \"string\"}\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/prompts",
+              "host": ["{{base_url}}"],
+              "path": ["prompts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "item": [
+        {
+          "name": "Create Workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Temp-Auth",
+                "value": "YOUR_TEMP_AUTH_TOKEN"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Marketing Campaign Workflow\",\n    \"tasks\": [\n        {\"name\": \"Research\", \"agent\": \"research_agent\"},\n        {\"name\": \"Draft Content\", \"agent\": \"content_agent\", \"dependencies\": [\"Research\"]}\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/workflows",
+              "host": ["{{base_url}}"],
+              "path": ["workflows"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Providers",
+      "item": [
+        {
+          "name": "Get Provider Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Temp-Auth",
+                "value": "YOUR_TEMP_AUTH_TOKEN"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/providers/status",
+              "host": ["{{base_url}}"],
+              "path": ["providers", "status"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api"
+    }
+  ]
+}

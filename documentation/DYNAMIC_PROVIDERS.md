@@ -49,27 +49,32 @@ All endpoints now accept optional provider configuration in the request body:
 ## Supported Providers
 
 ### Google Gemini
+
 - **Provider ID**: `google`
 - **Default Model**: `gemini-2.5-flash`
 - **Supported Parameters**: `temperature`, `maxTokens`, `topK`, `topP`, `systemInstruction`, `safetySettings`
 
 ### OpenAI
+
 - **Provider ID**: `openai`
 - **Default Model**: `gpt-4`
 - **Supported Parameters**: `temperature`, `maxTokens`, `top_p`, `presence_penalty`, `frequency_penalty`, `systemMessage`, `n`, `stop`
 
 ### Anthropic Claude
+
 - **Provider ID**: `anthropic`
 - **Default Model**: `claude-3-5-sonnet-20241022`
 - **Supported Parameters**: `temperature`, `maxTokens`, `top_p`, `top_k`, `system`, `stop_sequences`
 
 ### OpenRouter (Planned)
+
 - **Provider ID**: `openrouter`
 - **Status**: Not yet implemented
 
 ## Usage Examples
 
 ### Legacy Usage (Still Supported)
+
 ```javascript
 // This continues to work as before
 fetch('/api/gemini/test-prompt', {
@@ -82,6 +87,7 @@ fetch('/api/gemini/test-prompt', {
 ```
 
 ### Dynamic Provider Switching
+
 ```javascript
 // Use OpenAI instead of Gemini
 fetch('/api/gemini/test-prompt', {
@@ -100,6 +106,7 @@ fetch('/api/gemini/test-prompt', {
 ```
 
 ### SFL Generation with Different Providers
+
 ```javascript
 // Generate SFL prompt using Anthropic Claude
 fetch('/api/gemini/generate-sfl', {
@@ -236,6 +243,7 @@ Enable debug logging by setting `NODE_ENV=development` to see detailed request/r
 ### Health Checks
 
 Use the provider health check endpoint:
+
 ```bash
 curl http://localhost:5001/api/providers/health
 ```
