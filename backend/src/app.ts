@@ -7,11 +7,14 @@
 
 import express, { Request, Response } from 'express';
 import errorHandler from './middleware/errorHandler';
+import tempAuthMiddleware from './middleware/tempAuth';
 import apiRoutes from './api/routes';
 
 const app = express();
 
 app.use(express.json());
+// Temporary authentication middleware - replace with real auth
+app.use('/api', tempAuthMiddleware);
 app.use('/api', apiRoutes);
 
 app.get('/', (req: Request, res: Response) => {
