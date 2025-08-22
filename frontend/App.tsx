@@ -38,6 +38,7 @@ import PromptLabPage from './components/lab/PromptLabPage';
 import ProviderSetupPage from './components/settings/ProviderSetupPage';
 import { testPromptWithGemini } from './services/geminiService';
 import { getPrompts, savePrompt, deletePrompt as apiDeletePrompt } from './services/promptApiService';
+import { useProviderValidation } from './hooks/useProviderValidation';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
 
 /**
@@ -151,6 +152,17 @@ type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
  */
 const App: React.FC = () => {
   /**
+   * @hook useProviderValidation - Manages AI provider validation and routing
+   */
+  const {
+    isReady: providersReady,
+    isLoading: providersLoading,
+    error: providerError,
+    requiresSetup,
+    checkSetupComplete,
+  } = useProviderValidation();
+
+  /**
    * @state {PromptSFL[]} prompts - The master list of all SFL prompts loaded in the application.
    */
   const [prompts, setPrompts] = useState<PromptSFL[]>([]);
@@ -173,7 +185,7 @@ const App: React.FC = () => {
   /**
    * @state {Page} activePage - The currently displayed main page of the application.
    */
-  const [activePage, setActivePage] = useState<Page>('dashboard');
+  const [activePage, setActivePage] = useState<Page>(requiresSetup ? 'settings' : 'dashboard');
   
   /**
    * @ref {HTMLInputElement} importFileRef - A ref to a hidden file input element, used to trigger the file import dialog programmatically.
@@ -195,28 +207,54 @@ const App: React.FC = () => {
   });
 
   /**
-   * @effect Fetches the initial list of prompts from the API when the component mounts.
+   * @effect Handles routing based on provider validation status
    */
   useEffect(() => {
-    const fetchPrompts = async () => {
-      try {
-        const fetchedPrompts = await getPrompts();
-        setPrompts(fetchedPrompts);
-      } catch (error) {
-        console.error("Failed to fetch prompts:", error);
+    if (!providersLoading) {
+      if (requiresSetup) {
+        setActivePage('settings');
+      } else if (activePage === 'settings' && providersReady) {
+        // Redirect to dashboard if on settings page but providers are now ready
+        setActivePage('dashboard');
       }
-    };
-    fetchPrompts();
-  }, []);
+    }
+  }, [providersLoading, requiresSetup, providersReady, activePage]);
+
+  /**
+   * @effect Fetches the initial list of prompts from the API when providers are ready.
+   */
+  useEffect(() => {
+    if (providersReady) {
+      const fetchPrompts = async () => {
+        try {
+          const fetchedPrompts = await getPrompts();
+          setPrompts(fetchedPrompts);
+        } catch (error) {
+          console.error("Failed to fetch prompts:", error);
+        }
+      };
+      fetchPrompts();
+    }
+  }, [providersReady]);
 
   /**
    * @callback handleNavigate
    * @description Handles navigation between the main pages of the application.
+   * Also checks provider setup when navigating to non-settings pages.
    * @param {Page} page - The page to navigate to.
    */
-  const handleNavigate = useCallback((page: Page) => {
+  const handleNavigate = useCallback(async (page: Page) => {
+    // If user tries to navigate away from settings, check if setup is complete
+    if (page !== 'settings' && requiresSetup) {
+      const setupComplete = await checkSetupComplete();
+      if (!setupComplete) {
+        // Redirect to settings if setup is not complete
+        setActivePage('settings');
+        return;
+      }
+    }
     setActivePage(page);
-  }, []);
+  }, [requiresSetup, checkSetupComplete]);
 
   /**
    * @callback handleAddConstant
@@ -653,7 +691,7 @@ const App: React.FC = () => {
         case 'documentation':
             return <Documentation />;
         case 'settings':
-            return <ProviderSetupPage />;
+            return <ProviderSetupPage onSetupComplete={checkSetupComplete} />;
         default:
              return (
                 <div className="text-center py-20 bg-[#333e48] rounded-lg border border-[#5c6f7e]">
@@ -662,6 +700,39 @@ const App: React.FC = () => {
                 </div>
             );
     }
+  }
+
+  // Show loading screen while checking providers
+  if (providersLoading) {
+    return (
+      <div className="flex h-screen bg-[#212934] font-sans">
+        <div className="flex flex-col items-center justify-center w-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-200">Initializing AI Providers...</h2>
+          <p className="text-[#95aac0] mt-2">Checking available AI provider configurations</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error screen if provider validation failed
+  if (providerError) {
+    return (
+      <div className="flex h-screen bg-[#212934] font-sans">
+        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">
+          <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 mb-4">
+            <h2 className="text-xl font-semibold text-red-200 mb-2">Provider Error</h2>
+            <p className="text-red-300">{providerError}</p>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/80 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

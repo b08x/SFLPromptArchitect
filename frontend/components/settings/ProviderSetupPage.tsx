@@ -19,9 +19,11 @@ import { AIProvider, validateApiKey, listModels } from '../../services/aiService
 /**
  * @interface ProviderSetupPageProps
  * @description Defines the props for the `ProviderSetupPage` component.
- * Currently no props are required, but this interface is prepared for future extension.
  */
-interface ProviderSetupPageProps {}
+interface ProviderSetupPageProps {
+  /** Callback called when setup is successfully completed */
+  onSetupComplete?: () => void;
+}
 
 /**
  * Validation status type for API key validation
@@ -36,7 +38,7 @@ type ValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
  * @param {ProviderSetupPageProps} props - The props for the component (currently none).
  * @returns {JSX.Element} The rendered provider setup page.
  */
-const ProviderSetupPage: React.FC<ProviderSetupPageProps> = () => {
+const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }) => {
   // State management with localStorage integration
   const [selectedProvider, setSelectedProvider] = useState<AIProvider>('google');
   const [apiKey, setApiKey] = useState<string>('');
@@ -162,6 +164,11 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = () => {
         setAvailableModels([]);
       } finally {
         setIsLoadingModels(false);
+      }
+
+      // Notify parent component that setup is complete
+      if (onSetupComplete) {
+        onSetupComplete();
       }
     } catch (error) {
       setValidationStatus('invalid');

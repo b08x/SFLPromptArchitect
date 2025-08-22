@@ -27,6 +27,28 @@ interface Config {
   redisUrl: string | undefined;
   /** The API key for accessing Google's Gemini service */
   geminiApiKey: string | undefined;
+  /** The API key for accessing OpenAI's service */
+  openaiApiKey: string | undefined;
+  /** The API key for accessing OpenRouter's service */
+  openrouterApiKey: string | undefined;
+  /** The API key for accessing Anthropic's Claude service */
+  anthropicApiKey: string | undefined;
+  /** The default AI provider to use */
+  defaultAiProvider: string;
+  /** The fallback AI provider if default fails */
+  fallbackAiProvider: string;
+  /** OpenAI default model */
+  openaiDefaultModel: string;
+  /** Google default model */
+  googleDefaultModel: string;
+  /** OpenRouter default model */
+  openrouterDefaultModel: string;
+  /** OpenRouter base URL */
+  openrouterBaseUrl: string;
+  /** Anthropic default model */
+  anthropicDefaultModel: string;
+  /** Whether grounding is enabled */
+  enableGrounding: boolean;
   /** The current environment (development, production, test) */
   nodeEnv: string;
   /** The port number for the application server */
@@ -58,6 +80,17 @@ export default {
   databaseUrl: process.env.DATABASE_URL,
   redisUrl: process.env.REDIS_URL,
   geminiApiKey: process.env.GEMINI_API_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
+  openrouterApiKey: process.env.OPENROUTER_API_KEY,
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  defaultAiProvider: process.env.DEFAULT_AI_PROVIDER || 'google',
+  fallbackAiProvider: process.env.FALLBACK_AI_PROVIDER || 'openai',
+  openaiDefaultModel: process.env.OPENAI_DEFAULT_MODEL || 'gpt-4',
+  googleDefaultModel: process.env.GOOGLE_DEFAULT_MODEL || 'gemini-2.5-flash',
+  openrouterDefaultModel: process.env.OPENROUTER_DEFAULT_MODEL || 'openai/gpt-4',
+  openrouterBaseUrl: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+  anthropicDefaultModel: process.env.ANTHROPIC_DEFAULT_MODEL || 'claude-3-sonnet',
+  enableGrounding: process.env.ENABLE_GROUNDING === 'true',
   nodeEnv: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 4000,
 };

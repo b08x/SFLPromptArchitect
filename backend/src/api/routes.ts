@@ -4,6 +4,7 @@ import WorkflowController from './controllers/workflowController';
 import ModelController from './controllers/modelController';
 import GeminiController from './controllers/geminiController';
 import WorkflowExecutionController from './controllers/workflowExecutionController';
+import ProviderController from './controllers/providerController';
 
 /**
  * @file defines the routes for the application's API
@@ -40,5 +41,12 @@ router.post('/gemini/test-prompt', GeminiController.testPrompt);
 router.post('/gemini/generate-sfl', GeminiController.generateSFLFromGoal);
 router.post('/gemini/regenerate-sfl', GeminiController.regenerateSFLFromSuggestion);
 router.post('/gemini/generate-workflow', GeminiController.generateWorkflowFromGoal);
+
+// Provider validation routes
+router.get('/providers/status', ProviderController.getProviderStatus);
+router.get('/providers/available', ProviderController.getAvailableProviders);
+router.get('/providers/health', ProviderController.checkProviderHealth);
+router.get('/providers/preferred', ProviderController.getPreferredProvider);
+router.post('/providers/validate', ProviderController.validateProvider);
 
 export default router;
