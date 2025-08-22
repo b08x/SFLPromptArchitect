@@ -36,3 +36,5 @@ combined.log
 
 SFL-Prompt-Architect.code-workspace
 .backlogs_archive/
+
+.claude/

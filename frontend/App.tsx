@@ -35,6 +35,7 @@ import PromptWizardModal from './components/PromptWizardModal';
 import HelpModal from './components/HelpModal';
 import Documentation from './components/Documentation';
 import PromptLabPage from './components/lab/PromptLabPage';
+import ProviderSetupPage from './components/settings/ProviderSetupPage';
 import { testPromptWithGemini } from './services/geminiService';
 import { getPrompts, savePrompt, deletePrompt as apiDeletePrompt } from './services/promptApiService';
 import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
@@ -650,6 +651,7 @@ const App: React.FC = () => {
         case 'documentation':
             return <Documentation />;
         case 'settings':
+            return <ProviderSetupPage />;
         default:
              return (
                 <div className="text-center py-20 bg-[#333e48] rounded-lg border border-[#5c6f7e]">

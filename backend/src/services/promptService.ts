@@ -11,6 +11,7 @@
 
 import pool from '../config/database';
 import { Prompt, PromptSFL } from '../types';
+import '../types/express';
 
 /**
  * @class PromptService
@@ -27,11 +28,12 @@ class PromptService {
    * is stored as JSON in the metadata column.
    * 
    * @param {PromptSFL | Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>} sflData - The SFL prompt data.
+   * @param {string} userId - The ID of the authenticated user creating/updating the prompt.
    * @returns {Omit<Prompt, 'id' | 'created_at' | 'updated_at'>} The prompt data formatted for the database.
    * @private
    * @since 0.5.1
    */
-  private mapSFLToPrompt(sflData: PromptSFL | Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>): Omit<Prompt, 'id' | 'created_at' | 'updated_at'> {
+  private mapSFLToPrompt(sflData: PromptSFL | Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>, userId: string): Omit<Prompt, 'id' | 'created_at' | 'updated_at'> {
     const metadata = {
       sflField: sflData.sflField,
       sflTenor: sflData.sflTenor,
@@ -42,7 +44,7 @@ class PromptService {
     };
 
     return {
-      user_id: '00000000-0000-0000-0000-000000000001', // Default system user (created in migration 003)
+      user_id: userId,
       title: sflData.title || 'Untitled Prompt',
       body: sflData.promptText || '',
       metadata,
@@ -82,6 +84,7 @@ class PromptService {
    * Validates required fields and transforms the SFL data before insertion.
    * 
    * @param {Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>} promptData - The SFL data for the new prompt.
+   * @param {string} userId - The ID of the authenticated user creating the prompt.
    * @returns {Promise<PromptSFL>} A promise that resolves to the newly created prompt.
    * @throws {Error} If the title or prompt text is empty.
    * 
@@ -93,20 +96,23 @@ class PromptService {
    *   sflField: { topic: "Text Summarization", taskType: "Summarization", ... },
    *   // ... other SFL components
    * };
-   * const createdPrompt = await promptService.createPrompt(newPromptData);
+   * const createdPrompt = await promptService.createPrompt(newPromptData, userId);
    * ```
    * 
    * @since 0.5.1
    */
-  async createPrompt(promptData: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>): Promise<PromptSFL> {
+  async createPrompt(promptData: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>, userId: string): Promise<PromptSFL> {
     if (!promptData.title?.trim()) {
       throw new Error('Title is required');
     }
     if (!promptData.promptText?.trim()) {
       throw new Error('Prompt text is required');
     }
+    if (!userId?.trim()) {
+      throw new Error('User ID is required');
+    }
 
-    const mappedData = this.mapSFLToPrompt(promptData);
+    const mappedData = this.mapSFLToPrompt(promptData, userId);
     const result = await pool.query(
       'INSERT INTO prompts (user_id, title, body, metadata) VALUES ($1, $2, $3, $4) RETURNING *',
       [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata]
@@ -166,6 +172,7 @@ class PromptService {
    * 
    * @param {string} id - The UUID of the prompt to update.
    * @param {Partial<PromptSFL>} promptData - An object containing the fields to update.
+   * @param {string} userId - The ID of the authenticated user updating the prompt.
    * @returns {Promise<PromptSFL | null>} A promise that resolves to the updated prompt, or null if not found.
    * @throws {Error} If the title or prompt text is being updated to an empty value.
    * 
@@ -175,17 +182,20 @@ class PromptService {
    *   title: "Updated Prompt Title",
    *   sflField: { ...existingField, topic: "New Topic" }
    * };
-   * const updatedPrompt = await promptService.updatePrompt(promptId, updates);
+   * const updatedPrompt = await promptService.updatePrompt(promptId, updates, userId);
    * ```
    * 
    * @since 0.5.1
    */
-  async updatePrompt(id: string, promptData: Partial<PromptSFL>): Promise<PromptSFL | null> {
+  async updatePrompt(id: string, promptData: Partial<PromptSFL>, userId: string): Promise<PromptSFL | null> {
     if (promptData.title !== undefined && !promptData.title?.trim()) {
       throw new Error('Title cannot be empty');
     }
     if (promptData.promptText !== undefined && !promptData.promptText?.trim()) {
       throw new Error('Prompt text cannot be empty');
+    }
+    if (!userId?.trim()) {
+      throw new Error('User ID is required');
     }
 
     const existing = await pool.query('SELECT * FROM prompts WHERE id = $1', [id]);
@@ -193,11 +203,11 @@ class PromptService {
 
     const existingSFL = this.mapPromptToSFL(existing.rows[0]);
     const updatedSFL = { ...existingSFL, ...promptData };
-    const mappedData = this.mapSFLToPrompt(updatedSFL);
+    const mappedData = this.mapSFLToPrompt(updatedSFL, userId);
 
     const result = await pool.query(
-      'UPDATE prompts SET title = $1, body = $2, metadata = $3, updated_at = now() WHERE id = $4 RETURNING *',
-      [mappedData.title, mappedData.body, mappedData.metadata, id]
+      'UPDATE prompts SET user_id = $1, title = $2, body = $3, metadata = $4, updated_at = now() WHERE id = $5 RETURNING *',
+      [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata, id]
     );
     
     return result.rows[0] ? this.mapPromptToSFL(result.rows[0]) : null;

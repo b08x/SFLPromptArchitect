@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import PromptService from '../../services/promptService';
+import '../../types/express';
 
 /**
  * @class PromptController
@@ -9,14 +10,18 @@ class PromptController {
   /**
    * @method createPrompt
    * @description Creates a new prompt.
-   * @param {Request} req - The Express request object, containing the prompt data in the body.
+   * @param {Request} req - The Express request object, containing the prompt data in the body and user info.
    * @param {Response} res - The Express response object.
    * @param {NextFunction} next - The Express next middleware function.
    * @returns {Promise<void>} - A promise that resolves when the response is sent.
    */
   async createPrompt(req: Request, res: Response, next: NextFunction) {
     try {
-      const prompt = await PromptService.createPrompt(req.body);
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const prompt = await PromptService.createPrompt(req.body, req.user.id);
       res.status(201).json(prompt);
     } catch (error) {
       console.error('Create prompt error:', error);
@@ -68,14 +73,18 @@ class PromptController {
   /**
    * @method updatePrompt
    * @description Updates an existing prompt.
-   * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter and the update data in the body.
+   * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter, update data in the body, and user info.
    * @param {Response} res - The Express response object.
    * @param {NextFunction} next - The Express next middleware function.
    * @returns {Promise<void>} - A promise that resolves when the response is sent.
    */
   async updatePrompt(req: Request, res: Response, next: NextFunction) {
     try {
-      const prompt = await PromptService.updatePrompt(req.params.id, req.body);
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const prompt = await PromptService.updatePrompt(req.params.id, req.body, req.user.id);
       if (!prompt) {
         return res.status(404).json({ message: 'Prompt not found' });
       }
