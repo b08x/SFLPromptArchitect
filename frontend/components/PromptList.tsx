@@ -13,13 +13,13 @@
 
 import React from 'react';
 import { PromptSFL } from '../types';
+import { useAppStore } from '../store/appStore';
 import PromptCard from './PromptCard';
 import ClipboardDocumentListIcon from './icons/ClipboardDocumentListIcon';
 
 /**
  * @interface PromptListProps
  * @description Defines the props for the `PromptList` component.
- * @property {PromptSFL[]} prompts - An array of SFL prompt objects to be displayed.
  * @property {(prompt: PromptSFL) => void} onViewPrompt - Callback function passed down to each `PromptCard` to handle viewing a prompt's details.
  * @property {(prompt: PromptSFL) => void} onEditPrompt - Callback function passed down to each `PromptCard` to handle editing a prompt.
  * @property {(promptId: string) => void} onDeletePrompt - Callback function passed down to each `PromptCard` to handle deleting a prompt.
@@ -27,7 +27,6 @@ import ClipboardDocumentListIcon from './icons/ClipboardDocumentListIcon';
  * @property {(prompt: PromptSFL) => void} onExportMarkdown - Callback function passed down to each `PromptCard` to handle exporting a prompt as Markdown.
  */
 interface PromptListProps {
-  prompts: PromptSFL[];
   onViewPrompt: (prompt: PromptSFL) => void;
   onEditPrompt: (prompt: PromptSFL) => void;
   onDeletePrompt: (promptId: string) => void;
@@ -43,7 +42,9 @@ interface PromptListProps {
  * @param {PromptListProps} props - The props for the component.
  * @returns {JSX.Element} The rendered list of prompts as a grid, or an empty state message.
  */
-const PromptList: React.FC<PromptListProps> = ({ prompts, onViewPrompt, onEditPrompt, onDeletePrompt, onExportJSON, onExportMarkdown }) => {
+const PromptList: React.FC<PromptListProps> = ({ onViewPrompt, onEditPrompt, onDeletePrompt, onExportJSON, onExportMarkdown }) => {
+  const { getFilteredPrompts } = useAppStore();
+  const prompts = getFilteredPrompts();
   if (prompts.length === 0) {
     return (
       <div className="text-center py-10 bg-[#333e48] rounded-lg border border-[#5c6f7e]">

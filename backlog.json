@@ -1,0 +1,47 @@
+[
+  {
+    "taskId": "SEC-01",
+    "title": "Refactor API Key Handling to Eliminate Frontend Storage",
+    "description": "Currently, AI provider API keys are managed and stored in the browser's localStorage, which is a significant security vulnerability. This task is to refactor the application to ensure that API keys are never exposed on the client-side. All API calls to external AI providers must be proxied through the backend, where keys are securely stored and managed.",
+    "category": "Security",
+    "priority": "Critical",
+    "filesToModify": [
+      "frontend/components/settings/ProviderSetupPage.tsx",
+      "frontend/services/providerService.ts",
+      "frontend/services/aiService.ts",
+      "backend/src/services/providerValidationService.ts",
+      "backend/src/api/controllers/providerController.ts",
+      "backend/src/services/unifiedAIService.ts",
+      "backend/src/api/routes.ts"
+    ],
+    "llmAssistantPrompt": "As a senior full-stack developer, your task is to guide me through refactoring the API key management system to eliminate client-side storage of secrets. We need to move API key handling entirely to the backend. Provide a step-by-step plan.\n\n**Instructions:**\n1.  **Backend Changes:**\n    a. Create a new secure backend endpoint, perhaps `POST /api/providers/save-key`, that accepts a provider name and API key. This endpoint should store the key securely (e.g., in an HttpOnly, secure cookie or a server-side session, NOT in the database in plaintext).\n    b. Create a new backend proxy endpoint, like `POST /api/proxy/generate`, that accepts the provider, model, prompt, and parameters. This endpoint will retrieve the appropriate API key from the secure server-side storage, make the call to the external AI provider (e.g., OpenAI, Google), and then return the response to the frontend.\n    c. Modify the existing provider validation logic in `providerValidationService.ts` to work on the backend, checking keys stored in the user's session.\n\n2.  **Frontend Changes:**\n    a. Modify `frontend/components/settings/ProviderSetupPage.tsx` so that when a user enters an API key, it is sent directly to the new `/api/providers/save-key` backend endpoint and is NEVER stored in `localStorage`.\n    b. Remove all `localStorage.setItem` and `localStorage.getItem` calls related to API keys.\n    c. Refactor all frontend services (`providerService.ts`, `aiService.ts`, `geminiService.ts`) that make direct calls to AI providers. They should now call the new backend proxy endpoint (`/api/proxy/generate`) instead."
+  },
+  {
+    "taskId": "RELIABILITY-01",
+    "title": "Improve AI Orchestration with JSON Mode and Schema Validation",
+    "description": "The AI workflow orchestration in `orchestratorService.ts` relies on parsing JSON from a free-form text response from the LLM. This is brittle and can fail if the model's output format changes slightly. This task is to make this feature more robust by utilizing the LLM's dedicated JSON output mode and adding a strict schema validation layer.",
+    "category": "Reliability",
+    "priority": "High",
+    "filesToModify": [
+      "backend/src/services/orchestratorService.ts",
+      "backend/src/services/ai/GeminiService.ts",
+      "backend/src/types.ts"
+    ],
+    "llmAssistantPrompt": "As an expert on AI integration, guide me in refactoring the `orchestratorService.ts` to improve its reliability. The goal is to stop relying on fragile string parsing of LLM output.\n\n**Instructions:**\n1.  **Enable JSON Mode:** Modify the API call within `backend/src/services/orchestratorService.ts` (or the underlying `GeminiService.ts` if necessary) to configure the `responseMimeType: \"application/json\"` in the `generationConfig`. This will instruct the Gemini model to output a guaranteed JSON string.\n2.  **Remove Fragile Parsing:** Once JSON mode is enabled, the complex `parseJsonFromText` function with multiple strategies can be simplified to a standard `JSON.parse()` call, as the response body will be a valid JSON string.\n3.  **Implement Schema Validation:** Introduce a validation library like `Zod` to the backend. Create a Zod schema that rigorously defines the structure of a valid `Workflow` object, including all nested `Task` properties and their types. After parsing the JSON from the AI, use this schema to validate the object. If validation fails, return a structured error to the client instead of attempting to process a malformed workflow."
+  },
+  {
+    "taskId": "REFACTOR-01",
+    "title": "Implement Centralized State Management in Frontend",
+    "description": "The frontend application passes state (like the master prompts list) and callbacks down through multiple component layers, a pattern known as 'prop drilling'. This makes the code harder to maintain and refactor. This task is to introduce a centralized state management library (like Zustand or Redux) to simplify state access.",
+    "category": "Refactoring / Maintainability",
+    "priority": "Medium",
+    "filesToModify": [
+      "frontend/App.tsx",
+      "frontend/components/lab/PromptLabPage.tsx",
+      "frontend/components/Sidebar.tsx",
+      "frontend/components/TopBar.tsx",
+      "frontend/components/PromptList.tsx"
+    ],
+    "llmAssistantPrompt": "As a frontend architect, guide me through refactoring the React application to use a centralized state management library like Zustand to eliminate prop drilling.\n\n**Instructions:**\n1.  **Install Zustand:** Add Zustand as a dependency to the frontend project (`npm install zustand`).\n2.  **Create a Store:** Create a new file, for example `frontend/store/appStore.ts`. In this file, define a Zustand store. This store should manage the following state: `prompts`, `filters`, `activePage`, and `isLoading`.\n3.  **Define Actions:** Within the store, create actions (functions) to handle state modifications, such as `fetchPrompts`, `addPrompt`, `deletePrompt`, `setFilter`, and `setPage`.\n4.  **Refactor `App.tsx`:** Modify the root `App.tsx` component. Remove the local `useState` hooks for prompts, filters, etc., and instead, pull this state and the corresponding actions from the Zustand store using the `useAppStore` hook.\n5.  **Refactor Child Components:** Go through the child components (`Sidebar`, `TopBar`, `PromptList`, etc.) and remove the props that are now managed by the store. Instead, have each component that needs access to the shared state call the `useAppStore` hook directly. This will decouple the components and simplify the component tree."
+  }
+]

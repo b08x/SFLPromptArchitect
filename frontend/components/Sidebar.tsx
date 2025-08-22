@@ -22,7 +22,7 @@
  */
 
 import React from 'react';
-import { Filters } from '../types';
+import { useAppStore } from '../store/appStore';
 import BrainCircuitIcon from './icons/BrainCircuitIcon';
 import HomeIcon from './icons/HomeIcon';
 import FlaskIcon from './icons/FlaskIcon';
@@ -46,17 +46,9 @@ type Page = 'dashboard' | 'lab' | 'documentation' | 'settings';
 /**
  * @interface SidebarProps
  * @description Defines the props for the `Sidebar` component.
- * @property {Filters} filters - The current state of the filters, used to highlight active filter buttons.
- * @property {(key: K, value: Filters[K]) => void} onFilterChange - Callback to update a filter property in the parent component's state.
- * @property {string[]} popularTags - An array of popular tags to display as quick filter buttons.
- * @property {Page} activePage - The currently active page, used to highlight the active navigation item.
  * @property {(page: Page) => void} onNavigate - Callback to handle navigation to a different page.
  */
 interface SidebarProps {
-  filters: Filters;
-  onFilterChange: <K extends keyof Filters>(key: K, value: Filters[K]) => void;
-  popularTags: string[];
-  activePage: Page;
   onNavigate: (page: Page) => void;
 }
 
@@ -110,7 +102,8 @@ const FilterItem: React.FC<{ icon: React.ComponentType<{ className?: string }>; 
  * @param {SidebarProps} props - The props for the component.
  * @returns {JSX.Element} The rendered sidebar.
  */
-const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags, activePage, onNavigate }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
+  const { filters, activePage, appConstants, setFilter } = useAppStore();
     const taskTypes = ["Explanation", "Code Generation", "Summarization", "Translation"];
     const taskIcons: { [key: string]: React.ComponentType<{ className?: string }> } = {
         "Explanation": ChatBubbleLeftRightIcon,
@@ -152,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
                         key={type}
                         icon={taskIcons[type]} 
                         label={type} 
-                        onClick={() => onFilterChange('taskType', filters.taskType === type ? '' : type)}
+                        onClick={() => setFilter('taskType', filters.taskType === type ? '' : type)}
                         selected={filters.taskType === type}
                     />
                 ))}
@@ -167,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
                         key={persona}
                         icon={personaIcons[persona]} 
                         label={persona} 
-                        onClick={() => onFilterChange('aiPersona', filters.aiPersona === persona ? '' : persona)}
+                        onClick={() => setFilter('aiPersona', filters.aiPersona === persona ? '' : persona)}
                         selected={filters.aiPersona === persona}
                     />
                 ))}
@@ -177,10 +170,10 @@ const Sidebar: React.FC<SidebarProps> = ({ filters, onFilterChange, popularTags,
         <div>
           <h3 className="px-3 text-xs font-semibold text-[#95aac0] uppercase tracking-wider mb-2">Popular Tags</h3>
           <div className="flex flex-wrap gap-2 px-3">
-            {popularTags.map(tag => (
+            {appConstants.popularTags.map(tag => (
                 <button 
                   key={tag}
-                  onClick={() => onFilterChange('searchTerm', filters.searchTerm === tag ? '' : tag)}
+                  onClick={() => setFilter('searchTerm', filters.searchTerm === tag ? '' : tag)}
                   className={`px-2 py-1 text-xs rounded-full transition-colors ${
                     filters.searchTerm === tag ? 'bg-[#e2a32d] text-gray-200' : 'bg-[#333e48] text-[#95aac0] hover:bg-[#e2a32d]/80'
                   }`}

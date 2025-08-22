@@ -49,4 +49,12 @@ router.get('/providers/health', ProviderController.checkProviderHealth);
 router.get('/providers/preferred', ProviderController.getPreferredProvider);
 router.post('/providers/validate', ProviderController.validateProvider);
 
+// Secure API key management routes
+router.post('/providers/save-key', ProviderController.saveApiKey);
+router.delete('/providers/clear-keys', ProviderController.clearApiKeys);
+router.get('/providers/stored-keys', ProviderController.getStoredKeys);
+
+// AI proxy routes
+router.post('/proxy/generate', ProviderController.proxyGenerate);
+
 export default router;

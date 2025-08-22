@@ -14,7 +14,8 @@ import CogIcon from '../icons/CogIcon';
 import ArrowPathIcon from '../icons/ArrowPathIcon';
 import CheckCircleIcon from '../icons/CheckCircleIcon';
 import XCircleIcon from '../icons/XCircleIcon';
-import { AIProvider, validateApiKey, listModels } from '../../services/aiService';
+import { AIProvider } from '../../services/aiService';
+import { saveProviderApiKey, validateStoredProvider } from '../../services/providerService';
 
 /**
  * @interface ProviderSetupPageProps
@@ -48,63 +49,37 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
   const [validationError, setValidationError] = useState<string>('');
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
 
-  // Load state from localStorage on component mount
+  // Load state from secure backend storage on component mount
   useEffect(() => {
-    try {
-      const savedProvider = localStorage.getItem('sfl-ai-provider') as AIProvider;
-      const savedApiKey = localStorage.getItem('sfl-api-key');
-      const savedModel = localStorage.getItem('sfl-selected-model');
-      
-      if (savedProvider && ['google', 'openai', 'openrouter'].includes(savedProvider)) {
-        setSelectedProvider(savedProvider);
+    const loadStoredSettings = async () => {
+      try {
+        // Check which providers have stored keys
+        const response = await fetch('/api/providers/stored-keys', {
+          credentials: 'include', // Include session cookies
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.providers.length > 0) {
+            // Set the first stored provider as default
+            const firstProvider = data.data.providers[0] as AIProvider;
+            if (['google', 'openai', 'openrouter', 'anthropic'].includes(firstProvider)) {
+              setSelectedProvider(firstProvider);
+              setValidationStatus('valid'); // Assume stored keys are valid
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load stored provider settings:', error);
+        // Continue with default values if backend is unavailable
       }
-      
-      if (savedApiKey) {
-        setApiKey(savedApiKey);
-      }
-      
-      if (savedModel) {
-        setSelectedModel(savedModel);
-      }
-    } catch (error) {
-      console.warn('Failed to load settings from localStorage:', error);
-      // Continue with default values if localStorage is unavailable
-    }
+    };
+    
+    loadStoredSettings();
   }, []);
 
-  // Save state to localStorage whenever selectedProvider or apiKey changes
-  useEffect(() => {
-    try {
-      localStorage.setItem('sfl-ai-provider', selectedProvider);
-    } catch (error) {
-      console.warn('Failed to save provider to localStorage:', error);
-    }
-  }, [selectedProvider]);
-
-  useEffect(() => {
-    try {
-      if (apiKey) {
-        localStorage.setItem('sfl-api-key', apiKey);
-      } else {
-        localStorage.removeItem('sfl-api-key');
-      }
-    } catch (error) {
-      console.warn('Failed to save API key to localStorage:', error);
-    }
-  }, [apiKey]);
-
-  // Save selected model to localStorage
-  useEffect(() => {
-    try {
-      if (selectedModel) {
-        localStorage.setItem('sfl-selected-model', selectedModel);
-      } else {
-        localStorage.removeItem('sfl-selected-model');
-      }
-    } catch (error) {
-      console.warn('Failed to save selected model to localStorage:', error);
-    }
-  }, [selectedModel]);
+  // Note: API keys and settings are now stored securely on the backend
+  // No localStorage usage for sensitive data
 
   // Event handlers
   const handleProviderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +107,7 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
     setSelectedModel(event.target.value);
   };
 
-  // API Key Validation Handler (UX-01-C)
+  // API Key Validation and Secure Storage Handler
   const handleValidate = async () => {
     if (!apiKey.trim()) {
       setValidationError('API key is required');
@@ -144,31 +119,25 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
     setIsLoadingModels(false);
 
     try {
-      // Validate API key
-      await validateApiKey(selectedProvider, apiKey);
-      setValidationStatus('valid');
+      // Save and validate API key through secure backend endpoint
+      const result = await saveProviderApiKey(selectedProvider, apiKey.trim());
       
-      // Upon successful validation, fetch available models (UX-01-D)
-      setIsLoadingModels(true);
-      try {
-        const models = await listModels(selectedProvider, apiKey);
-        setAvailableModels(models);
+      if (result.success) {
+        setValidationStatus('valid');
         
-        // Auto-select first model if none is currently selected
-        if (models.length > 0 && !selectedModel) {
-          setSelectedModel(models[0]);
+        // Clear the API key from frontend state immediately after successful storage
+        setApiKey('');
+        
+        // Notify parent component that setup is complete
+        if (onSetupComplete) {
+          onSetupComplete();
         }
-      } catch (modelError) {
-        console.warn('Failed to fetch models, but API key is valid:', modelError);
-        // Don't change validation status - key is still valid
+        
+        // TODO: Implement model listing through backend proxy
+        // For now, we'll skip model listing to maintain security
         setAvailableModels([]);
-      } finally {
-        setIsLoadingModels(false);
-      }
-
-      // Notify parent component that setup is complete
-      if (onSetupComplete) {
-        onSetupComplete();
+      } else {
+        throw new Error(result.error || 'Failed to validate and store API key');
       }
     } catch (error) {
       setValidationStatus('invalid');
@@ -281,7 +250,7 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
                 className="w-full px-4 py-3 bg-surface border border-border-secondary rounded-md text-text-primary placeholder-text-tertiary focus:ring-2 focus:ring-accent-primary focus:border-accent-primary transition-colors"
               />
               <p className="mt-2 text-sm text-text-tertiary">
-                Your API key is stored locally and never sent to our servers.
+                Your API key is encrypted and stored securely on our servers. It is never exposed to client-side code.
               </p>
             </div>
 

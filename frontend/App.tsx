@@ -23,8 +23,8 @@
  * @requires ./constants
  */
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { PromptSFL, Filters, ModalType } from './types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { PromptSFL, ModalType } from './types';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Stats from './components/Stats';
@@ -37,21 +37,9 @@ import Documentation from './components/Documentation';
 import PromptLabPage from './components/lab/PromptLabPage';
 import ProviderSetupPage from './components/settings/ProviderSetupPage';
 import { testPromptWithGemini } from './services/geminiService';
-import { getPrompts, savePrompt, deletePrompt as apiDeletePrompt } from './services/promptApiService';
 import { useProviderValidation } from './hooks/useProviderValidation';
-import { TASK_TYPES, AI_PERSONAS, TARGET_AUDIENCES, DESIRED_TONES, OUTPUT_FORMATS, LENGTH_CONSTRAINTS, POPULAR_TAGS } from './constants';
+import { useAppStore } from './store/appStore';
 
-/**
- * @constant {Filters} initialFilters - The default state for the prompt filters.
- * @private
- */
-const initialFilters: Filters = {
-  searchTerm: '',
-  topic: '',
-  taskType: '',
-  aiPersona: '',
-  outputFormat: '',
-};
 
 /**
  * Converts a `PromptSFL` object into a well-formatted Markdown string.
@@ -163,10 +151,22 @@ const App: React.FC = () => {
   } = useProviderValidation();
 
   /**
-   * @state {PromptSFL[]} prompts - The master list of all SFL prompts loaded in the application.
+   * @hook useAppStore - Access to centralized application state and actions
    */
-  const [prompts, setPrompts] = useState<PromptSFL[]>([]);
-  
+  const {
+    prompts,
+    filters,
+    activePage,
+    appConstants,
+    fetchPrompts,
+    updatePrompt,
+    deletePrompt,
+    setFilter,
+    setPage,
+    addConstant,
+    getFilteredPrompts
+  } = useAppStore();
+
   /**
    * @state {ModalType} activeModal - The type of the currently active modal, or `ModalType.NONE` if no modal is open.
    */
@@ -176,16 +176,6 @@ const App: React.FC = () => {
    * @state {PromptSFL | null} selectedPrompt - The prompt that is currently selected for viewing or editing.
    */
   const [selectedPrompt, setSelectedPrompt] = useState<PromptSFL | null>(null);
-  
-  /**
-   * @state {Filters} filters - The current state of the filters used to narrow down the list of prompts.
-   */
-  const [filters, setFilters] = useState<Filters>(initialFilters);
-  
-  /**
-   * @state {Page} activePage - The currently displayed main page of the application.
-   */
-  const [activePage, setActivePage] = useState<Page>(requiresSetup ? 'settings' : 'dashboard');
   
   /**
    * @state {boolean} hasUserNavigated - Tracks if user has manually navigated to prevent auto-redirects
@@ -198,50 +188,28 @@ const App: React.FC = () => {
   const importFileRef = useRef<HTMLInputElement>(null);
 
   /**
-   * @state {object} appConstants - The state holding the dynamic lists of options for SFL fields (e.g., Task Types, AI Personas).
-   * This allows users to add new options at runtime.
-   */
-  const [appConstants, setAppConstants] = useState({
-    taskTypes: TASK_TYPES,
-    aiPersonas: AI_PERSONAS,
-    targetAudiences: TARGET_AUDIENCES,
-    desiredTones: DESIRED_TONES,
-    outputFormats: OUTPUT_FORMATS,
-    lengthConstraints: LENGTH_CONSTRAINTS,
-    popularTags: POPULAR_TAGS,
-  });
-
-  /**
    * @effect Handles routing based on provider validation status
    * Only auto-redirects on initial load, not after manual navigation
    */
   useEffect(() => {
     if (!providersLoading) {
       if (requiresSetup) {
-        setActivePage('settings');
+        setPage('settings');
       } else if (activePage === 'settings' && providersReady && !hasUserNavigated) {
         // Only redirect to dashboard if this is initial load (user hasn't manually navigated)
-        setActivePage('dashboard');
+        setPage('dashboard');
       }
     }
-  }, [providersLoading, requiresSetup, providersReady, activePage, hasUserNavigated]);
+  }, [providersLoading, requiresSetup, providersReady, activePage, hasUserNavigated, setPage]);
 
   /**
    * @effect Fetches the initial list of prompts from the API when providers are ready.
    */
   useEffect(() => {
     if (providersReady) {
-      const fetchPrompts = async () => {
-        try {
-          const fetchedPrompts = await getPrompts();
-          setPrompts(fetchedPrompts);
-        } catch (error) {
-          console.error("Failed to fetch prompts:", error);
-        }
-      };
       fetchPrompts();
     }
-  }, [providersReady]);
+  }, [providersReady, fetchPrompts]);
 
   /**
    * @callback handleNavigate
@@ -258,39 +226,13 @@ const App: React.FC = () => {
       const setupComplete = await checkSetupComplete();
       if (!setupComplete) {
         // Redirect to settings if setup is not complete
-        setActivePage('settings');
+        setPage('settings');
         return;
       }
     }
-    setActivePage(page);
-  }, [requiresSetup, checkSetupComplete]);
+    setPage(page);
+  }, [requiresSetup, checkSetupComplete, setPage]);
 
-  /**
-   * @callback handleAddConstant
-   * @description Adds a new, user-defined option to one of the SFL dropdown lists (e.g., a new 'Task Type').
-   * It ensures the new value is unique before adding it to the state.
-   * @param {keyof typeof appConstants} key - The category of the constant to add (e.g., 'taskTypes').
-   * @param {string} value - The new string value to add.
-   */
-  const handleAddConstant = useCallback((key: keyof typeof appConstants, value: string) => {
-    if (!value || !value.trim()) return;
-    const trimmedValue = value.trim();
-    setAppConstants(prev => {
-        const currentValues = prev[key];
-        if (!Array.isArray(currentValues)) return prev;
-
-        const lowerCaseValue = trimmedValue.toLowerCase();
-        const existingValues = currentValues.map(v => String(v).toLowerCase());
-
-        if (existingValues.includes(lowerCaseValue)) {
-            return prev;
-        }
-        return {
-            ...prev,
-            [key]: [...currentValues, trimmedValue]
-        };
-    });
-  }, []);
 
   /**
    * @function handleOpenCreateModal
@@ -347,23 +289,13 @@ const App: React.FC = () => {
 
   /**
    * @callback handleSavePrompt
-   * @description Handles saving a new or updated prompt. It calls the API service
-   * and then updates the local state with the returned prompt data.
+   * @description Handles saving a new or updated prompt using the store actions.
    * @param {PromptSFL} prompt - The prompt to be saved.
-   * @throws {Error} Propagates any errors from the API service.
+   * @throws {Error} Propagates any errors from the store action.
    */
   const handleSavePrompt = async (prompt: PromptSFL) => {
     try {
-      const saved = await savePrompt(prompt);
-      setPrompts(prevPrompts => {
-        const existingIndex = prevPrompts.findIndex(p => p.id === saved.id);
-        if (existingIndex > -1) {
-          const updatedPrompts = [...prevPrompts];
-          updatedPrompts[existingIndex] = saved;
-          return updatedPrompts;
-        }
-        return [saved, ...prevPrompts].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      });
+      await updatePrompt(prompt);
     } catch (error) {
       console.error("Failed to save prompt:", error);
       throw error;
@@ -372,71 +304,27 @@ const App: React.FC = () => {
 
   /**
    * @callback handleDeletePrompt
-   * @description Handles the deletion of a prompt after user confirmation.
-   * It calls the API service and then removes the prompt from the local state.
+   * @description Handles the deletion of a prompt using the store action.
    * @param {string} promptId - The ID of the prompt to delete.
    */
   const handleDeletePrompt = async (promptId: string) => {
-    if(window.confirm('Are you sure you want to delete this prompt?')){
-      try {
-        await apiDeletePrompt(promptId);
-        setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== promptId));
-        if (selectedPrompt && selectedPrompt.id === promptId) {
-            setSelectedPrompt(null);
-            handleCloseModal();
-        }
-      } catch (error) {
-        console.error("Failed to delete prompt:", error);
-        alert("Failed to delete prompt. Please try again.");
+    try {
+      await deletePrompt(promptId);
+      if (selectedPrompt && selectedPrompt.id === promptId) {
+        setSelectedPrompt(null);
+        handleCloseModal();
       }
+    } catch (error) {
+      console.error("Failed to delete prompt:", error);
     }
   };
 
-  /**
-   * @callback handleFilterChange
-   * @description Updates the filter state based on user input.
-   * @param {K} key - The filter key to update.
-   * @param {Filters[K]} value - The new value for the filter.
-   */
-  const handleFilterChange = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  }, []);
-  
-  /**
-   * @callback handleResetFilters
-   * @description Resets all filters to their initial, empty state.
-   */
-  const handleResetFilters = useCallback(() => {
-    setFilters(initialFilters);
-  }, []);
 
   /**
-   * @memorized {PromptSFL[]} filteredPrompts
-   * @description A memoized list of prompts that have been filtered based on the current `filters` state.
-   * This prevents re-filtering on every render.
+   * @computed {PromptSFL[]} filteredPrompts
+   * @description Get filtered prompts from the store.
    */
-  const filteredPrompts = useMemo(() => {
-    return prompts.filter(p => {
-      const searchTermLower = filters.searchTerm.toLowerCase();
-      
-      const searchFields = [
-        p.title,
-        p.promptText,
-        p.sflField.keywords,
-        p.sflField.topic,
-        p.sflField.domainSpecifics,
-        p.sflTenor.aiPersona,
-        p.sflTenor.targetAudience.join(' '),
-        p.sflMode.outputFormat
-      ];
-
-      const matchesSearchTerm = filters.searchTerm === '' || searchFields.some(field => field && field.toLowerCase().includes(searchTermLower));
-      const matchesTaskType = filters.taskType === '' || p.sflField.taskType === filters.taskType;
-      const matchesAiPersona = filters.aiPersona === '' || p.sflTenor.aiPersona === filters.aiPersona;
-      
-      return matchesSearchTerm && matchesTaskType && matchesAiPersona;
-    }).sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }, [prompts, filters]);
+  const filteredPrompts = getFilteredPrompts();
 
   /**
    * @callback handleTestWithGemini
@@ -447,12 +335,15 @@ const App: React.FC = () => {
    * @param {Record<string, string>} variables - A map of variable names to their values for interpolation.
    */
   const handleTestWithGemini = async (promptToTest: PromptSFL, variables: Record<string, string>) => {
-    const updatePromptState = (id: string, updates: Partial<PromptSFL>) => {
-        setPrompts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-        setSelectedPrompt(prev => prev && prev.id === id ? { ...prev, ...updates } : prev);
+    const updatePromptState = async (id: string, updates: Partial<PromptSFL>) => {
+        const updatedPrompt = prompts.find(p => p.id === id);
+        if (updatedPrompt) {
+          await updatePrompt({ ...updatedPrompt, ...updates });
+          setSelectedPrompt(prev => prev && prev.id === id ? { ...prev, ...updates } : prev);
+        }
     };
 
-    updatePromptState(promptToTest.id, { isTesting: true, geminiResponse: undefined, geminiTestError: undefined });
+    await updatePromptState(promptToTest.id, { isTesting: true, geminiResponse: undefined, geminiTestError: undefined });
     
     let finalPromptText = promptToTest.promptText;
     Object.keys(variables).forEach(key => {
@@ -462,9 +353,9 @@ const App: React.FC = () => {
 
     try {
       const responseText = await testPromptWithGemini(finalPromptText);
-      updatePromptState(promptToTest.id, { isTesting: false, geminiResponse: responseText, geminiTestError: undefined });
+      await updatePromptState(promptToTest.id, { isTesting: false, geminiResponse: responseText, geminiTestError: undefined });
     } catch (error: any) {
-      updatePromptState(promptToTest.id, { isTesting: false, geminiTestError: error.message, geminiResponse: undefined });
+      await updatePromptState(promptToTest.id, { isTesting: false, geminiTestError: error.message, geminiResponse: undefined });
     }
   };
 
@@ -619,7 +510,7 @@ const App: React.FC = () => {
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
           try {
               const text = e.target?.result;
               if (typeof text !== 'string') {
@@ -637,27 +528,29 @@ const App: React.FC = () => {
               }
               const importedPrompts = importedData as PromptSFL[];
               
-              setPrompts(prevPrompts => {
-                  const promptsMap = new Map(prevPrompts.map(p => [p.id, p]));
-                  let newPromptsCount = 0;
-                  let updatedPromptsCount = 0;
+              // Import prompts using store actions
+              let newPromptsCount = 0;
+              let updatedPromptsCount = 0;
+              const existingIds = new Set(prompts.map(p => p.id));
 
-                  importedPrompts.forEach(importedPrompt => {
-                      if (promptsMap.has(importedPrompt.id)) {
-                          updatedPromptsCount++;
-                      } else {
-                          newPromptsCount++;
-                      }
-                      promptsMap.set(importedPrompt.id, {
-                          ...importedPrompt,
-                          geminiResponse: undefined,
-                          geminiTestError: undefined,
-                          isTesting: false,
-                      });
-                  });
-                  alert(`Import successful!\n\nNew prompts: ${newPromptsCount}\nUpdated prompts: ${updatedPromptsCount}`);
-                  return Array.from(promptsMap.values());
-              });
+              for (const importedPrompt of importedPrompts) {
+                  const cleanPrompt = {
+                      ...importedPrompt,
+                      geminiResponse: undefined,
+                      geminiTestError: undefined,
+                      isTesting: false,
+                  };
+                  
+                  if (existingIds.has(importedPrompt.id)) {
+                      updatedPromptsCount++;
+                  } else {
+                      newPromptsCount++;
+                  }
+                  
+                  await updatePrompt(cleanPrompt);
+              }
+              
+              alert(`Import successful!\n\nNew prompts: ${newPromptsCount}\nUpdated prompts: ${updatedPromptsCount}`);
 
           } catch (error: any) {
               console.error("Error importing prompts:", error);
@@ -685,7 +578,6 @@ const App: React.FC = () => {
                     <Stats totalPrompts={prompts.length}/>
                     <div className="mt-8">
                         <PromptList 
-                            prompts={filteredPrompts} 
                             onViewPrompt={handleOpenDetailModal}
                             onEditPrompt={handleOpenEditModal}
                             onDeletePrompt={handleDeletePrompt}
@@ -696,7 +588,7 @@ const App: React.FC = () => {
                 </>
             );
         case 'lab':
-            return <PromptLabPage prompts={prompts} />;
+            return <PromptLabPage />;
         case 'documentation':
             return <Documentation />;
         case 'settings':
@@ -747,10 +639,6 @@ const App: React.FC = () => {
   return (
     <div className="flex h-screen bg-[#212934] font-sans">
       <Sidebar 
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        popularTags={appConstants.popularTags}
-        activePage={activePage}
         onNavigate={handleNavigate}
       />
        <input
@@ -765,8 +653,6 @@ const App: React.FC = () => {
         <TopBar 
           onAddNewPrompt={handleOpenCreateModal}
           onOpenWizard={handleOpenWizard}
-          searchTerm={filters.searchTerm}
-          onSearchChange={(value) => handleFilterChange('searchTerm', value)}
         />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
           {renderMainContent()}
@@ -780,7 +666,7 @@ const App: React.FC = () => {
           onSave={handleSavePrompt}
           promptToEdit={selectedPrompt}
           appConstants={appConstants}
-          onAddConstant={handleAddConstant}
+          onAddConstant={addConstant}
         />
       )}
 
@@ -801,7 +687,7 @@ const App: React.FC = () => {
           onClose={handleCloseModal}
           onSave={handleSavePrompt}
           appConstants={appConstants}
-          onAddConstant={handleAddConstant}
+          onAddConstant={addConstant}
         />
       )}
 

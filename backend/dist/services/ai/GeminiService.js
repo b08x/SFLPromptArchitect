@@ -18,8 +18,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GeminiService = void 0;
+exports.GeminiOrchestrationService = exports.GeminiService = void 0;
 exports.createGeminiService = createGeminiService;
+exports.createGeminiOrchestrationService = createGeminiOrchestrationService;
 const axios_1 = __importDefault(require("axios"));
 const BaseAIService_1 = require("./BaseAIService");
 /**
@@ -101,7 +102,7 @@ class GeminiService extends BaseAIService_1.BaseAIService {
         });
     }
     /**
-     * Generate completion using Gemini API
+     * Generate completion using Gemini API with optional JSON mode
      */
     generateCompletion(request) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -109,10 +110,18 @@ class GeminiService extends BaseAIService_1.BaseAIService {
             try {
                 const payload = this.buildRequestPayload(request);
                 this.logRequest(payload);
+                // Log JSON mode status
+                if (request.forceJsonMode) {
+                    console.log('GeminiService: Executing request with JSON mode enabled');
+                }
                 const modelName = this.normalizeModelName(request.model);
                 const url = `/models/${modelName}:generateContent?key=${this.config.apiKey}`;
                 const response = yield this.client.post(url, payload);
                 const aiResponse = this.parseResponse(response.data, startTime);
+                // Enhanced logging for JSON mode responses
+                if (request.forceJsonMode) {
+                    console.log('GeminiService: JSON mode response received, length:', aiResponse.text.length);
+                }
                 this.logResponse(aiResponse);
                 return aiResponse;
             }
@@ -170,7 +179,7 @@ class GeminiService extends BaseAIService_1.BaseAIService {
         };
     }
     /**
-     * Normalize parameters to Gemini format
+     * Normalize parameters to Gemini format with JSON mode support
      */
     normalizeParameters(parameters) {
         const params = parameters;
@@ -185,6 +194,11 @@ class GeminiService extends BaseAIService_1.BaseAIService {
             generationConfig.topK = params.topK;
         if (params.topP !== undefined)
             generationConfig.topP = params.topP;
+        // Enable JSON mode when requested (for orchestration calls)
+        if (params.forceJsonMode) {
+            generationConfig.responseMimeType = "application/json";
+            console.log("GeminiService: JSON mode enabled for this request");
+        }
         if (Object.keys(generationConfig).length > 0) {
             normalized.generationConfig = generationConfig;
         }
@@ -195,10 +209,12 @@ class GeminiService extends BaseAIService_1.BaseAIService {
         return this.sanitizeParameters(normalized);
     }
     /**
-     * Build Gemini API request payload
+     * Build Gemini API request payload with optional JSON mode
      */
     buildRequestPayload(request) {
-        const parameters = this.normalizeParameters(request.parameters);
+        // Pass through forceJsonMode to parameter normalization
+        const extendedParams = Object.assign(Object.assign({}, request.parameters), { forceJsonMode: request.forceJsonMode });
+        const parameters = this.normalizeParameters(extendedParams);
         const params = request.parameters;
         // Build contents array
         const contents = [];
@@ -274,8 +290,30 @@ class GeminiService extends BaseAIService_1.BaseAIService {
 }
 exports.GeminiService = GeminiService;
 /**
+ * Enhanced Gemini service with JSON mode orchestration support
+ */
+class GeminiOrchestrationService extends GeminiService {
+    /**
+     * Generate completion specifically for orchestration with guaranteed JSON mode
+     */
+    generateOrchestrationCompletion(request) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const orchestrationRequest = Object.assign(Object.assign({}, request), { forceJsonMode: true });
+            console.log('GeminiOrchestrationService: Generating completion with guaranteed JSON mode');
+            return this.generateCompletion(orchestrationRequest);
+        });
+    }
+}
+exports.GeminiOrchestrationService = GeminiOrchestrationService;
+/**
  * Factory function for creating Gemini service instances
  */
 function createGeminiService(config) {
     return new GeminiService(config);
+}
+/**
+ * Factory function for creating orchestration-enhanced Gemini service instances
+ */
+function createGeminiOrchestrationService(config) {
+    return new GeminiOrchestrationService(config);
 }

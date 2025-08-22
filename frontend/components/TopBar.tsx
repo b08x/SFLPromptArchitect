@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { useAppStore } from '../store/appStore';
 import MagnifyingGlassIcon from './icons/MagnifyingGlassIcon';
 import PlusIcon from './icons/PlusIcon';
 import MagicWandIcon from './icons/MagicWandIcon';
@@ -20,14 +21,10 @@ import MagicWandIcon from './icons/MagicWandIcon';
  * @description Defines the props for the `TopBar` component.
  * @property {() => void} onAddNewPrompt - Callback function invoked when the "Create New Prompt" button is clicked.
  * @property {() => void} onOpenWizard - Callback function invoked when the "Prompt Wizard" button is clicked.
- * @property {string} searchTerm - The current value of the search input, making it a controlled component.
- * @property {(value: string) => void} onSearchChange - Callback function to handle changes to the search term, lifting the state up.
  */
 interface TopBarProps {
   onAddNewPrompt: () => void;
   onOpenWizard: () => void;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
 }
 
 /**
@@ -37,7 +34,8 @@ interface TopBarProps {
  * @param {TopBarProps} props - The props for the component.
  * @returns {JSX.Element} The rendered top bar header element.
  */
-const TopBar: React.FC<TopBarProps> = ({ onAddNewPrompt, onOpenWizard, searchTerm, onSearchChange }) => {
+const TopBar: React.FC<TopBarProps> = ({ onAddNewPrompt, onOpenWizard }) => {
+  const { filters, setFilter } = useAppStore();
   return (
     <header className="bg-[#333e48]/80 backdrop-blur-lg border-b border-[#5c6f7e] px-6 py-4 flex items-center justify-between sticky top-0 z-20">
       <div className="relative w-full max-w-sm">
@@ -45,8 +43,8 @@ const TopBar: React.FC<TopBarProps> = ({ onAddNewPrompt, onOpenWizard, searchTer
         <input
           type="text"
           placeholder="Search prompts..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          value={filters.searchTerm}
+          onChange={(e) => setFilter('searchTerm', e.target.value)}
           className="w-full pl-10 pr-4 py-2 bg-[#333e48] border border-[#5c6f7e] rounded-lg text-sm text-gray-200 placeholder-[#95aac0] focus:ring-2 focus:ring-[#e2a32d] focus:border-[#e2a32d] outline-none"
           aria-label="Search prompts"
         />

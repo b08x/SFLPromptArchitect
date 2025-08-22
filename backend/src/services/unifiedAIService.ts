@@ -13,6 +13,7 @@ import GeminiService from './geminiService';
 
 /**
  * Request configuration for provider-aware AI operations
+ * Note: apiKey should come from session storage, not directly from client
  */
 export interface ProviderAwareRequest {
   provider?: AIProvider;
@@ -20,6 +21,22 @@ export interface ProviderAwareRequest {
   parameters?: ModelParameters;
   apiKey?: string;
   baseUrl?: string;
+}
+
+/**
+ * Session-aware request configuration
+ */
+export interface SessionAwareRequest extends Omit<ProviderAwareRequest, 'apiKey'> {
+  sessionApiKeys?: {
+    [provider: string]: {
+      encrypted: string;
+      iv: string;
+      timestamp: number;
+    };
+  };
+  sessionBaseUrls?: {
+    [provider: string]: string;
+  };
 }
 
 /**
@@ -62,10 +79,11 @@ export class UnifiedAIService {
 
   /**
    * Test a prompt with specified or default provider
+   * Now supports session-aware API key retrieval
    */
   async testPrompt(
     promptText: string, 
-    providerConfig?: ProviderAwareRequest
+    providerConfig?: ProviderAwareRequest | SessionAwareRequest
   ): Promise<string> {
     if (!providerConfig?.provider || providerConfig.provider === 'google') {
       // Use legacy Gemini service for backward compatibility
@@ -221,24 +239,76 @@ export class UnifiedAIService {
 
   /**
    * Create AI service instance for the specified provider
+   * Now supports session-aware API key retrieval
    */
-  private createAIService(config: ProviderAwareRequest): BaseAIService {
+  private createAIService(config: ProviderAwareRequest | SessionAwareRequest): BaseAIService {
     if (!config.provider) {
       throw new Error('Provider is required');
     }
 
-    if (!config.apiKey) {
-      // Try to get API key from environment variables
-      config.apiKey = this.getApiKeyFromEnv(config.provider);
+    let apiKey: string | undefined;
+    
+    // Type narrow to access apiKey property safely
+    if ('apiKey' in config) {
+      apiKey = config.apiKey;
+    }
+    
+    // If no direct API key, try to get from session data
+    if (!apiKey && 'sessionApiKeys' in config && config.sessionApiKeys) {
+      const sessionKeyData = config.sessionApiKeys[config.provider];
+      if (sessionKeyData) {
+        // Decrypt the API key from session storage
+        try {
+          apiKey = this.decryptApiKey(sessionKeyData);
+        } catch (error) {
+          console.error('Failed to decrypt API key from session:', error);
+        }
+      }
+    }
+
+    // If still no API key, try environment variables as fallback
+    if (!apiKey) {
+      apiKey = this.getApiKeyFromEnv(config.provider);
+    }
+
+    if (!apiKey) {
+      throw new Error(`No API key available for provider: ${config.provider}`);
+    }
+
+    let baseUrl = config.baseUrl;
+    if (!baseUrl && 'sessionBaseUrls' in config && config.sessionBaseUrls) {
+      baseUrl = config.sessionBaseUrls[config.provider];
     }
 
     const serviceConfig: AIServiceConfig = {
-      apiKey: config.apiKey,
-      baseUrl: config.baseUrl,
+      apiKey,
+      baseUrl,
       timeout: 30000
     };
 
     return aiProviderFactory.createService(config.provider, serviceConfig);
+  }
+
+  /**
+   * Decrypt an API key from session storage
+   * @private
+   */
+  private decryptApiKey(encryptedData: { encrypted: string; iv: string }): string {
+    const crypto = require('crypto');
+    const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
+    const ENCRYPTION_KEY = process.env.API_KEY_ENCRYPTION_SECRET || crypto.randomBytes(32).toString('hex');
+    
+    try {
+      const decipher = crypto.createDecipher(ENCRYPTION_ALGORITHM, ENCRYPTION_KEY);
+      
+      let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      
+      return decrypted;
+    } catch (error) {
+      console.error('Failed to decrypt API key:', error);
+      throw new Error('Failed to decrypt API key');
+    }
   }
 
   /**

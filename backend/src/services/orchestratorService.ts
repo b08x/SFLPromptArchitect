@@ -12,6 +12,9 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Workflow, Task } from '../types';
 import { buildOrchestratorPrompt } from '../prompts/orchestratorPrompt';
+import { validateWorkflow, hasCircularDependencies, ValidationResult, ValidatedWorkflow } from '../validation/workflowSchemas';
+import { createGeminiOrchestrationService, GeminiOrchestrationService } from './ai/GeminiService';
+import { AIServiceConfig } from './ai/BaseAIService';
 
 /**
  * @constant {string|undefined} API_KEY
@@ -25,262 +28,93 @@ if (!API_KEY) {
 }
 
 /**
- * @constant {GoogleGenAI} ai
- * @description Initialized GoogleGenAI client instance for API communication.
+ * @constant {GeminiOrchestrationService} orchestrationService
+ * @description Enhanced Gemini service with guaranteed JSON mode for orchestration.
  * @private
  */
-const ai = new GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY" });
+const orchestrationService = createGeminiOrchestrationService({
+  apiKey: API_KEY || "MISSING_API_KEY",
+  baseUrl: 'https://generativelanguage.googleapis.com/v1beta'
+});
 
 /**
  * @interface OrchestratorResponse
- * @description Represents the response from the orchestrator service
+ * @description Represents the response from the orchestrator service with enhanced error details
  */
 interface OrchestratorResponse {
   success: boolean;
   workflow?: Workflow;
   error?: string;
   validationErrors?: string[];
+  errorType?: 'JSON_PARSE_ERROR' | 'SCHEMA_VALIDATION_ERROR' | 'CIRCULAR_DEPENDENCY_ERROR' | 'API_ERROR' | 'CONFIGURATION_ERROR';
+  details?: Record<string, any>;
 }
 
 /**
- * Parses JSON content from AI-generated text using multiple extraction strategies.
- * Enhanced version of the parser from geminiService with better error handling.
+ * Parses JSON content from AI-generated response using guaranteed JSON mode.
+ * Since the AI is configured with JSON mode, the response should be valid JSON.
  * 
- * @param {string} text - The raw text response from the AI that contains JSON data.
- * @returns {any} The parsed JSON object.
- * @throws {Error} Throws an error if all parsing strategies fail.
+ * @param {string} text - The JSON response from the AI
+ * @returns {any} The parsed JSON object
+ * @throws {Error} Throws an error if JSON parsing fails
  * @private
  */
-const parseJsonFromText = (text: string): any => {
-  console.log("Orchestrator: Attempting to parse JSON from text:", text.substring(0, 200) + "...");
+const parseJsonResponse = (text: string): any => {
+  console.log("Orchestrator: [JSON_PARSE] Starting JSON parsing");
+  console.log("Orchestrator: [JSON_PARSE] Response length:", text.length);
+  console.log("Orchestrator: [JSON_PARSE] First 200 chars:", text.substring(0, 200));
   
-  const strategies = [
-    // Strategy 1: Extract code block content
-    () => {
-      const fenceRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/;
-      const match = text.match(fenceRegex);
-      return match && match[1] ? match[1].trim() : null;
-    },
-    
-    // Strategy 2: Extract content between first { and last }
-    () => {
-      const firstBrace = text.indexOf('{');
-      const lastBrace = text.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace > firstBrace) {
-        return text.substring(firstBrace, lastBrace + 1);
-      }
-      return null;
-    },
-    
-    // Strategy 3: Try the text as-is if it starts with {
-    () => {
-      const trimmed = text.trim();
-      return trimmed.startsWith('{') ? trimmed : null;
-    },
-    
-    // Strategy 4: Remove common prefixes and try again
-    () => {
-      const cleaned = text.replace(/^(bash\s*|```\s*|json\s*|```json\s*)/i, '').trim();
-      const firstBrace = cleaned.indexOf('{');
-      const lastBrace = cleaned.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace > firstBrace) {
-        return cleaned.substring(firstBrace, lastBrace + 1);
-      }
-      return null;
+  try {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      throw new Error("Response is empty");
     }
-  ];
-
-  for (let i = 0; i < strategies.length; i++) {
-    const jsonStr = strategies[i]();
-    if (jsonStr) {
-      try {
-        console.log(`Orchestrator: Strategy ${i + 1} extracted JSON:`, jsonStr.substring(0, 100) + "...");
-        const parsed = JSON.parse(jsonStr);
-        console.log("Orchestrator: Successfully parsed JSON with strategy", i + 1);
-        return parsed;
-      } catch (e) {
-        console.log(`Orchestrator: Strategy ${i + 1} failed to parse:`, e);
-        continue;
-      }
-    }
+    
+    const parsed = JSON.parse(trimmed);
+    console.log("Orchestrator: [JSON_PARSE] Successfully parsed JSON response");
+    console.log("Orchestrator: [JSON_PARSE] Parsed object type:", typeof parsed);
+    console.log("Orchestrator: [JSON_PARSE] Has workflow structure:", !!parsed.name && !!parsed.tasks);
+    return parsed;
+  } catch (error: unknown) {
+    console.error("Orchestrator: [JSON_PARSE] JSON parsing failed:", error);
+    console.error("Orchestrator: [JSON_PARSE] Error type:", error instanceof Error ? error.constructor.name : 'Unknown');
+    console.error("Orchestrator: [JSON_PARSE] Raw response (first 500 chars):", text.substring(0, 500));
+    console.error("Orchestrator: [JSON_PARSE] Response contains JSON markers:", text.includes('{') && text.includes('}'));
+    throw new Error(`AI response was not valid JSON: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-
-  console.error("Orchestrator: All JSON parsing strategies failed");
-  throw new Error("The AI orchestrator returned a response that could not be parsed as JSON.");
 };
 
 /**
- * Validates that a workflow object conforms to the expected structure and business rules.
+ * Validates workflow structure using comprehensive Zod schemas.
+ * This replaces the manual validation with type-safe schema validation.
  * 
  * @param {any} workflow - The workflow object to validate
- * @returns {string[]} Array of validation error messages, empty if valid
+ * @returns {ValidationResult} Detailed validation result with errors
  * @private
  */
-const validateWorkflow = (workflow: any): string[] => {
-  const errors: string[] = [];
-
-  // Check required top-level fields
-  if (!workflow.name || typeof workflow.name !== 'string') {
-    errors.push("Workflow must have a 'name' field of type string");
+const validateWorkflowStructure = (workflow: any): ValidationResult => {
+  console.log("Orchestrator: [VALIDATION] Starting Zod schema validation");
+  console.log("Orchestrator: [VALIDATION] Workflow name:", workflow?.name || 'MISSING');
+  console.log("Orchestrator: [VALIDATION] Task count:", Array.isArray(workflow?.tasks) ? workflow.tasks.length : 'INVALID');
+  
+  const validationResult = validateWorkflow(workflow);
+  
+  if (validationResult.success) {
+    console.log("Orchestrator: [VALIDATION] Schema validation passed successfully");
+    console.log("Orchestrator: [VALIDATION] Validated workflow name:", validationResult.data?.name);
+    console.log("Orchestrator: [VALIDATION] Validated task count:", validationResult.data?.tasks.length);
+  } else {
+    console.error("Orchestrator: [VALIDATION] Schema validation failed");
+    console.error("Orchestrator: [VALIDATION] Total errors:", validationResult.errors?.length || 0);
+    console.error("Orchestrator: [VALIDATION] Error details:", validationResult.errors);
+    if (validationResult.fieldErrors) {
+      console.error("Orchestrator: [VALIDATION] Field-specific errors:", validationResult.fieldErrors);
+    }
   }
   
-  if (!workflow.description || typeof workflow.description !== 'string') {
-    errors.push("Workflow must have a 'description' field of type string");
-  }
-  
-  if (!Array.isArray(workflow.tasks)) {
-    errors.push("Workflow must have a 'tasks' field that is an array");
-    return errors; // Can't validate tasks if it's not an array
-  }
-
-  if (workflow.tasks.length === 0) {
-    errors.push("Workflow must contain at least one task");
-  }
-
-  // Validate each task
-  const taskIds = new Set<string>();
-  workflow.tasks.forEach((task: any, index: number) => {
-    const taskPrefix = `Task ${index + 1} (${task.id || 'unknown'})`;
-
-    // Required fields
-    if (!task.id || typeof task.id !== 'string') {
-      errors.push(`${taskPrefix}: must have a unique 'id' field of type string`);
-    } else if (taskIds.has(task.id)) {
-      errors.push(`${taskPrefix}: duplicate task ID '${task.id}'`);
-    } else {
-      taskIds.add(task.id);
-    }
-
-    if (!task.name || typeof task.name !== 'string') {
-      errors.push(`${taskPrefix}: must have a 'name' field of type string`);
-    }
-
-    if (!task.description || typeof task.description !== 'string') {
-      errors.push(`${taskPrefix}: must have a 'description' field of type string`);
-    }
-
-    if (!task.type || typeof task.type !== 'string') {
-      errors.push(`${taskPrefix}: must have a 'type' field of type string`);
-    }
-
-    if (!Array.isArray(task.dependencies)) {
-      errors.push(`${taskPrefix}: must have a 'dependencies' field that is an array`);
-    }
-
-    if (!Array.isArray(task.inputKeys)) {
-      errors.push(`${taskPrefix}: must have an 'inputKeys' field that is an array`);
-    }
-
-    if (!task.outputKey || typeof task.outputKey !== 'string') {
-      errors.push(`${taskPrefix}: must have an 'outputKey' field of type string`);
-    }
-
-    // Validate dependencies reference existing tasks
-    if (Array.isArray(task.dependencies)) {
-      task.dependencies.forEach((depId: string) => {
-        if (typeof depId !== 'string') {
-          errors.push(`${taskPrefix}: dependency must be a string, got ${typeof depId}`);
-        }
-        // Note: We can't validate if the dependency exists yet since we're processing tasks in order
-      });
-    }
-
-    // Type-specific validations
-    if (task.type) {
-      switch (task.type) {
-        case 'GEMINI_PROMPT':
-        case 'IMAGE_ANALYSIS':
-        case 'GEMINI_GROUNDED':
-          if (!task.promptTemplate || typeof task.promptTemplate !== 'string') {
-            errors.push(`${taskPrefix}: type '${task.type}' requires a 'promptTemplate' field of type string`);
-          }
-          break;
-        
-        case 'TEXT_MANIPULATION':
-          if (!task.functionBody || typeof task.functionBody !== 'string') {
-            errors.push(`${taskPrefix}: type 'TEXT_MANIPULATION' requires a 'functionBody' field of type string`);
-          }
-          break;
-        
-        case 'DATA_INPUT':
-          if (task.staticValue === undefined) {
-            errors.push(`${taskPrefix}: type 'DATA_INPUT' requires a 'staticValue' field`);
-          }
-          break;
-        
-        case 'DISPLAY_CHART':
-          if (!task.dataKey || typeof task.dataKey !== 'string') {
-            errors.push(`${taskPrefix}: type 'DISPLAY_CHART' requires a 'dataKey' field of type string`);
-          }
-          break;
-      }
-    }
-  });
-
-  // Validate that all dependency references exist
-  workflow.tasks.forEach((task: any) => {
-    if (Array.isArray(task.dependencies)) {
-      task.dependencies.forEach((depId: string) => {
-        if (!taskIds.has(depId)) {
-          errors.push(`Task '${task.id}': references non-existent dependency '${depId}'`);
-        }
-      });
-    }
-  });
-
-  return errors;
+  return validationResult;
 };
 
-/**
- * Detects circular dependencies in a workflow task graph.
- * 
- * @param {Task[]} tasks - Array of workflow tasks to check
- * @returns {boolean} True if circular dependencies are detected
- * @private
- */
-const hasCircularDependencies = (tasks: Task[]): boolean => {
-  const visited = new Set<string>();
-  const recursionStack = new Set<string>();
-  
-  const taskMap = new Map<string, Task>();
-  tasks.forEach(task => taskMap.set(task.id, task));
-
-  const dfsVisit = (taskId: string): boolean => {
-    if (recursionStack.has(taskId)) {
-      return true; // Circular dependency detected
-    }
-    
-    if (visited.has(taskId)) {
-      return false; // Already processed
-    }
-
-    visited.add(taskId);
-    recursionStack.add(taskId);
-
-    const task = taskMap.get(taskId);
-    if (task) {
-      for (const depId of task.dependencies) {
-        if (dfsVisit(depId)) {
-          return true;
-        }
-      }
-    }
-
-    recursionStack.delete(taskId);
-    return false;
-  };
-
-  // Check each task
-  for (const task of tasks) {
-    if (!visited.has(task.id)) {
-      if (dfsVisit(task.id)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-};
 
 /**
  * @class OrchestratorService
@@ -316,75 +150,120 @@ class OrchestratorService {
     if (!API_KEY) {
       return {
         success: false,
-        error: "Gemini API Key is not configured. Cannot generate workflow."
+        error: "Gemini API Key is not configured. Cannot generate workflow.",
+        errorType: 'CONFIGURATION_ERROR'
       };
     }
 
     if (!userRequest?.trim()) {
       return {
         success: false,
-        error: "User request cannot be empty."
+        error: "User request cannot be empty.",
+        errorType: 'CONFIGURATION_ERROR'
       };
     }
 
     try {
-      console.log("Orchestrator: Generating workflow for request:", userRequest);
+      console.log("Orchestrator: [REQUEST] Starting workflow generation");
+      console.log("Orchestrator: [REQUEST] User request length:", userRequest.length);
+      console.log("Orchestrator: [REQUEST] User request:", userRequest);
 
       const orchestratorPrompt = buildOrchestratorPrompt(userRequest);
       
-      console.log("Orchestrator: Sending request to Gemini API");
-      const response: GenerateContentResponse = await ai.models.generateContent({
+      console.log("Orchestrator: [API_CALL] Preparing Gemini API request");
+      console.log("Orchestrator: [API_CALL] Using guaranteed JSON mode");
+      console.log("Orchestrator: [API_CALL] Model: gemini-2.5-flash");
+      console.log("Orchestrator: [API_CALL] Temperature: 0.3");
+      const response = await orchestrationService.generateOrchestrationCompletion({
+        provider: 'google',
+        prompt: orchestratorPrompt,
         model: 'gemini-2.5-flash',
-        contents: [{ role: "user", parts: [{ text: orchestratorPrompt }] }],
-        config: {
-          responseMimeType: "application/json",
+        parameters: {
           temperature: 0.3, // Lower temperature for more consistent structure
           topK: 40,
           topP: 0.8
-        },
+        }
       });
 
-      const text = response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-      console.log("Orchestrator: Received response from API, parsing...");
+      const text = response.text || "{}";
+      console.log("Orchestrator: [API_RESPONSE] Received response from Gemini API");
+      console.log("Orchestrator: [API_RESPONSE] Response type:", typeof response);
+      console.log("Orchestrator: [API_RESPONSE] Has text field:", !!response.text);
+      console.log("Orchestrator: [API_RESPONSE] Starting JSON parsing...");
 
+      // Parse JSON response (guaranteed JSON mode)
       let workflowData: any;
       try {
-        workflowData = parseJsonFromText(text);
+        workflowData = parseJsonResponse(text);
       } catch (parseError) {
-        console.error("Orchestrator: Failed to parse JSON:", parseError);
+        console.error("Orchestrator: JSON parsing failed:", parseError);
         return {
           success: false,
-          error: "Failed to parse workflow structure from AI response.",
+          error: parseError instanceof Error ? parseError.message : "Failed to parse AI response as JSON",
+          errorType: 'JSON_PARSE_ERROR',
+          details: {
+            originalError: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
+            responseLength: text.length,
+            responsePreview: text.substring(0, 100)
+          }
         };
       }
 
-      // Validate the workflow structure
-      const validationErrors = validateWorkflow(workflowData);
-      if (validationErrors.length > 0) {
-        console.error("Orchestrator: Validation errors:", validationErrors);
+      // Validate the workflow structure using Zod schemas
+      const validationResult = validateWorkflowStructure(workflowData);
+      if (!validationResult.success) {
         return {
           success: false,
-          error: "Generated workflow failed validation.",
-          validationErrors
+          error: "Generated workflow failed schema validation.",
+          errorType: 'SCHEMA_VALIDATION_ERROR',
+          validationErrors: validationResult.errors,
+          details: {
+            fieldErrors: validationResult.fieldErrors,
+            totalErrors: validationResult.errors?.length || 0
+          }
         };
       }
 
-      // Check for circular dependencies
-      if (hasCircularDependencies(workflowData.tasks)) {
+      // Check for circular dependencies using the validated workflow
+      const validatedWorkflow = validationResult.data!;
+      if (hasCircularDependencies(validatedWorkflow)) {
+        console.error("Orchestrator: [DEPENDENCIES] Circular dependencies detected in validated workflow");
+        console.error("Orchestrator: [DEPENDENCIES] Task count:", validatedWorkflow.tasks.length);
+        console.error("Orchestrator: [DEPENDENCIES] Task IDs:", validatedWorkflow.tasks.map(t => t.id));
         return {
           success: false,
-          error: "Generated workflow contains circular dependencies."
+          error: "Generated workflow contains circular dependencies.",
+          errorType: 'CIRCULAR_DEPENDENCY_ERROR'
         };
       }
 
-      // Generate a unique ID for the workflow
-      workflowData.id = `orchestrated-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      // Generate a unique ID and create a proper Workflow object for database storage
+      const workflowId = `orchestrated-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      const now = new Date().toISOString();
+      
+      const workflowForDatabase: Workflow = {
+        id: workflowId,
+        user_id: '', // Will be set by the calling service
+        name: validatedWorkflow.name,
+        graph_data: {
+          name: validatedWorkflow.name,
+          description: validatedWorkflow.description,
+          tasks: validatedWorkflow.tasks
+        },
+        created_at: now,
+        updated_at: now,
+        tasks: validatedWorkflow.tasks
+      };
 
-      console.log(`Orchestrator: Successfully generated workflow "${workflowData.name}" with ${workflowData.tasks.length} tasks`);
+      console.log("Orchestrator: [SUCCESS] Workflow generation completed successfully");
+      console.log(`Orchestrator: [SUCCESS] Generated workflow: "${workflowForDatabase.name}"`); 
+      console.log(`Orchestrator: [SUCCESS] Task count: ${workflowForDatabase.tasks?.length || 0}`);
+      console.log(`Orchestrator: [SUCCESS] Workflow ID: ${workflowForDatabase.id}`);
+      console.log("Orchestrator: [SUCCESS] Task types:", [...new Set((workflowForDatabase.tasks || []).map(t => t.type))]);
 
       return {
         success: true,
-        workflow: workflowData as Workflow
+        workflow: workflowForDatabase
       };
 
     } catch (error: unknown) {
@@ -393,13 +272,18 @@ class OrchestratorService {
       if (error instanceof Error) {
         return {
           success: false,
-          error: `Workflow generation failed: ${error.message}`
+          error: `Workflow generation failed: ${error.message}`,
+          errorType: 'API_ERROR',
+          details: {
+            originalError: error.message
+          }
         };
       }
       
       return {
         success: false,
-        error: "An unknown error occurred during workflow generation."
+        error: "An unknown error occurred during workflow generation.",
+        errorType: 'API_ERROR'
       };
     }
   }
@@ -425,13 +309,18 @@ class OrchestratorService {
    * @since 2.1.0
    */
   validateWorkflowStructure(workflow: Workflow): string[] {
-    const errors = validateWorkflow(workflow);
+    const validationResult = validateWorkflow(workflow);
     
-    if (errors.length === 0 && workflow.tasks && hasCircularDependencies(workflow.tasks)) {
-      errors.push("Workflow contains circular dependencies");
+    if (!validationResult.success) {
+      return validationResult.errors || [];
+    }
+    
+    // Check for circular dependencies if validation passed
+    if (hasCircularDependencies(validationResult.data!)) {
+      return ["Workflow contains circular dependencies"];
     }
 
-    return errors;
+    return [];
   }
 
   /**
@@ -442,7 +331,7 @@ class OrchestratorService {
    * @since 2.1.0
    */
   isConfigured(): boolean {
-    return !!API_KEY;
+    return !!API_KEY && orchestrationService.isConfigured();
   }
 }
 

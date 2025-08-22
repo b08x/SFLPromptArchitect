@@ -145,6 +145,165 @@ export async function validateProvider(
 }
 
 /**
+ * Securely save an API key to the backend
+ */
+export async function saveProviderApiKey(
+  provider: AIProvider,
+  apiKey: string,
+  baseUrl?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch('/api/providers/save-key', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Include session cookies
+      body: JSON.stringify({
+        provider,
+        apiKey,
+        baseUrl,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Unknown error saving API key' };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error saving API key',
+    };
+  }
+}
+
+/**
+ * Validate a stored provider (check if key exists and is valid in session)
+ */
+export async function validateStoredProvider(provider: AIProvider): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch('/api/providers/stored-keys', {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      return { success: false, error: 'Failed to check stored providers' };
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Unknown error checking stored providers' };
+    }
+    
+    return { success: data.data.providers.includes(provider) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error validating stored provider',
+    };
+  }
+}
+
+/**
+ * Generate AI response through secure backend proxy
+ */
+export async function generateAIResponse(
+  provider: AIProvider,
+  model: string,
+  prompt: string,
+  parameters?: Record<string, unknown>,
+  systemMessage?: string
+): Promise<{ success: boolean; response?: string; error?: string }> {
+  try {
+    const response = await fetch('/api/proxy/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Include session cookies
+      body: JSON.stringify({
+        provider,
+        model,
+        prompt,
+        parameters,
+        systemMessage,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Unknown error generating AI response' };
+    }
+    
+    return { success: true, response: data.data.response };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error generating AI response',
+    };
+  }
+}
+
+/**
+ * Clear all stored API keys from the backend session
+ */
+export async function clearStoredApiKeys(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch('/api/providers/clear-keys', {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Unknown error clearing API keys' };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error clearing API keys',
+    };
+  }
+}
+
+/**
+ * Get list of providers with stored API keys
+ */
+export async function getStoredProviders(): Promise<{ success: boolean; providers?: AIProvider[]; error?: string }> {
+  try {
+    const response = await fetch('/api/providers/stored-keys', {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      return { success: false, error: 'Failed to get stored providers' };
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Unknown error getting stored providers' };
+    }
+    
+    return { success: true, providers: data.data.providers };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error getting stored providers',
+    };
+  }
+}
+
+/**
  * Checks if the application is ready (has at least one valid provider)
  * This is the main function used for routing logic
  */

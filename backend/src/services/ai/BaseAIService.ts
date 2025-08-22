@@ -98,6 +98,13 @@ export abstract class BaseAIService {
   }
 
   /**
+   * Check if the service is properly configured
+   */
+  isConfigured(): boolean {
+    return !!this.config.apiKey;
+  }
+
+  /**
    * Test the service connection and API key validity
    */
   abstract testConnection(): Promise<boolean>;

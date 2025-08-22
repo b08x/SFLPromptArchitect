@@ -55,6 +55,7 @@ interface GeminiGenerateContentRequest {
     maxOutputTokens?: number;
     candidateCount?: number;
     stopSequences?: string[];
+    responseMimeType?: string;
   };
   safetySettings?: Array<{
     category: string;
@@ -151,14 +152,19 @@ export class GeminiService extends BaseAIService {
   }
 
   /**
-   * Generate completion using Gemini API
+   * Generate completion using Gemini API with optional JSON mode
    */
-  async generateCompletion(request: AIRequest): Promise<AIResponse> {
+  async generateCompletion(request: AIRequest & { forceJsonMode?: boolean }): Promise<AIResponse> {
     const startTime = Date.now();
     
     try {
       const payload = this.buildRequestPayload(request);
       this.logRequest(payload);
+      
+      // Log JSON mode status
+      if (request.forceJsonMode) {
+        console.log('GeminiService: Executing request with JSON mode enabled');
+      }
       
       const modelName = this.normalizeModelName(request.model);
       const url = `/models/${modelName}:generateContent?key=${this.config.apiKey}`;
@@ -166,6 +172,12 @@ export class GeminiService extends BaseAIService {
       const response: AxiosResponse<GeminiResponse> = await this.client.post(url, payload);
       
       const aiResponse = this.parseResponse(response.data, startTime);
+      
+      // Enhanced logging for JSON mode responses
+      if (request.forceJsonMode) {
+        console.log('GeminiService: JSON mode response received, length:', aiResponse.text.length);
+      }
+      
       this.logResponse(aiResponse);
       
       return aiResponse;
@@ -179,7 +191,7 @@ export class GeminiService extends BaseAIService {
    * Generate streaming completion (placeholder implementation)
    */
   async generateStreamingCompletion(
-    request: AIRequest,
+    request: AIRequest & { forceJsonMode?: boolean },
     onChunk: (chunk: string) => void
   ): Promise<AIResponse> {
     // For now, implement as non-streaming
@@ -231,10 +243,10 @@ export class GeminiService extends BaseAIService {
   }
 
   /**
-   * Normalize parameters to Gemini format
+   * Normalize parameters to Gemini format with JSON mode support
    */
-  protected normalizeParameters(parameters: ModelParameters): Record<string, any> {
-    const params = parameters as GeminiParameters;
+  protected normalizeParameters(parameters: ModelParameters & { forceJsonMode?: boolean }): Record<string, any> {
+    const params = parameters as GeminiParameters & { forceJsonMode?: boolean };
     const normalized: Record<string, any> = {};
 
     // Map to Gemini generationConfig format
@@ -244,6 +256,12 @@ export class GeminiService extends BaseAIService {
     if (params.maxTokens !== undefined) generationConfig.maxOutputTokens = params.maxTokens;
     if (params.topK !== undefined) generationConfig.topK = params.topK;
     if (params.topP !== undefined) generationConfig.topP = params.topP;
+    
+    // Enable JSON mode when requested (for orchestration calls)
+    if (params.forceJsonMode) {
+      generationConfig.responseMimeType = "application/json";
+      console.log("GeminiService: JSON mode enabled for this request");
+    }
 
     if (Object.keys(generationConfig).length > 0) {
       normalized.generationConfig = generationConfig;
@@ -258,10 +276,16 @@ export class GeminiService extends BaseAIService {
   }
 
   /**
-   * Build Gemini API request payload
+   * Build Gemini API request payload with optional JSON mode
    */
-  protected buildRequestPayload(request: AIRequest): GeminiGenerateContentRequest {
-    const parameters = this.normalizeParameters(request.parameters);
+  protected buildRequestPayload(request: AIRequest & { forceJsonMode?: boolean }): GeminiGenerateContentRequest {
+    // Pass through forceJsonMode to parameter normalization
+    const extendedParams = {
+      ...request.parameters,
+      forceJsonMode: request.forceJsonMode
+    };
+    
+    const parameters = this.normalizeParameters(extendedParams);
     const params = request.parameters as GeminiParameters;
     
     // Build contents array
@@ -350,8 +374,33 @@ export class GeminiService extends BaseAIService {
 }
 
 /**
+ * Enhanced Gemini service with JSON mode orchestration support
+ */
+export class GeminiOrchestrationService extends GeminiService {
+  /**
+   * Generate completion specifically for orchestration with guaranteed JSON mode
+   */
+  async generateOrchestrationCompletion(request: AIRequest): Promise<AIResponse> {
+    const orchestrationRequest = {
+      ...request,
+      forceJsonMode: true
+    };
+    
+    console.log('GeminiOrchestrationService: Generating completion with guaranteed JSON mode');
+    return this.generateCompletion(orchestrationRequest);
+  }
+}
+
+/**
  * Factory function for creating Gemini service instances
  */
 export function createGeminiService(config: AIServiceConfig): GeminiService {
   return new GeminiService(config);
+}
+
+/**
+ * Factory function for creating orchestration-enhanced Gemini service instances
+ */
+export function createGeminiOrchestrationService(config: AIServiceConfig): GeminiOrchestrationService {
+  return new GeminiOrchestrationService(config);
 }

@@ -16,7 +16,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Workflow, ModalType, StagedUserInput, PromptSFL } from '../../types';
+import { Workflow, ModalType, StagedUserInput } from '../../types';
+import { useAppStore } from '../../store/appStore';
 import { useWorkflowManager } from '../../hooks/useWorkflowManager';
 import WorkflowControls from './WorkflowControls';
 import UserInputArea from './UserInputArea';
@@ -27,11 +28,9 @@ import WorkflowWizardModal from './modals/WorkflowWizardModal';
 /**
  * @interface PromptLabPageProps
  * @description Defines the props for the PromptLabPage component.
- * @property {PromptSFL[]} prompts - An array of all available SFL prompts from the library.
+ * No props are needed as prompts are accessed from the store.
  */
-interface PromptLabPageProps {
-    prompts: PromptSFL[];
-}
+interface PromptLabPageProps {}
 
 /**
  * The main page component for the Prompt Lab feature.
@@ -40,7 +39,8 @@ interface PromptLabPageProps {
  * @param {PromptLabPageProps} props - The props for the component.
  * @returns {JSX.Element} The rendered Prompt Lab page.
  */
-const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
+const PromptLabPage: React.FC<PromptLabPageProps> = () => {
+    const { prompts } = useAppStore();
     const { workflows, saveWorkflow, deleteWorkflow, isLoading, saveCustomWorkflows } = useWorkflowManager();
     const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(null);
     const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
@@ -123,7 +123,6 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
                     onClose={handleCloseModal}
                     onSave={handleSaveWorkflow}
                     workflowToEdit={activeWorkflow?.isDefault ? null : activeWorkflow}
-                    prompts={prompts}
                 />
             )}
             
@@ -132,7 +131,6 @@ const PromptLabPage: React.FC<PromptLabPageProps> = ({ prompts }) => {
                     isOpen={true}
                     onClose={handleCloseModal}
                     onSave={handleSaveWorkflow}
-                    prompts={prompts}
                 />
             )}
         </div>

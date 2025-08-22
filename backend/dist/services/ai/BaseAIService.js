@@ -40,6 +40,12 @@ class BaseAIService {
         return Object.assign({}, this.capabilities);
     }
     /**
+     * Check if the service is properly configured
+     */
+    isConfigured() {
+        return !!this.config.apiKey;
+    }
+    /**
      * Handle provider-specific errors and convert them to standard format
      * @param error - The error from the provider
      */

@@ -46,4 +46,10 @@ router.get('/providers/available', providerController_1.default.getAvailableProv
 router.get('/providers/health', providerController_1.default.checkProviderHealth);
 router.get('/providers/preferred', providerController_1.default.getPreferredProvider);
 router.post('/providers/validate', providerController_1.default.validateProvider);
+// Secure API key management routes
+router.post('/providers/save-key', providerController_1.default.saveApiKey);
+router.delete('/providers/clear-keys', providerController_1.default.clearApiKeys);
+router.get('/providers/stored-keys', providerController_1.default.getStoredKeys);
+// AI proxy routes
+router.post('/proxy/generate', providerController_1.default.proxyGenerate);
 exports.default = router;
