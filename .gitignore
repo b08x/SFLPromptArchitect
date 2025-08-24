@@ -38,3 +38,5 @@ SFL-Prompt-Architect.code-workspace
 .backlogs_archive/
 
 .claude/
+/logs/**
+/backups/**

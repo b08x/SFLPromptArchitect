@@ -90,7 +90,7 @@ services:
       - BACKUP_RETENTION_DAYS=30
     volumes:
       - ./scripts:/scripts:ro
-      - backup-data:/backups
+      - ./backups:/backups
       - ./logs:/logs
     depends_on:
       db:

@@ -34,6 +34,7 @@ source scripts/.env.backup.local
 ### 2. Choose Deployment Strategy
 
 #### Strategy A: Docker Service (Recommended)
+
 ```bash
 # Add backup service to docker-compose
 docker-compose up -d db-backup
@@ -43,6 +44,7 @@ docker-compose logs -f db-backup
 ```
 
 #### Strategy B: Host Cron
+
 ```bash
 # Set up automated host cron
 ./scripts/setup-host-cron.sh -v
@@ -58,6 +60,7 @@ crontab -l
 The backup service runs as a dedicated Docker container with the following characteristics:
 
 **Advantages:**
+
 - ✅ Self-contained and portable
 - ✅ Uses same network as database
 - ✅ Automatic startup with docker-compose
@@ -115,6 +118,7 @@ docker-compose exec db-backup /scripts/backup.sh -v
 Runs backups from the host system using docker-compose exec.
 
 **Advantages:**
+
 - ✅ Uses host's cron system (more reliable)
 - ✅ Easier to manage and monitor
 - ✅ Direct access to backup files
@@ -161,6 +165,7 @@ vim scripts/.env.backup.local
 ```
 
 **Required Variables:**
+
 ```bash
 POSTGRES_HOST=localhost        # Database host
 POSTGRES_PORT=5432            # Database port
@@ -170,6 +175,7 @@ POSTGRES_DB=sfl_db           # Database name
 ```
 
 **Optional Variables:**
+
 ```bash
 BACKUP_PATH=/path/to/backups  # Backup storage directory
 BACKUP_RETENTION_DAYS=30      # Days to keep backups
@@ -225,21 +231,25 @@ sfl_db_backup_2024-01-15_143022.sql.gz
 ### Manual Recovery Steps
 
 1. **Stop Application Services:**
+
    ```bash
    docker-compose stop backend frontend
    ```
 
 2. **Set Environment Variables:**
+
    ```bash
    source scripts/.env.backup.local
    ```
 
 3. **Run Restore:**
+
    ```bash
    ./scripts/restore.sh --verbose /path/to/backup.sql.gz
    ```
 
 4. **Verify Restoration:**
+
    ```bash
    # Check tables
    PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt"
@@ -249,6 +259,7 @@ sfl_db_backup_2024-01-15_143022.sql.gz
    ```
 
 5. **Restart Services:**
+
    ```bash
    docker-compose up -d
    ```
@@ -271,16 +282,19 @@ docker-compose cp sfl-db-backup:/backups/sfl_db_backup_2024-01-15_143022.sql.gz 
 ### Log Files
 
 **Backup Logs:**
+
 - Location: `./logs/backup.log`
 - Content: Detailed backup operations, errors, and statistics
 - Rotation: Managed by script (keeps last 50MB)
 
 **Cron Logs (Strategy A):**
+
 - Location: `./logs/cron.log`
 - Content: Cron execution logs
 - Access: `docker-compose logs db-backup`
 
 **Restore Logs:**
+
 - Location: `./logs/restore.log`
 - Content: Restoration operations and verification
 
@@ -321,6 +335,7 @@ cat ./backups/backup_report.txt
 ### Custom Schedules
 
 **Strategy A (Docker Service):**
+
 ```yaml
 # Edit docker-compose.yml cron line:
 echo '0 */6 * * * cd /scripts && ./backup.sh' | crontab -  # Every 6 hours
@@ -328,6 +343,7 @@ echo '0 2 * * 0 cd /scripts && ./backup.sh' | crontab -    # Weekly on Sunday
 ```
 
 **Strategy B (Host Cron):**
+
 ```bash
 # Every 6 hours
 ./scripts/setup-host-cron.sh --schedule "0 */6 * * *"
@@ -366,17 +382,20 @@ encrypt_backup() {
 ### Database Credentials
 
 1. **Use Strong Passwords:**
+
    ```bash
    # Generate secure password
    openssl rand -base64 32
    ```
 
 2. **Environment File Permissions:**
+
    ```bash
    chmod 600 scripts/.env.backup.local
    ```
 
 3. **Backup File Permissions:**
+
    ```bash
    # Ensure only owner can read backups
    chmod 600 ./backups/*.sql.gz
@@ -402,6 +421,7 @@ pg_dump ... | gzip | gpg --symmetric --cipher-algo AES256 > backup.sql.gz.gpg
 ### Common Issues
 
 **1. Permission Denied:**
+
 ```bash
 # Fix script permissions
 chmod +x scripts/*.sh
@@ -412,6 +432,7 @@ chmod 755 ./backups ./logs
 ```
 
 **2. Database Connection Failed:**
+
 ```bash
 # Test connection manually
 PGPASSWORD=password pg_isready -h localhost -p 5432 -U user -d sfl_db
@@ -424,6 +445,7 @@ docker-compose exec backend ping db
 ```
 
 **3. Backup Service Not Starting:**
+
 ```bash
 # Check container logs
 docker-compose logs db-backup
@@ -436,6 +458,7 @@ docker-compose build db-backup
 ```
 
 **4. Disk Space Issues:**
+
 ```bash
 # Check disk usage
 df -h
@@ -448,6 +471,7 @@ find ./backups -name "*.sql.gz" -mtime +7 -delete
 ```
 
 **5. Cron Not Working (Strategy B):**
+
 ```bash
 # Check cron service status
 systemctl status cron
@@ -462,18 +486,21 @@ crontab -l
 ### Recovery Issues
 
 **1. Restore Permission Denied:**
+
 ```bash
 # Ensure user has createdb privileges
 PGPASSWORD=password psql -h localhost -U user -d postgres -c "ALTER USER user CREATEDB;"
 ```
 
 **2. Database Already Exists:**
+
 ```bash
 # Use clean restore
 ./scripts/restore.sh --clean --force backup.sql.gz
 ```
 
 **3. Backup File Corruption:**
+
 ```bash
 # Test backup integrity
 gunzip -t backup.sql.gz
