@@ -9,7 +9,7 @@
  * @requires ../icons/DocumentTextIcon
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StagedUserInput, Workflow } from '../../types';
 import PaperClipIcon from '../icons/PaperClipIcon';
 import DocumentTextIcon from '../icons/DocumentTextIcon';
@@ -43,6 +43,18 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
     const [image, setImage] = useState<{ name: string; type: string; base64: string, preview: string } | null>(null);
     const [file, setFile] = useState<{ name: string; content: string } | null>(null);
     const [isOrchestrating, setIsOrchestrating] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [isStaging, setIsStaging] = useState(false);
+
+    // Auto-hide success message after 3 seconds
+    useEffect(() => {
+        if (successMessage) {
+            const timer = setTimeout(() => {
+                setSuccessMessage(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMessage]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const uploadedFile = e.target.files?.[0];
@@ -69,8 +81,22 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
     }
 
     const handleStage = () => {
-        onStageInput({ text, image, file });
-        alert('Input has been staged for the workflow.');
+        setIsStaging(true);
+        
+        try {
+            onStageInput({ text, image, file });
+            
+            // Show success message and clear only the text input
+            setSuccessMessage('Input has been staged successfully!');
+            setText(''); // Clear only the text input
+            
+            // Keep image and file uploads intact
+        } catch (error) {
+            console.error('Failed to stage input:', error);
+            setSuccessMessage('Failed to stage input. Please try again.');
+        } finally {
+            setIsStaging(false);
+        }
     };
 
     const handleOrchestrate = async () => {
@@ -165,12 +191,40 @@ const UserInputArea: React.FC<UserInputAreaProps> = ({ onStageInput, onWorkflowG
                     </div>
                 )}
             </div>
+            
+            {/* Success notification */}
+            {successMessage && (
+                <div className={`mt-4 p-3 rounded-md transition-all duration-300 ${
+                    successMessage.includes('Failed') 
+                        ? 'error-bg error-text border border-error/20' 
+                        : 'success-bg success-text border border-success/20'
+                }`}>
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{successMessage}</span>
+                        <button 
+                            onClick={() => setSuccessMessage(null)}
+                            className="text-xs opacity-70 hover:opacity-100 ml-2"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            )}
+            
             <div className="mt-4 flex gap-2">
                 <button
                     onClick={handleStage}
-                    className="btn-primary flex-1 py-2 rounded-md font-semibold"
+                    disabled={isStaging}
+                    className="btn-primary flex-1 py-2 rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Stage Input for Workflow
+                    {isStaging ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                            Staging...
+                        </span>
+                    ) : (
+                        'Stage Input for Workflow'
+                    )}
                 </button>
                 <button
                     onClick={handleOrchestrate}
