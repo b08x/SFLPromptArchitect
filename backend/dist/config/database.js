@@ -10,10 +10,20 @@
  * @requires ./env
  * @since 0.5.1
  */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPool = getPool;
 const pg_1 = require("pg");
 const env_1 = __importDefault(require("./env"));
 /**
@@ -24,14 +34,15 @@ const env_1 = __importDefault(require("./env"));
  * The pool is configured using the database URL from environment configuration
  * and will automatically handle connection acquisition, release, and cleanup.
  *
- * @type {Pool}
+ * @type {Promise<Pool>}
  * @see {@link https://node-postgres.com/features/pooling|node-postgres pooling}
  *
  * @example
  * ```typescript
- * import pool from './config/database';
+ * import { getPool } from './config/database';
  *
  * // Execute a query
+ * const pool = await getPool();
  * const result = await pool.query('SELECT * FROM prompts WHERE id = $1', [promptId]);
  *
  * // The connection is automatically returned to the pool
@@ -39,26 +50,39 @@ const env_1 = __importDefault(require("./env"));
  *
  * @since 0.5.1
  */
-const pool = new pg_1.Pool({
-    connectionString: env_1.default.databaseUrl,
-});
+let pool = null;
 /**
- * Connection event handler.
- * Logs a confirmation message when a client successfully connects to the database.
- * This is useful for debugging connection issues and monitoring database connectivity.
- *
- * @event Pool#connect
- * @since 0.5.1
+ * Get or create the database connection pool
+ * @returns Promise resolving to the configured PostgreSQL connection pool
  */
-pool.on('connect', () => {
-    console.log('Connected to the database');
-});
+function getPool() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!pool) {
+            const databaseUrl = yield env_1.default.getDatabaseUrl();
+            pool = new pg_1.Pool({
+                connectionString: databaseUrl,
+            });
+            /**
+             * Connection event handler.
+             * Logs a confirmation message when a client successfully connects to the database.
+             * This is useful for debugging connection issues and monitoring database connectivity.
+             *
+             * @event Pool#connect
+             * @since 0.5.1
+             */
+            pool.on('connect', () => {
+                console.log('Connected to the database');
+            });
+        }
+        return pool;
+    });
+}
 /**
- * @exports {Pool} pool
- * @description The configured PostgreSQL connection pool instance.
+ * @exports {Function} getPool
+ * @description Function to get the configured PostgreSQL connection pool instance.
  * This is the primary database interface used throughout the application
  * for executing queries and managing database connections.
  *
  * @since 0.5.1
  */
-exports.default = pool;
+exports.default = getPool;

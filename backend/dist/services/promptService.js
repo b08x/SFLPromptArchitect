@@ -121,7 +121,8 @@ class PromptService {
                 throw new Error('User ID is required');
             }
             const mappedData = this.mapSFLToPrompt(promptData, userId);
-            const result = yield database_1.default.query('INSERT INTO prompts (user_id, title, body, metadata) VALUES ($1, $2, $3, $4) RETURNING *', [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata]);
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('INSERT INTO prompts (user_id, title, body, metadata) VALUES ($1, $2, $3, $4) RETURNING *', [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata]);
             return this.mapPromptToSFL(result.rows[0]);
         });
     }
@@ -142,7 +143,8 @@ class PromptService {
      */
     getPrompts(filters) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('SELECT * FROM prompts ORDER BY updated_at DESC');
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('SELECT * FROM prompts ORDER BY updated_at DESC');
             return result.rows.map(row => this.mapPromptToSFL(row));
         });
     }
@@ -166,7 +168,8 @@ class PromptService {
      */
     getPromptById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('SELECT * FROM prompts WHERE id = $1', [id]);
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('SELECT * FROM prompts WHERE id = $1', [id]);
             if (!result.rows[0])
                 return null;
             return this.mapPromptToSFL(result.rows[0]);
@@ -206,13 +209,14 @@ class PromptService {
             if (!(userId === null || userId === void 0 ? void 0 : userId.trim())) {
                 throw new Error('User ID is required');
             }
-            const existing = yield database_1.default.query('SELECT * FROM prompts WHERE id = $1', [id]);
+            const pool = yield (0, database_1.default)();
+            const existing = yield pool.query('SELECT * FROM prompts WHERE id = $1', [id]);
             if (!existing.rows[0])
                 return null;
             const existingSFL = this.mapPromptToSFL(existing.rows[0]);
             const updatedSFL = Object.assign(Object.assign({}, existingSFL), promptData);
             const mappedData = this.mapSFLToPrompt(updatedSFL, userId);
-            const result = yield database_1.default.query('UPDATE prompts SET user_id = $1, title = $2, body = $3, metadata = $4, updated_at = now() WHERE id = $5 RETURNING *', [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata, id]);
+            const result = yield pool.query('UPDATE prompts SET user_id = $1, title = $2, body = $3, metadata = $4, updated_at = now() WHERE id = $5 RETURNING *', [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata, id]);
             return result.rows[0] ? this.mapPromptToSFL(result.rows[0]) : null;
         });
     }
@@ -236,7 +240,8 @@ class PromptService {
      */
     deletePrompt(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('DELETE FROM prompts WHERE id = $1', [id]);
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('DELETE FROM prompts WHERE id = $1', [id]);
             return !!result.rowCount;
         });
     }

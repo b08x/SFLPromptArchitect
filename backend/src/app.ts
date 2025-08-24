@@ -7,9 +7,10 @@
 
 import express, { Request, Response } from 'express';
 import session from 'express-session';
+import helmet from 'helmet';
+import cors from 'cors';
 import crypto from 'crypto';
 import errorHandler from './middleware/errorHandler';
-import tempAuthMiddleware from './middleware/tempAuth';
 import apiRoutes from './api/routes';
 
 // Extend session interface to include custom properties
@@ -31,6 +32,29 @@ declare module 'express-session' {
 
 const app = express();
 
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding for development
+}));
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || false 
+    : ['http://localhost:3000', 'http://localhost:5173'], // Common dev ports
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // Security-focused session configuration
 const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 if (!process.env.SESSION_SECRET) {
@@ -51,8 +75,9 @@ app.use(session({
 }));
 
 app.use(express.json({ limit: '10mb' })); // Reasonable payload limit
-// Temporary authentication middleware - replace with real auth
-app.use('/api', tempAuthMiddleware);
+app.use(express.urlencoded({ extended: true }));
+
+// API routes (authentication now handled within routes)
 app.use('/api', apiRoutes);
 
 app.get('/', (req: Request, res: Response) => {

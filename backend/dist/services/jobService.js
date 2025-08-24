@@ -29,41 +29,48 @@ const webSocketService_1 = __importDefault(require("./webSocketService"));
  */
 class JobService {
     constructor() {
-        if (!env_1.default.redisUrl) {
-            console.warn('REDIS_URL environment variable not set, job service will be disabled');
-            return;
-        }
-        try {
-            // Initialize Redis connection with BullMQ-compatible settings
-            this.redis = new ioredis_1.default(env_1.default.redisUrl, {
-                maxRetriesPerRequest: null, // Required for BullMQ
-                lazyConnect: true, // Don't connect immediately
-            });
-            // Initialize BullMQ queue
-            this.queue = new bullmq_1.Queue('workflow-execution', {
-                connection: this.redis,
-                defaultJobOptions: {
-                    removeOnComplete: 10, // Keep last 10 completed jobs
-                    removeOnFail: 50, // Keep last 50 failed jobs
-                    attempts: 3, // Retry failed jobs up to 3 times
-                    backoff: {
-                        type: 'exponential',
-                        delay: 2000,
+        // Initialize asynchronously
+        this.initPromise = this.initialize();
+    }
+    initialize() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const redisUrl = yield env_1.default.getRedisUrl();
+                if (!redisUrl) {
+                    console.warn('REDIS_URL not configured, job service will be disabled');
+                    return;
+                }
+                // Initialize Redis connection with BullMQ-compatible settings
+                this.redis = new ioredis_1.default(redisUrl, {
+                    maxRetriesPerRequest: null, // Required for BullMQ
+                    lazyConnect: true, // Don't connect immediately
+                });
+                // Initialize BullMQ queue
+                this.queue = new bullmq_1.Queue('workflow-execution', {
+                    connection: this.redis,
+                    defaultJobOptions: {
+                        removeOnComplete: 10, // Keep last 10 completed jobs
+                        removeOnFail: 50, // Keep last 50 failed jobs
+                        attempts: 3, // Retry failed jobs up to 3 times
+                        backoff: {
+                            type: 'exponential',
+                            delay: 2000,
+                        },
                     },
-                },
-            });
-            // Initialize BullMQ worker
-            this.worker = new bullmq_1.Worker('workflow-execution', this.processWorkflowJob.bind(this), {
-                connection: this.redis,
-                concurrency: 5, // Process up to 5 jobs concurrently
-            });
-            // Set up worker event listeners
-            this.setupWorkerEvents();
-        }
-        catch (error) {
-            console.error('Failed to initialize job service:', error);
-            throw error;
-        }
+                });
+                // Initialize BullMQ worker
+                this.worker = new bullmq_1.Worker('workflow-execution', this.processWorkflowJob.bind(this), {
+                    connection: this.redis,
+                    concurrency: 5, // Process up to 5 jobs concurrently
+                });
+                // Set up worker event listeners
+                this.setupWorkerEvents();
+            }
+            catch (error) {
+                console.error('Failed to initialize job service:', error);
+                throw error;
+            }
+        });
     }
     /**
      * Adds a workflow execution job to the queue
@@ -74,6 +81,7 @@ class JobService {
      */
     addWorkflowJob(workflowId, workflow, userInput) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.initPromise; // Wait for initialization
             if (!this.queue) {
                 throw new Error('Job service not initialized - Redis connection not available');
             }
@@ -95,6 +103,7 @@ class JobService {
      */
     getJobStatus(jobId) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.initPromise; // Wait for initialization
             if (!this.queue) {
                 throw new Error('Job service not initialized - Redis connection not available');
             }
@@ -120,6 +129,7 @@ class JobService {
      */
     stopJob(jobId) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.initPromise; // Wait for initialization
             if (!this.queue) {
                 throw new Error('Job service not initialized - Redis connection not available');
             }

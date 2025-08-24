@@ -1,47 +1,98 @@
-[
-  {
-    "taskId": "SEC-01",
-    "title": "Refactor API Key Handling to Eliminate Frontend Storage",
-    "description": "Currently, AI provider API keys are managed and stored in the browser's localStorage, which is a significant security vulnerability. This task is to refactor the application to ensure that API keys are never exposed on the client-side. All API calls to external AI providers must be proxied through the backend, where keys are securely stored and managed.",
-    "category": "Security",
-    "priority": "Critical",
-    "filesToModify": [
-      "frontend/components/settings/ProviderSetupPage.tsx",
-      "frontend/services/providerService.ts",
-      "frontend/services/aiService.ts",
-      "backend/src/services/providerValidationService.ts",
-      "backend/src/api/controllers/providerController.ts",
-      "backend/src/services/unifiedAIService.ts",
-      "backend/src/api/routes.ts"
-    ],
-    "llmAssistantPrompt": "As a senior full-stack developer, your task is to guide me through refactoring the API key management system to eliminate client-side storage of secrets. We need to move API key handling entirely to the backend. Provide a step-by-step plan.\n\n**Instructions:**\n1.  **Backend Changes:**\n    a. Create a new secure backend endpoint, perhaps `POST /api/providers/save-key`, that accepts a provider name and API key. This endpoint should store the key securely (e.g., in an HttpOnly, secure cookie or a server-side session, NOT in the database in plaintext).\n    b. Create a new backend proxy endpoint, like `POST /api/proxy/generate`, that accepts the provider, model, prompt, and parameters. This endpoint will retrieve the appropriate API key from the secure server-side storage, make the call to the external AI provider (e.g., OpenAI, Google), and then return the response to the frontend.\n    c. Modify the existing provider validation logic in `providerValidationService.ts` to work on the backend, checking keys stored in the user's session.\n\n2.  **Frontend Changes:**\n    a. Modify `frontend/components/settings/ProviderSetupPage.tsx` so that when a user enters an API key, it is sent directly to the new `/api/providers/save-key` backend endpoint and is NEVER stored in `localStorage`.\n    b. Remove all `localStorage.setItem` and `localStorage.getItem` calls related to API keys.\n    c. Refactor all frontend services (`providerService.ts`, `aiService.ts`, `geminiService.ts`) that make direct calls to AI providers. They should now call the new backend proxy endpoint (`/api/proxy/generate`) instead."
-  },
-  {
-    "taskId": "RELIABILITY-01",
-    "title": "Improve AI Orchestration with JSON Mode and Schema Validation",
-    "description": "The AI workflow orchestration in `orchestratorService.ts` relies on parsing JSON from a free-form text response from the LLM. This is brittle and can fail if the model's output format changes slightly. This task is to make this feature more robust by utilizing the LLM's dedicated JSON output mode and adding a strict schema validation layer.",
-    "category": "Reliability",
-    "priority": "High",
-    "filesToModify": [
-      "backend/src/services/orchestratorService.ts",
-      "backend/src/services/ai/GeminiService.ts",
-      "backend/src/types.ts"
-    ],
-    "llmAssistantPrompt": "As an expert on AI integration, guide me in refactoring the `orchestratorService.ts` to improve its reliability. The goal is to stop relying on fragile string parsing of LLM output.\n\n**Instructions:**\n1.  **Enable JSON Mode:** Modify the API call within `backend/src/services/orchestratorService.ts` (or the underlying `GeminiService.ts` if necessary) to configure the `responseMimeType: \"application/json\"` in the `generationConfig`. This will instruct the Gemini model to output a guaranteed JSON string.\n2.  **Remove Fragile Parsing:** Once JSON mode is enabled, the complex `parseJsonFromText` function with multiple strategies can be simplified to a standard `JSON.parse()` call, as the response body will be a valid JSON string.\n3.  **Implement Schema Validation:** Introduce a validation library like `Zod` to the backend. Create a Zod schema that rigorously defines the structure of a valid `Workflow` object, including all nested `Task` properties and their types. After parsing the JSON from the AI, use this schema to validate the object. If validation fails, return a structured error to the client instead of attempting to process a malformed workflow."
-  },
-  {
-    "taskId": "REFACTOR-01",
-    "title": "Implement Centralized State Management in Frontend",
-    "description": "The frontend application passes state (like the master prompts list) and callbacks down through multiple component layers, a pattern known as 'prop drilling'. This makes the code harder to maintain and refactor. This task is to introduce a centralized state management library (like Zustand or Redux) to simplify state access.",
-    "category": "Refactoring / Maintainability",
-    "priority": "Medium",
-    "filesToModify": [
-      "frontend/App.tsx",
-      "frontend/components/lab/PromptLabPage.tsx",
-      "frontend/components/Sidebar.tsx",
-      "frontend/components/TopBar.tsx",
-      "frontend/components/PromptList.tsx"
-    ],
-    "llmAssistantPrompt": "As a frontend architect, guide me through refactoring the React application to use a centralized state management library like Zustand to eliminate prop drilling.\n\n**Instructions:**\n1.  **Install Zustand:** Add Zustand as a dependency to the frontend project (`npm install zustand`).\n2.  **Create a Store:** Create a new file, for example `frontend/store/appStore.ts`. In this file, define a Zustand store. This store should manage the following state: `prompts`, `filters`, `activePage`, and `isLoading`.\n3.  **Define Actions:** Within the store, create actions (functions) to handle state modifications, such as `fetchPrompts`, `addPrompt`, `deletePrompt`, `setFilter`, and `setPage`.\n4.  **Refactor `App.tsx`:** Modify the root `App.tsx` component. Remove the local `useState` hooks for prompts, filters, etc., and instead, pull this state and the corresponding actions from the Zustand store using the `useAppStore` hook.\n5.  **Refactor Child Components:** Go through the child components (`Sidebar`, `TopBar`, `PromptList`, etc.) and remove the props that are now managed by the store. Instead, have each component that needs access to the shared state call the `useAppStore` hook directly. This will decouple the components and simplify the component tree."
-  }
-]
+{
+  "backlog": [
+    {
+      "task_id": "SEC-001",
+      "title": "Implement Production-Ready Authentication",
+      "description": "The current system uses a temporary, insecure authentication middleware (`tempAuth.ts`) that hardcodes a single system user for all requests. This is a critical security vulnerability that must be replaced with a robust authentication mechanism before any production deployment.",
+      "priority": "Critical",
+      "related_files": [
+        "backend/src/middleware/tempAuth.ts",
+        "backend/src/app.ts",
+        "backend/src/services/promptService.ts"
+      ],
+      "llm_assistant_prompt": {
+        "role": "You are a senior full-stack developer specializing in API security.",
+        "task": "Develop a complete plan and provide the necessary code to replace the insecure temporary authentication middleware in the SFL Prompt Studio backend with a secure, JWT-based authentication system.",
+        "instructions": [
+          "1. **Analyze Existing Code:** Review `backend/src/middleware/tempAuth.ts` to understand what needs to be replaced. Note how it currently injects a user object into the request.",
+          "2. **Propose Architecture:** Design a JWT-based authentication flow. Your plan should include:",
+          "   - User registration endpoint (`/api/auth/register`) that hashes passwords using `bcrypt`.",
+          "   - User login endpoint (`/api/auth/login`) that validates credentials and returns a JWT.",
+          "   - A new middleware (`authMiddleware.ts`) that verifies the JWT from the `Authorization` header and attaches the authenticated user object (containing at least the user `id`) to the request.",
+          "3. **Provide Code:** Write the full TypeScript code for the new authentication service, the two auth endpoints, and the `authMiddleware.ts`.",
+          "4. **Integration Steps:** Explain how to integrate the new middleware into `backend/src/app.ts`, replacing the existing `tempAuthMiddleware`. Show how to protect specific routes (e.g., the prompt creation endpoint in `promptController.ts`) so they require a valid JWT.",
+          "5. **Update Services:** Show how services like `promptService.ts` in the `createPrompt` and `updatePrompt` methods will now correctly receive a real user ID from the new middleware instead of the hardcoded one."
+        ]
+      }
+    },
+    {
+      "task_id": "SEC-002",
+      "title": "Implement Secure Secrets Management for API Keys",
+      "description": "API keys for various AI providers are currently managed via a `.env` file, as shown in `backend/.env.example`. This method is not secure for production, posing a risk of accidental exposure and making key rotation difficult.",
+      "priority": "Critical",
+      "related_files": [
+        "backend/.env.example",
+        "backend/src/config/env.ts",
+        "backend/src/services/unifiedAIService.ts"
+      ],
+      "llm_assistant_prompt": {
+        "role": "You are a DevOps engineer with expertise in cloud security and secrets management.",
+        "task": "Create a detailed implementation plan to migrate API key management from environment variables to a secure secrets management solution like HashiCorp Vault or AWS Secrets Manager.",
+        "instructions": [
+          "1. **Recommend a Solution:** Based on a containerized deployment (`docker-compose.yml`), recommend either HashiCorp Vault or AWS Secrets Manager, explaining the trade-offs.",
+          "2. **Integration Plan:** Provide a step-by-step guide for integrating the chosen secrets manager with the Node.js backend.",
+          "3. **Code Modifications:** Show the necessary code changes in `backend/src/config/env.ts` to fetch secrets at runtime instead of reading from `process.env`. The configuration should gracefully handle local development (where `.env` might still be used) versus production.",
+          "4. **Service Update:** Demonstrate how the `UnifiedAIService` would be modified to retrieve the API key from the new configuration system just before creating a provider-specific service instance.",
+          "5. **Docker Configuration:** Provide an example of how the `docker-compose.yml` file should be updated to grant the backend service the necessary permissions or environment variables to connect to the secrets manager securely."
+        ]
+      }
+    },
+    {
+      "task_id": "DEP-001",
+      "title": "Correct Backend Docker Container Startup Command",
+      "description": "The `docker-compose.yml` file incorrectly starts the backend service using a development command (`npm start`, which maps to `nodemon`). However, the `backend/Dockerfile` is designed for a production build, creating compiled JavaScript in a `dist/` directory. This mismatch is the root cause of the issue described in `TYPESCRIPT_ISSUE.md`.",
+      "priority": "Critical",
+      "related_files": [
+        "docker-compose.yml",
+        "backend/Dockerfile",
+        "backend/package.json",
+        "backend/TYPESCRIPT_ISSUE.md"
+      ],
+      "llm_assistant_prompt": {
+        "role": "You are a senior DevOps engineer specializing in Docker and Node.js applications.",
+        "task": "Correct the `docker-compose.yml` file to properly run the production build of the backend service, resolving the issue outlined in `TYPESCRIPT_ISSUE.md`.",
+        "instructions": [
+          "1. **Analyze the Problem:** Examine the `backend` service definition in `docker-compose.yml`. Note that its `command` is `npm start`. Now, check `backend/package.json` to see that the `start` script runs `nodemon src/index.ts`, which is for development.",
+          "2. **Review the Dockerfile:** Look at `backend/Dockerfile`. It uses a multi-stage build. Stage 2 copies the compiled output from `/app/dist` and sets the `CMD` to `[\"node\", \"dist/index.js\"]`. This is the intended production command.",
+          "3. **Propose the Fix:** Modify the `backend` service in `docker-compose.yml`. The `command` key should either be removed entirely (to let the Dockerfile's `CMD` take over) or be explicitly set to `node dist/index.js`. Explain why removing the command is often the preferred approach to respect the image's intended behavior.",
+          "4. **Provide the Corrected Code:** Output the corrected `services.backend` section of the `docker-compose.yml` file."
+        ]
+      }
+    },
+    {
+      "task_id": "OPS-001",
+      "title": "Implement Automated Database Backup Strategy",
+      "description": "The project's `todo.md` file specifies a need for a database backup and recovery plan using `pg_dump`. This is a critical operational requirement to prevent data loss but has not yet been implemented.",
+      "priority": "High",
+      "related_files": [
+        "todo.md",
+        "docker-compose.yml",
+        "database/migrations/001_initial_schema.sql"
+      ],
+      "llm_assistant_prompt": {
+        "role": "You are a Database Reliability Engineer (DBRE).",
+        "task": "Create a shell script and provide instructions for setting up automated daily backups for the PostgreSQL database running in Docker, as specified in `todo.md`.",
+        "instructions": [
+          "1. **Create a Backup Script:** Write a robust shell script (`backup.sh`) that uses `pg_dump` to create a compressed backup of the PostgreSQL database.",
+          "   - The script must use environment variables for the database credentials (`POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`) and the backup destination path.",
+          "   - The backup filename should include a timestamp (e.g., `sfl_db_backup_YYYY-MM-DD_HHMMSS.sql.gz`).",
+          "   - The script should include basic error handling and log its output.",
+          "2. **Docker Integration:** Provide two strategies for running this script automatically:",
+          "   - **Strategy A (Cron in a new service):** Show how to add a new service to the `docker-compose.yml` file (e.g., `db-backup`) that uses the official PostgreSQL image, mounts the backup script and a volume for backup storage, and runs the script on a cron schedule.",
+          "   - **Strategy B (Host Cron):** Explain how to run the backup script from the host machine's crontab using `docker-compose exec`.",
+          "3. **Recovery Steps:** Briefly outline the steps required to restore the database from a backup file using `pg_restore`."
+        ]
+      }
+    }
+  ]
+}

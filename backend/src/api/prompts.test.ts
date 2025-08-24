@@ -9,17 +9,25 @@ import request from 'supertest';
 import app from '../app';
 import { PromptSFL } from '../types';
 
-// Mock the database pool
-jest.mock('../config/database', () => ({
+// Mock the database getPool function
+jest.mock('../config/database', () => jest.fn(() => Promise.resolve({
   query: jest.fn(),
   end: jest.fn(),
   on: jest.fn(),
-}));
+})));
 
-import pool from '../config/database';
+import getPool from '../config/database';
 
-const mockQuery = pool.query as jest.MockedFunction<any>;
-const mockEnd = pool.end as jest.MockedFunction<any>;
+const mockGetPool = getPool as jest.MockedFunction<typeof getPool>;
+const mockPool = {
+  query: jest.fn(),
+  end: jest.fn(),
+  on: jest.fn(),
+} as any; // Mock pool object
+mockGetPool.mockResolvedValue(mockPool);
+
+const mockQuery = mockPool.query as jest.MockedFunction<any>;
+const mockEnd = mockPool.end as jest.MockedFunction<any>;
 
 describe('/api/prompts', () => {
   const mockPromptId = 'test-prompt-id-123';

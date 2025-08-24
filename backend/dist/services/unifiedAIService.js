@@ -5,6 +5,39 @@
  * compatibility with existing SFL prompt generation and workflow creation functionality.
  * Acts as a bridge between the legacy GeminiService interface and the new multi-provider architecture.
  */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -67,7 +100,7 @@ class UnifiedAIService {
                 return yield geminiService_1.default.testPrompt(promptText);
             }
             // Use new provider system
-            const aiService = this.createAIService(providerConfig);
+            const aiService = yield this.createAIService(providerConfig);
             const request = {
                 provider: providerConfig.provider,
                 model: providerConfig.model || this.getDefaultModelForProvider(providerConfig.provider),
@@ -88,7 +121,7 @@ class UnifiedAIService {
                 return yield geminiService_1.default.generateSFLFromGoal(goal, sourceDocContent);
             }
             // For non-Gemini providers, we need to adapt the prompt structure
-            const aiService = this.createAIService(providerConfig);
+            const aiService = yield this.createAIService(providerConfig);
             const systemInstruction = this.getSFLSystemInstruction();
             const userContent = sourceDocContent
                 ? `Source document for style reference:\n\n---\n\n${sourceDocContent}\n\n----\n\nUser's goal: "${goal}"`
@@ -122,7 +155,7 @@ class UnifiedAIService {
                 return yield geminiService_1.default.regenerateSFLFromSuggestion(currentPrompt, suggestion);
             }
             // For non-Gemini providers, we need to adapt the prompt structure
-            const aiService = this.createAIService(providerConfig);
+            const aiService = yield this.createAIService(providerConfig);
             const systemInstruction = this.getSFLRegenerationSystemInstruction();
             const { sourceDocument } = currentPrompt, promptForPayload = __rest(currentPrompt, ["sourceDocument"]);
             const userContent = `
@@ -167,7 +200,7 @@ class UnifiedAIService {
                 return yield geminiService_1.default.generateWorkflowFromGoal(goal);
             }
             // For non-Gemini providers, we need to adapt the prompt structure
-            const aiService = this.createAIService(providerConfig);
+            const aiService = yield this.createAIService(providerConfig);
             const systemInstruction = this.getWorkflowSystemInstruction();
             const request = {
                 provider: providerConfig.provider,
@@ -187,47 +220,49 @@ class UnifiedAIService {
     }
     /**
      * Create AI service instance for the specified provider
-     * Now supports session-aware API key retrieval
+     * Now supports session-aware API key retrieval and secure configuration
      */
     createAIService(config) {
-        if (!config.provider) {
-            throw new Error('Provider is required');
-        }
-        let apiKey;
-        // Type narrow to access apiKey property safely
-        if ('apiKey' in config) {
-            apiKey = config.apiKey;
-        }
-        // If no direct API key, try to get from session data
-        if (!apiKey && 'sessionApiKeys' in config && config.sessionApiKeys) {
-            const sessionKeyData = config.sessionApiKeys[config.provider];
-            if (sessionKeyData) {
-                // Decrypt the API key from session storage
-                try {
-                    apiKey = this.decryptApiKey(sessionKeyData);
-                }
-                catch (error) {
-                    console.error('Failed to decrypt API key from session:', error);
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!config.provider) {
+                throw new Error('Provider is required');
+            }
+            let apiKey;
+            // Type narrow to access apiKey property safely
+            if ('apiKey' in config) {
+                apiKey = config.apiKey;
+            }
+            // If no direct API key, try to get from session data
+            if (!apiKey && 'sessionApiKeys' in config && config.sessionApiKeys) {
+                const sessionKeyData = config.sessionApiKeys[config.provider];
+                if (sessionKeyData) {
+                    // Decrypt the API key from session storage
+                    try {
+                        apiKey = this.decryptApiKey(sessionKeyData);
+                    }
+                    catch (error) {
+                        console.error('Failed to decrypt API key from session:', error);
+                    }
                 }
             }
-        }
-        // If still no API key, try environment variables as fallback
-        if (!apiKey) {
-            apiKey = this.getApiKeyFromEnv(config.provider);
-        }
-        if (!apiKey) {
-            throw new Error(`No API key available for provider: ${config.provider}`);
-        }
-        let baseUrl = config.baseUrl;
-        if (!baseUrl && 'sessionBaseUrls' in config && config.sessionBaseUrls) {
-            baseUrl = config.sessionBaseUrls[config.provider];
-        }
-        const serviceConfig = {
-            apiKey,
-            baseUrl,
-            timeout: 30000
-        };
-        return AIProviderFactory_1.aiProviderFactory.createService(config.provider, serviceConfig);
+            // If still no API key, try secure configuration
+            if (!apiKey) {
+                apiKey = yield this.getApiKeyFromConfig(config.provider);
+            }
+            if (!apiKey) {
+                throw new Error(`No API key available for provider: ${config.provider}`);
+            }
+            let baseUrl = config.baseUrl;
+            if (!baseUrl && 'sessionBaseUrls' in config && config.sessionBaseUrls) {
+                baseUrl = config.sessionBaseUrls[config.provider];
+            }
+            const serviceConfig = {
+                apiKey,
+                baseUrl,
+                timeout: 30000
+            };
+            return AIProviderFactory_1.aiProviderFactory.createService(config.provider, serviceConfig);
+        });
     }
     /**
      * Decrypt an API key from session storage
@@ -249,21 +284,32 @@ class UnifiedAIService {
         }
     }
     /**
-     * Get API key from environment variables
+     * Get API key from secure configuration (with fallback to environment variables)
      */
-    getApiKeyFromEnv(provider) {
-        switch (provider) {
-            case 'openai':
-                return process.env.OPENAI_API_KEY || '';
-            case 'anthropic':
-                return process.env.ANTHROPIC_API_KEY || '';
-            case 'google':
-                return process.env.GEMINI_API_KEY || '';
-            case 'openrouter':
-                return process.env.OPENROUTER_API_KEY || '';
-            default:
-                throw new Error(`No API key found for provider: ${provider}`);
-        }
+    getApiKeyFromConfig(provider) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Import at runtime to avoid circular dependencies
+                const config = (yield Promise.resolve().then(() => __importStar(require('../config/env')))).default;
+                return yield config.getProviderApiKey(provider);
+            }
+            catch (error) {
+                console.error(`Failed to get API key for ${provider} from secure config:`, error);
+                // Fallback to direct environment access
+                switch (provider) {
+                    case 'openai':
+                        return process.env.OPENAI_API_KEY || '';
+                    case 'anthropic':
+                        return process.env.ANTHROPIC_API_KEY || '';
+                    case 'google':
+                        return process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || '';
+                    case 'openrouter':
+                        return process.env.OPENROUTER_API_KEY || '';
+                    default:
+                        throw new Error(`No API key found for provider: ${provider}`);
+                }
+            }
+        });
     }
     /**
      * Get default model for provider

@@ -58,7 +58,8 @@ class WorkflowService {
     createWorkflow(workflowData) {
         return __awaiter(this, void 0, void 0, function* () {
             const { user_id, name, graph_data } = workflowData;
-            const result = yield database_1.default.query('INSERT INTO workflows (user_id, name, graph_data) VALUES ($1, $2, $3) RETURNING *', [user_id, name, graph_data]);
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('INSERT INTO workflows (user_id, name, graph_data) VALUES ($1, $2, $3) RETURNING *', [user_id, name, graph_data]);
             return result.rows[0];
         });
     }
@@ -79,7 +80,8 @@ class WorkflowService {
      */
     getWorkflows() {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('SELECT * FROM workflows ORDER BY updated_at DESC');
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('SELECT * FROM workflows ORDER BY updated_at DESC');
             return result.rows;
         });
     }
@@ -102,7 +104,8 @@ class WorkflowService {
      */
     getWorkflowById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('SELECT * FROM workflows WHERE id = $1', [id]);
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('SELECT * FROM workflows WHERE id = $1', [id]);
             return result.rows[0] || null;
         });
     }
@@ -133,14 +136,15 @@ class WorkflowService {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
             // First, fetch the existing workflow from the database
-            const existing = yield database_1.default.query('SELECT * FROM workflows WHERE id = $1', [id]);
+            const pool = yield (0, database_1.default)();
+            const existing = yield pool.query('SELECT * FROM workflows WHERE id = $1', [id]);
             if (!existing.rows[0])
                 return null;
             // Create a merged object by combining existing data with new data
             const name = (_a = workflowData.name) !== null && _a !== void 0 ? _a : existing.rows[0].name;
             const graph_data = (_b = workflowData.graph_data) !== null && _b !== void 0 ? _b : existing.rows[0].graph_data;
             // Update with the merged values to ensure partial updates don't overwrite existing data
-            const result = yield database_1.default.query('UPDATE workflows SET name = $1, graph_data = $2, updated_at = now() WHERE id = $3 RETURNING *', [name, graph_data, id]);
+            const result = yield pool.query('UPDATE workflows SET name = $1, graph_data = $2, updated_at = now() WHERE id = $3 RETURNING *', [name, graph_data, id]);
             return result.rows[0] || null;
         });
     }
@@ -164,7 +168,8 @@ class WorkflowService {
      */
     deleteWorkflow(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('DELETE FROM workflows WHERE id = $1', [id]);
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('DELETE FROM workflows WHERE id = $1', [id]);
             return !!result.rowCount;
         });
     }

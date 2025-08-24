@@ -42,16 +42,23 @@ class JobService {
   private queue?: Queue;
   private worker?: Worker;
   private redis?: Redis;
+  private initPromise?: Promise<void>;
 
   constructor() {
-    if (!config.redisUrl) {
-      console.warn('REDIS_URL environment variable not set, job service will be disabled');
-      return;
-    }
+    // Initialize asynchronously
+    this.initPromise = this.initialize();
+  }
 
+  private async initialize(): Promise<void> {
     try {
+      const redisUrl = await config.getRedisUrl();
+      if (!redisUrl) {
+        console.warn('REDIS_URL not configured, job service will be disabled');
+        return;
+      }
+
       // Initialize Redis connection with BullMQ-compatible settings
-      this.redis = new Redis(config.redisUrl, {
+      this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: null, // Required for BullMQ
         lazyConnect: true, // Don't connect immediately
       });
@@ -96,6 +103,7 @@ class JobService {
     workflow: Workflow, 
     userInput?: Record<string, any>
   ): Promise<string> {
+    await this.initPromise; // Wait for initialization
     if (!this.queue) {
       throw new Error('Job service not initialized - Redis connection not available');
     }
@@ -119,6 +127,7 @@ class JobService {
    * @returns Promise resolving to job status information
    */
   async getJobStatus(jobId: string) {
+    await this.initPromise; // Wait for initialization
     if (!this.queue) {
       throw new Error('Job service not initialized - Redis connection not available');
     }
@@ -145,6 +154,7 @@ class JobService {
    * @returns Promise resolving to success status
    */
   async stopJob(jobId: string): Promise<boolean> {
+    await this.initPromise; // Wait for initialization
     if (!this.queue) {
       throw new Error('Job service not initialized - Redis connection not available');
     }

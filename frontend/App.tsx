@@ -36,6 +36,7 @@ import HelpModal from './components/HelpModal';
 import Documentation from './components/Documentation';
 import PromptLabPage from './components/lab/PromptLabPage';
 import ProviderSetupPage from './components/settings/ProviderSetupPage';
+import AuthGuard from './components/AuthGuard';
 import { testPromptWithGemini } from './services/geminiService';
 import { useProviderValidation } from './hooks/useProviderValidation';
 import { useAppStore } from './store/appStore';
@@ -148,6 +149,7 @@ const App: React.FC = () => {
     error: providerError,
     requiresSetup,
     checkSetupComplete,
+    refresh: refreshProviders,
   } = useProviderValidation();
 
   /**
@@ -636,8 +638,16 @@ const App: React.FC = () => {
     );
   }
 
+  /**
+   * Handle successful authentication by refreshing provider validation
+   */
+  const handleAuthSuccess = () => {
+    refreshProviders();
+  };
+
   return (
-    <div className="flex h-screen bg-[#212934] font-sans">
+    <AuthGuard onAuthSuccess={handleAuthSuccess}>
+      <div className="flex h-screen bg-[#212934] font-sans">
       <Sidebar 
         onNavigate={handleNavigate}
       />
@@ -698,6 +708,7 @@ const App: React.FC = () => {
         />
       )}
     </div>
+    </AuthGuard>
   );
 };
 

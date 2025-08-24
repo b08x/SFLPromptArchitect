@@ -91,7 +91,7 @@ export class UnifiedAIService {
     }
 
     // Use new provider system
-    const aiService = this.createAIService(providerConfig);
+    const aiService = await this.createAIService(providerConfig);
     const request: AIRequest = {
       provider: providerConfig.provider,
       model: providerConfig.model || this.getDefaultModelForProvider(providerConfig.provider),
@@ -117,7 +117,7 @@ export class UnifiedAIService {
     }
 
     // For non-Gemini providers, we need to adapt the prompt structure
-    const aiService = this.createAIService(providerConfig);
+    const aiService = await this.createAIService(providerConfig);
     const systemInstruction = this.getSFLSystemInstruction();
     
     const userContent = sourceDocContent
@@ -160,7 +160,7 @@ export class UnifiedAIService {
     }
 
     // For non-Gemini providers, we need to adapt the prompt structure
-    const aiService = this.createAIService(providerConfig);
+    const aiService = await this.createAIService(providerConfig);
     const systemInstruction = this.getSFLRegenerationSystemInstruction();
     
     const { sourceDocument, ...promptForPayload } = currentPrompt;
@@ -214,7 +214,7 @@ export class UnifiedAIService {
     }
 
     // For non-Gemini providers, we need to adapt the prompt structure
-    const aiService = this.createAIService(providerConfig);
+    const aiService = await this.createAIService(providerConfig);
     const systemInstruction = this.getWorkflowSystemInstruction();
 
     const request: AIRequest = {
@@ -239,9 +239,9 @@ export class UnifiedAIService {
 
   /**
    * Create AI service instance for the specified provider
-   * Now supports session-aware API key retrieval
+   * Now supports session-aware API key retrieval and secure configuration
    */
-  private createAIService(config: ProviderAwareRequest | SessionAwareRequest): BaseAIService {
+  private async createAIService(config: ProviderAwareRequest | SessionAwareRequest): Promise<BaseAIService> {
     if (!config.provider) {
       throw new Error('Provider is required');
     }
@@ -266,9 +266,9 @@ export class UnifiedAIService {
       }
     }
 
-    // If still no API key, try environment variables as fallback
+    // If still no API key, try secure configuration
     if (!apiKey) {
-      apiKey = this.getApiKeyFromEnv(config.provider);
+      apiKey = await this.getApiKeyFromConfig(config.provider);
     }
 
     if (!apiKey) {
@@ -312,20 +312,29 @@ export class UnifiedAIService {
   }
 
   /**
-   * Get API key from environment variables
+   * Get API key from secure configuration (with fallback to environment variables)
    */
-  private getApiKeyFromEnv(provider: AIProvider): string {
-    switch (provider) {
-      case 'openai':
-        return process.env.OPENAI_API_KEY || '';
-      case 'anthropic':
-        return process.env.ANTHROPIC_API_KEY || '';
-      case 'google':
-        return process.env.GEMINI_API_KEY || '';
-      case 'openrouter':
-        return process.env.OPENROUTER_API_KEY || '';
-      default:
-        throw new Error(`No API key found for provider: ${provider}`);
+  private async getApiKeyFromConfig(provider: AIProvider): Promise<string> {
+    try {
+      // Import at runtime to avoid circular dependencies
+      const config = (await import('../config/env')).default;
+      return await config.getProviderApiKey(provider);
+    } catch (error) {
+      console.error(`Failed to get API key for ${provider} from secure config:`, error);
+      
+      // Fallback to direct environment access
+      switch (provider) {
+        case 'openai':
+          return process.env.OPENAI_API_KEY || '';
+        case 'anthropic':
+          return process.env.ANTHROPIC_API_KEY || '';
+        case 'google':
+          return process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || '';
+        case 'openrouter':
+          return process.env.OPENROUTER_API_KEY || '';
+        default:
+          throw new Error(`No API key found for provider: ${provider}`);
+      }
     }
   }
 

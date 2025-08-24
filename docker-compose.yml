@@ -10,14 +10,13 @@ services:
       - "4000:4000"
     volumes:
       - /app/node_modules # Avoids overwriting container node_modules
-    command: npm start
     depends_on:
       - migration
       - cache
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/sfl_db
       - REDIS_URL=redis://cache:6379
-      - NODE_ENV=development
+      - NODE_ENV=production
     networks:
       - sfl-network
 
@@ -77,8 +76,44 @@ services:
     networks:
       - sfl-network
 
+  # Database Backup Service - Strategy A
+  db-backup:
+    image: docker.io/pgvector/pgvector:pg16
+    container_name: sfl-db-backup
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=sfl_db
+      - BACKUP_PATH=/backups
+      - BACKUP_RETENTION_DAYS=30
+    volumes:
+      - ./scripts:/scripts:ro
+      - backup-data:/backups
+      - ./logs:/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - sfl-network
+    # Run backup daily at 2 AM
+    command: >
+      sh -c "
+        # Install cron
+        apt-get update && apt-get install -y cron && 
+        # Create cron job
+        echo '0 2 * * * cd /scripts && ./backup.sh >> /logs/cron.log 2>&1' | crontab - &&
+        # Run cron in foreground
+        cron -f
+      "
+    restart: unless-stopped
+    # Optionally run backup immediately on startup (uncomment next line)
+    # command: sh -c "cd /scripts && ./backup.sh && cron -f"
+
 volumes:
   pgdata:
+  backup-data:
 
 networks:
   sfl-network:

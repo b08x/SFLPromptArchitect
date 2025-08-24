@@ -51,7 +51,8 @@ class ModelService {
      */
     getModels() {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield database_1.default.query('SELECT * FROM models WHERE is_active = true ORDER BY name');
+            const pool = yield (0, database_1.default)();
+            const result = yield pool.query('SELECT * FROM models WHERE is_active = true ORDER BY name');
             return result.rows;
         });
     }

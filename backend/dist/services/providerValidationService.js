@@ -26,72 +26,96 @@ exports.getPreferredProvider = getPreferredProvider;
 const env_1 = __importDefault(require("../config/env"));
 /**
  * Detects which AI providers are configured via environment variables
- * @returns Array of provider availability information
+ * @returns Promise resolving to array of provider availability information
  */
 function detectAvailableProviders() {
-    const providers = [
-        {
-            provider: 'google',
-            hasApiKey: !!env_1.default.geminiApiKey,
-            isConfigured: !!(env_1.default.geminiApiKey && env_1.default.googleDefaultModel),
-        },
-        {
-            provider: 'openai',
-            hasApiKey: !!env_1.default.openaiApiKey,
-            isConfigured: !!(env_1.default.openaiApiKey && env_1.default.openaiDefaultModel),
-        },
-        {
-            provider: 'openrouter',
-            hasApiKey: !!env_1.default.openrouterApiKey,
-            isConfigured: !!(env_1.default.openrouterApiKey && env_1.default.openrouterDefaultModel && env_1.default.openrouterBaseUrl),
-        },
-        {
-            provider: 'anthropic',
-            hasApiKey: !!env_1.default.anthropicApiKey,
-            isConfigured: !!(env_1.default.anthropicApiKey && env_1.default.anthropicDefaultModel),
-        },
-    ];
-    return providers;
+    return __awaiter(this, void 0, void 0, function* () {
+        const [geminiApiKey, openaiApiKey, openrouterApiKey, anthropicApiKey] = yield Promise.all([
+            env_1.default.getGeminiApiKey().catch(() => ''),
+            env_1.default.getOpenaiApiKey().catch(() => ''),
+            env_1.default.getOpenrouterApiKey().catch(() => ''),
+            env_1.default.getAnthropicApiKey().catch(() => '')
+        ]);
+        const providers = [
+            {
+                provider: 'google',
+                hasApiKey: !!geminiApiKey,
+                isConfigured: !!(geminiApiKey && env_1.default.googleDefaultModel),
+            },
+            {
+                provider: 'openai',
+                hasApiKey: !!openaiApiKey,
+                isConfigured: !!(openaiApiKey && env_1.default.openaiDefaultModel),
+            },
+            {
+                provider: 'openrouter',
+                hasApiKey: !!openrouterApiKey,
+                isConfigured: !!(openrouterApiKey && env_1.default.openrouterDefaultModel && env_1.default.openrouterBaseUrl),
+            },
+            {
+                provider: 'anthropic',
+                hasApiKey: !!anthropicApiKey,
+                isConfigured: !!(anthropicApiKey && env_1.default.anthropicDefaultModel),
+            },
+        ];
+        return providers;
+    });
 }
 /**
  * Gets the configured provider settings
  * @param provider The AI provider
- * @returns Provider configuration or null if not configured
+ * @returns Promise resolving to provider configuration or null if not configured
  */
 function getProviderConfig(provider) {
-    switch (provider) {
-        case 'google':
-            if (!env_1.default.geminiApiKey)
-                return null;
-            return {
-                apiKey: env_1.default.geminiApiKey,
-                defaultModel: env_1.default.googleDefaultModel,
-            };
-        case 'openai':
-            if (!env_1.default.openaiApiKey)
-                return null;
-            return {
-                apiKey: env_1.default.openaiApiKey,
-                defaultModel: env_1.default.openaiDefaultModel,
-            };
-        case 'openrouter':
-            if (!env_1.default.openrouterApiKey)
-                return null;
-            return {
-                apiKey: env_1.default.openrouterApiKey,
-                defaultModel: env_1.default.openrouterDefaultModel,
-                baseUrl: env_1.default.openrouterBaseUrl,
-            };
-        case 'anthropic':
-            if (!env_1.default.anthropicApiKey)
-                return null;
-            return {
-                apiKey: env_1.default.anthropicApiKey,
-                defaultModel: env_1.default.anthropicDefaultModel,
-            };
-        default:
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            switch (provider) {
+                case 'google': {
+                    const apiKey = yield env_1.default.getGeminiApiKey();
+                    if (!apiKey)
+                        return null;
+                    return {
+                        apiKey,
+                        defaultModel: env_1.default.googleDefaultModel,
+                    };
+                }
+                case 'openai': {
+                    const apiKey = yield env_1.default.getOpenaiApiKey();
+                    if (!apiKey)
+                        return null;
+                    return {
+                        apiKey,
+                        defaultModel: env_1.default.openaiDefaultModel,
+                    };
+                }
+                case 'openrouter': {
+                    const apiKey = yield env_1.default.getOpenrouterApiKey();
+                    if (!apiKey)
+                        return null;
+                    return {
+                        apiKey,
+                        defaultModel: env_1.default.openrouterDefaultModel,
+                        baseUrl: env_1.default.openrouterBaseUrl,
+                    };
+                }
+                case 'anthropic': {
+                    const apiKey = yield env_1.default.getAnthropicApiKey();
+                    if (!apiKey)
+                        return null;
+                    return {
+                        apiKey,
+                        defaultModel: env_1.default.anthropicDefaultModel,
+                    };
+                }
+                default:
+                    return null;
+            }
+        }
+        catch (error) {
+            console.error(`Failed to get provider config for ${provider}:`, error);
             return null;
-    }
+        }
+    });
 }
 /**
  * Validates an API key by making a request to the provider's API
@@ -231,16 +255,16 @@ function validateProviderApiKey(provider, apiKey, baseUrl) {
  */
 function validateAllProviders() {
     return __awaiter(this, void 0, void 0, function* () {
-        const providers = detectAvailableProviders();
+        const providers = yield detectAvailableProviders();
         const validationPromises = providers.map((provider) => __awaiter(this, void 0, void 0, function* () {
             if (!provider.hasApiKey) {
                 return Object.assign(Object.assign({}, provider), { validationResult: { success: false, error: 'No API key configured' } });
             }
-            const config = getProviderConfig(provider.provider);
-            if (!config) {
+            const providerConfig = yield getProviderConfig(provider.provider);
+            if (!providerConfig) {
                 return Object.assign(Object.assign({}, provider), { validationResult: { success: false, error: 'Provider not configured' } });
             }
-            const validationResult = yield validateProviderApiKey(provider.provider, config.apiKey, config.baseUrl);
+            const validationResult = yield validateProviderApiKey(provider.provider, providerConfig.apiKey, providerConfig.baseUrl);
             return Object.assign(Object.assign({}, provider), { validationResult });
         }));
         return yield Promise.all(validationPromises);

@@ -9,7 +9,7 @@
  * @since 0.5.1
  */
 
-import pool from '../config/database';
+import getPool from '../config/database';
 
 /**
  * @interface Model
@@ -57,6 +57,7 @@ class ModelService {
    * @since 0.5.1
    */
   async getModels(): Promise<Model[]> {
+    const pool = await getPool();
     const result = await pool.query('SELECT * FROM models WHERE is_active = true ORDER BY name');
     return result.rows;
   }

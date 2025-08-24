@@ -1,17 +1,20 @@
 /**
  * @file env.ts
- * @description Environment configuration module that loads and exports environment variables
- * for the application. Uses dotenv to load variables from .env files and provides
- * a centralized configuration object with sensible defaults.
+ * @description Environment configuration module that integrates with secure secrets management
+ * while maintaining backward compatibility with environment variables for development.
  * 
- * This module should be imported by other configuration modules that need access
- * to environment-specific settings like database URLs, API keys, and runtime settings.
+ * Features:
+ * - Runtime secret retrieval from HashiCorp Vault in production
+ * - Graceful fallback to environment variables in development
+ * - Lazy loading of sensitive configuration values
+ * - Comprehensive configuration validation and error handling
  * 
  * @requires dotenv
- * @since 0.5.1
+ * @since 0.6.0
  */
 
 import dotenv from 'dotenv';
+import secretsManager from './secrets';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,20 +22,27 @@ dotenv.config();
 /**
  * @interface Config
  * @description Type definition for the application configuration object.
+ * All secret values are now retrieved at runtime rather than at module load time.
  */
 interface Config {
-  /** The connection URL for the PostgreSQL database */
-  databaseUrl: string | undefined;
-  /** The connection URL for the Redis server */
-  redisUrl: string | undefined;
-  /** The API key for accessing Google's Gemini service */
-  geminiApiKey: string | undefined;
-  /** The API key for accessing OpenAI's service */
-  openaiApiKey: string | undefined;
-  /** The API key for accessing OpenRouter's service */
-  openrouterApiKey: string | undefined;
-  /** The API key for accessing Anthropic's Claude service */
-  anthropicApiKey: string | undefined;
+  /** Get the connection URL for the PostgreSQL database */
+  getDatabaseUrl(): Promise<string>;
+  /** Get the connection URL for the Redis server */
+  getRedisUrl(): Promise<string>;
+  /** Get the API key for accessing Google's Gemini service */
+  getGeminiApiKey(): Promise<string>;
+  /** Get the API key for accessing OpenAI's service */
+  getOpenaiApiKey(): Promise<string>;
+  /** Get the API key for accessing OpenRouter's service */
+  getOpenrouterApiKey(): Promise<string>;
+  /** Get the API key for accessing Anthropic's Claude service */
+  getAnthropicApiKey(): Promise<string>;
+  /** Get JWT signing secret */
+  getJWTSecret(): Promise<string>;
+  /** Get session secret */
+  getSessionSecret(): Promise<string>;
+  /** Get API key for a specific provider */
+  getProviderApiKey(provider: string): Promise<string>;
   /** The default AI provider to use */
   defaultAiProvider: string;
   /** The fallback AI provider if default fails */
@@ -53,12 +63,13 @@ interface Config {
   nodeEnv: string;
   /** The port number for the application server */
   port: string | number;
+  /** Check system health including secrets availability */
+  healthCheck(): Promise<{ secrets: boolean; vault: boolean; fallback: boolean }>;
 }
 
 /**
- * Application configuration object containing all environment variables.
- * Provides centralized access to environment-specific settings with fallback defaults
- * where appropriate. Some values may be undefined if not set in the environment.
+ * Application configuration object with secure secrets management integration.
+ * Provides centralized access to environment-specific settings with runtime secret retrieval.
  * 
  * @type {Config}
  * 
@@ -69,20 +80,52 @@ interface Config {
  * console.log(`Starting server on port ${config.port}`);
  * console.log(`Environment: ${config.nodeEnv}`);
  * 
- * if (!config.databaseUrl) {
- *   throw new Error('DATABASE_URL environment variable is required');
- * }
+ * // Async secret retrieval
+ * const dbUrl = await config.getDatabaseUrl();
+ * const apiKey = await config.getProviderApiKey('openai');
  * ```
  * 
- * @since 0.5.1
+ * @since 0.6.0
  */
 export default {
-  databaseUrl: process.env.DATABASE_URL,
-  redisUrl: process.env.REDIS_URL,
-  geminiApiKey: process.env.GEMINI_API_KEY,
-  openaiApiKey: process.env.OPENAI_API_KEY,
-  openrouterApiKey: process.env.OPENROUTER_API_KEY,
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  // Async methods for secure secrets
+  async getDatabaseUrl(): Promise<string> {
+    return await secretsManager.getDatabaseUrl();
+  },
+
+  async getRedisUrl(): Promise<string> {
+    return await secretsManager.getRedisUrl();
+  },
+
+  async getGeminiApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('google');
+  },
+
+  async getOpenaiApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('openai');
+  },
+
+  async getOpenrouterApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('openrouter');
+  },
+
+  async getAnthropicApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('anthropic');
+  },
+
+  async getJWTSecret(): Promise<string> {
+    return await secretsManager.getJWTSecret();
+  },
+
+  async getSessionSecret(): Promise<string> {
+    return await secretsManager.getSessionSecret();
+  },
+
+  async getProviderApiKey(provider: string): Promise<string> {
+    return await secretsManager.getProviderApiKey(provider);
+  },
+
+  // Non-sensitive configuration (immediate access)
   defaultAiProvider: process.env.DEFAULT_AI_PROVIDER || 'google',
   fallbackAiProvider: process.env.FALLBACK_AI_PROVIDER || 'openai',
   openaiDefaultModel: process.env.OPENAI_DEFAULT_MODEL || 'gpt-4',
@@ -93,4 +136,23 @@ export default {
   enableGrounding: process.env.ENABLE_GROUNDING === 'true',
   nodeEnv: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 4000,
-};
+
+  // Health check method
+  async healthCheck(): Promise<{ secrets: boolean; vault: boolean; fallback: boolean }> {
+    try {
+      const health = await secretsManager.healthCheck();
+      return {
+        secrets: true,
+        vault: health.vault,
+        fallback: health.fallback
+      };
+    } catch (error) {
+      console.error('Config health check failed:', error);
+      return {
+        secrets: false,
+        vault: false,
+        fallback: true
+      };
+    }
+  }
+} as Config;

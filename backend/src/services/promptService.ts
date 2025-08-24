@@ -9,7 +9,7 @@
  * @since 0.5.1
  */
 
-import pool from '../config/database';
+import getPool from '../config/database';
 import { Prompt, PromptSFL } from '../types';
 import '../types/express';
 
@@ -113,6 +113,7 @@ class PromptService {
     }
 
     const mappedData = this.mapSFLToPrompt(promptData, userId);
+    const pool = await getPool();
     const result = await pool.query(
       'INSERT INTO prompts (user_id, title, body, metadata) VALUES ($1, $2, $3, $4) RETURNING *',
       [mappedData.user_id, mappedData.title, mappedData.body, mappedData.metadata]
@@ -137,6 +138,7 @@ class PromptService {
    * @since 0.5.1
    */
   async getPrompts(filters: any): Promise<PromptSFL[]> {
+    const pool = await getPool();
     const result = await pool.query('SELECT * FROM prompts ORDER BY updated_at DESC');
     return result.rows.map(row => this.mapPromptToSFL(row));
   }
@@ -160,6 +162,7 @@ class PromptService {
    * @since 0.5.1
    */
   async getPromptById(id: string): Promise<PromptSFL | null> {
+    const pool = await getPool();
     const result = await pool.query('SELECT * FROM prompts WHERE id = $1', [id]);
     if (!result.rows[0]) return null;
     return this.mapPromptToSFL(result.rows[0]);
@@ -198,6 +201,7 @@ class PromptService {
       throw new Error('User ID is required');
     }
 
+    const pool = await getPool();
     const existing = await pool.query('SELECT * FROM prompts WHERE id = $1', [id]);
     if (!existing.rows[0]) return null;
 
@@ -232,6 +236,7 @@ class PromptService {
    * @since 0.5.1
    */
   async deletePrompt(id: string): Promise<boolean> {
+    const pool = await getPool();
     const result = await pool.query('DELETE FROM prompts WHERE id = $1', [id]);
     return !!result.rowCount;
   }

@@ -21,14 +21,15 @@ import config from './env';
  * The pool is configured using the database URL from environment configuration
  * and will automatically handle connection acquisition, release, and cleanup.
  * 
- * @type {Pool}
+ * @type {Promise<Pool>}
  * @see {@link https://node-postgres.com/features/pooling|node-postgres pooling}
  * 
  * @example
  * ```typescript
- * import pool from './config/database';
+ * import { getPool } from './config/database';
  * 
  * // Execute a query
+ * const pool = await getPool();
  * const result = await pool.query('SELECT * FROM prompts WHERE id = $1', [promptId]);
  * 
  * // The connection is automatically returned to the pool
@@ -36,28 +37,41 @@ import config from './env';
  * 
  * @since 0.5.1
  */
-const pool: Pool = new Pool({
-  connectionString: config.databaseUrl,
-});
+let pool: Pool | null = null;
 
 /**
- * Connection event handler.
- * Logs a confirmation message when a client successfully connects to the database.
- * This is useful for debugging connection issues and monitoring database connectivity.
- * 
- * @event Pool#connect
- * @since 0.5.1
+ * Get or create the database connection pool
+ * @returns Promise resolving to the configured PostgreSQL connection pool
  */
-pool.on('connect', () => {
-  console.log('Connected to the database');
-});
+export async function getPool(): Promise<Pool> {
+  if (!pool) {
+    const databaseUrl = await config.getDatabaseUrl();
+    pool = new Pool({
+      connectionString: databaseUrl,
+    });
+
+    /**
+     * Connection event handler.
+     * Logs a confirmation message when a client successfully connects to the database.
+     * This is useful for debugging connection issues and monitoring database connectivity.
+     * 
+     * @event Pool#connect
+     * @since 0.5.1
+     */
+    pool.on('connect', () => {
+      console.log('Connected to the database');
+    });
+  }
+  
+  return pool;
+}
 
 /**
- * @exports {Pool} pool
- * @description The configured PostgreSQL connection pool instance.
+ * @exports {Function} getPool
+ * @description Function to get the configured PostgreSQL connection pool instance.
  * This is the primary database interface used throughout the application
  * for executing queries and managing database connections.
  * 
  * @since 0.5.1
  */
-export default pool;
+export default getPool;

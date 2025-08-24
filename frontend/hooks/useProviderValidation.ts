@@ -11,6 +11,7 @@ import {
   type AIProvider,
   type ProviderHealthResponse,
 } from '../services/providerService';
+import authService from '../services/authService';
 
 export interface UseProviderValidationResult {
   /** Whether the application is ready (has at least one valid provider) */
@@ -38,11 +39,22 @@ export function useProviderValidation(): UseProviderValidationResult {
   const [error, setError] = useState<string | null>(null);
   const [preferredProvider, setPreferredProvider] = useState<AIProvider | null>(null);
   const [requiresSetup, setRequiresSetup] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   /**
    * Refresh provider validation status
    */
   const refresh = useCallback(async () => {
+    // Don't run validation if not authenticated
+    if (!authService.isAuthenticated()) {
+      setIsReady(false);
+      setPreferredProvider(null);
+      setRequiresSetup(true);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
@@ -67,6 +79,11 @@ export function useProviderValidation(): UseProviderValidationResult {
    * Check if setup is complete (used for navigation logic)
    */
   const checkSetupComplete = useCallback(async (): Promise<boolean> => {
+    // Don't check if not authenticated
+    if (!authService.isAuthenticated()) {
+      return false;
+    }
+    
     try {
       const ready = await isApplicationReady();
       if (ready !== isReady) {
@@ -80,9 +97,25 @@ export function useProviderValidation(): UseProviderValidationResult {
     }
   }, [isReady, refresh]);
 
-  // Initial load
+  // Check authentication status and run validation
   useEffect(() => {
-    refresh();
+    const checkAuthAndRefresh = () => {
+      const authStatus = authService.isAuthenticated();
+      setIsAuthenticated(authStatus);
+      
+      if (authStatus) {
+        refresh();
+      } else {
+        // Reset state when not authenticated
+        setIsReady(false);
+        setPreferredProvider(null);
+        setRequiresSetup(true);
+        setError(null);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthAndRefresh();
   }, [refresh]);
 
   return {
@@ -105,6 +138,13 @@ export function useProviderSetupCheck() {
   const [isChecking, setIsChecking] = useState<boolean>(true);
 
   const checkSetup = useCallback(async () => {
+    // Don't check if not authenticated
+    if (!authService.isAuthenticated()) {
+      setNeedsSetup(true);
+      setIsChecking(false);
+      return;
+    }
+
     setIsChecking(true);
     try {
       const ready = await isApplicationReady();

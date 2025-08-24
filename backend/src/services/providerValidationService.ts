@@ -28,29 +28,36 @@ export interface ProviderAvailability {
 
 /**
  * Detects which AI providers are configured via environment variables
- * @returns Array of provider availability information
+ * @returns Promise resolving to array of provider availability information
  */
-export function detectAvailableProviders(): ProviderAvailability[] {
+export async function detectAvailableProviders(): Promise<ProviderAvailability[]> {
+  const [geminiApiKey, openaiApiKey, openrouterApiKey, anthropicApiKey] = await Promise.all([
+    config.getGeminiApiKey().catch(() => ''),
+    config.getOpenaiApiKey().catch(() => ''),
+    config.getOpenrouterApiKey().catch(() => ''),
+    config.getAnthropicApiKey().catch(() => '')
+  ]);
+
   const providers: ProviderAvailability[] = [
     {
       provider: 'google',
-      hasApiKey: !!config.geminiApiKey,
-      isConfigured: !!(config.geminiApiKey && config.googleDefaultModel),
+      hasApiKey: !!geminiApiKey,
+      isConfigured: !!(geminiApiKey && config.googleDefaultModel),
     },
     {
       provider: 'openai',
-      hasApiKey: !!config.openaiApiKey,
-      isConfigured: !!(config.openaiApiKey && config.openaiDefaultModel),
+      hasApiKey: !!openaiApiKey,
+      isConfigured: !!(openaiApiKey && config.openaiDefaultModel),
     },
     {
       provider: 'openrouter',
-      hasApiKey: !!config.openrouterApiKey,
-      isConfigured: !!(config.openrouterApiKey && config.openrouterDefaultModel && config.openrouterBaseUrl),
+      hasApiKey: !!openrouterApiKey,
+      isConfigured: !!(openrouterApiKey && config.openrouterDefaultModel && config.openrouterBaseUrl),
     },
     {
       provider: 'anthropic',
-      hasApiKey: !!config.anthropicApiKey,
-      isConfigured: !!(config.anthropicApiKey && config.anthropicDefaultModel),
+      hasApiKey: !!anthropicApiKey,
+      isConfigured: !!(anthropicApiKey && config.anthropicDefaultModel),
     },
   ];
 
@@ -60,41 +67,54 @@ export function detectAvailableProviders(): ProviderAvailability[] {
 /**
  * Gets the configured provider settings
  * @param provider The AI provider
- * @returns Provider configuration or null if not configured
+ * @returns Promise resolving to provider configuration or null if not configured
  */
-export function getProviderConfig(provider: AIProvider): ProviderConfig | null {
-  switch (provider) {
-    case 'google':
-      if (!config.geminiApiKey) return null;
-      return {
-        apiKey: config.geminiApiKey,
-        defaultModel: config.googleDefaultModel,
-      };
+export async function getProviderConfig(provider: AIProvider): Promise<ProviderConfig | null> {
+  try {
+    switch (provider) {
+      case 'google': {
+        const apiKey = await config.getGeminiApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.googleDefaultModel,
+        };
+      }
 
-    case 'openai':
-      if (!config.openaiApiKey) return null;
-      return {
-        apiKey: config.openaiApiKey,
-        defaultModel: config.openaiDefaultModel,
-      };
+      case 'openai': {
+        const apiKey = await config.getOpenaiApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.openaiDefaultModel,
+        };
+      }
 
-    case 'openrouter':
-      if (!config.openrouterApiKey) return null;
-      return {
-        apiKey: config.openrouterApiKey,
-        defaultModel: config.openrouterDefaultModel,
-        baseUrl: config.openrouterBaseUrl,
-      };
+      case 'openrouter': {
+        const apiKey = await config.getOpenrouterApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.openrouterDefaultModel,
+          baseUrl: config.openrouterBaseUrl,
+        };
+      }
 
-    case 'anthropic':
-      if (!config.anthropicApiKey) return null;
-      return {
-        apiKey: config.anthropicApiKey,
-        defaultModel: config.anthropicDefaultModel,
-      };
+      case 'anthropic': {
+        const apiKey = await config.getAnthropicApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.anthropicDefaultModel,
+        };
+      }
 
-    default:
-      return null;
+      default:
+        return null;
+    }
+  } catch (error) {
+    console.error(`Failed to get provider config for ${provider}:`, error);
+    return null;
   }
 }
 
@@ -238,22 +258,22 @@ export async function validateProviderApiKey(
  * @returns Promise resolving to array of provider availability with validation results
  */
 export async function validateAllProviders(): Promise<ProviderAvailability[]> {
-  const providers = detectAvailableProviders();
+  const providers = await detectAvailableProviders();
   
   const validationPromises = providers.map(async (provider) => {
     if (!provider.hasApiKey) {
       return { ...provider, validationResult: { success: false, error: 'No API key configured' } };
     }
 
-    const config = getProviderConfig(provider.provider);
-    if (!config) {
+    const providerConfig = await getProviderConfig(provider.provider);
+    if (!providerConfig) {
       return { ...provider, validationResult: { success: false, error: 'Provider not configured' } };
     }
 
     const validationResult = await validateProviderApiKey(
       provider.provider,
-      config.apiKey,
-      config.baseUrl
+      providerConfig.apiKey,
+      providerConfig.baseUrl
     );
 
     return { ...provider, validationResult };

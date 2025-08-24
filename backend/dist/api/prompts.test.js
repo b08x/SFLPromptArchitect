@@ -20,15 +20,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../app"));
-// Mock the database pool
-jest.mock('../config/database', () => ({
+// Mock the database getPool function
+jest.mock('../config/database', () => jest.fn(() => Promise.resolve({
     query: jest.fn(),
     end: jest.fn(),
     on: jest.fn(),
-}));
+})));
 const database_1 = __importDefault(require("../config/database"));
-const mockQuery = database_1.default.query;
-const mockEnd = database_1.default.end;
+const mockGetPool = database_1.default;
+const mockPool = {
+    query: jest.fn(),
+    end: jest.fn(),
+    on: jest.fn(),
+}; // Mock pool object
+mockGetPool.mockResolvedValue(mockPool);
+const mockQuery = mockPool.query;
+const mockEnd = mockPool.end;
 describe('/api/prompts', () => {
     const mockPromptId = 'test-prompt-id-123';
     const validPromptData = {

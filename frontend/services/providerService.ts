@@ -4,6 +4,8 @@
  * @since 0.6.0
  */
 
+import authService from './authService';
+
 export type AIProvider = 'google' | 'openai' | 'openrouter' | 'anthropic';
 
 export interface ProviderValidationResult {
@@ -36,7 +38,7 @@ const API_BASE = '/api';
  * Gets the status of all providers including validation results
  */
 export async function getProviderStatus(): Promise<ProviderStatusResponse> {
-  const response = await fetch(`${API_BASE}/providers/status`);
+  const response = await authService.authenticatedFetch(`${API_BASE}/providers/status`);
   
   if (!response.ok) {
     throw new Error(`Failed to get provider status: ${response.statusText}`);
@@ -55,7 +57,7 @@ export async function getProviderStatus(): Promise<ProviderStatusResponse> {
  * Gets available providers without validation (faster)
  */
 export async function getAvailableProviders(): Promise<{ providers: ProviderAvailability[] }> {
-  const response = await fetch(`${API_BASE}/providers/available`);
+  const response = await authService.authenticatedFetch(`${API_BASE}/providers/available`);
   
   if (!response.ok) {
     throw new Error(`Failed to get available providers: ${response.statusText}`);
@@ -74,7 +76,7 @@ export async function getAvailableProviders(): Promise<{ providers: ProviderAvai
  * Checks if at least one provider is healthy and ready
  */
 export async function checkProviderHealth(): Promise<ProviderHealthResponse> {
-  const response = await fetch(`${API_BASE}/providers/health`);
+  const response = await authService.authenticatedFetch(`${API_BASE}/providers/health`);
   
   if (!response.ok) {
     throw new Error(`Failed to check provider health: ${response.statusText}`);
@@ -93,7 +95,7 @@ export async function checkProviderHealth(): Promise<ProviderHealthResponse> {
  * Gets the preferred provider based on configuration
  */
 export async function getPreferredProvider(): Promise<{ preferredProvider: AIProvider | null; requiresSetup: boolean }> {
-  const response = await fetch(`${API_BASE}/providers/preferred`);
+  const response = await authService.authenticatedFetch(`${API_BASE}/providers/preferred`);
   
   const data = await response.json();
   
@@ -119,11 +121,8 @@ export async function validateProvider(
   apiKey: string,
   baseUrl?: string
 ): Promise<{ provider: AIProvider; validation: ProviderValidationResult }> {
-  const response = await fetch(`${API_BASE}/providers/validate`, {
+  const response = await authService.authenticatedFetch(`${API_BASE}/providers/validate`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       provider,
       apiKey,
@@ -153,11 +152,8 @@ export async function saveProviderApiKey(
   baseUrl?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('/api/providers/save-key', {
+    const response = await authService.authenticatedFetch('/api/providers/save-key', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include', // Include session cookies
       body: JSON.stringify({
         provider,
@@ -186,7 +182,7 @@ export async function saveProviderApiKey(
  */
 export async function validateStoredProvider(provider: AIProvider): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('/api/providers/stored-keys', {
+    const response = await authService.authenticatedFetch('/api/providers/stored-keys', {
       credentials: 'include',
     });
     
@@ -220,11 +216,8 @@ export async function generateAIResponse(
   systemMessage?: string
 ): Promise<{ success: boolean; response?: string; error?: string }> {
   try {
-    const response = await fetch('/api/proxy/generate', {
+    const response = await authService.authenticatedFetch('/api/proxy/generate', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include', // Include session cookies
       body: JSON.stringify({
         provider,
@@ -255,7 +248,7 @@ export async function generateAIResponse(
  */
 export async function clearStoredApiKeys(): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('/api/providers/clear-keys', {
+    const response = await authService.authenticatedFetch('/api/providers/clear-keys', {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -280,7 +273,7 @@ export async function clearStoredApiKeys(): Promise<{ success: boolean; error?: 
  */
 export async function getStoredProviders(): Promise<{ success: boolean; providers?: AIProvider[]; error?: string }> {
   try {
-    const response = await fetch('/api/providers/stored-keys', {
+    const response = await authService.authenticatedFetch('/api/providers/stored-keys', {
       credentials: 'include',
     });
     

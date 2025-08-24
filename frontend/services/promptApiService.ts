@@ -7,6 +7,7 @@
  */
 
 import { PromptSFL } from '../types';
+import authService from './authService';
 
 /**
  * @constant {string} API_BASE_URL - The base URL for the prompt-related API endpoints.
@@ -32,7 +33,7 @@ const API_BASE_URL = '/api';
  * }
  */
 export const getPrompts = async (): Promise<PromptSFL[]> => {
-  const response = await fetch(`${API_BASE_URL}/prompts`);
+  const response = await authService.authenticatedFetch(`${API_BASE_URL}/prompts`);
   if (!response.ok) {
     throw new Error('Failed to fetch prompts');
   }

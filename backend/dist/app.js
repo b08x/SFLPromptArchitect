@@ -11,11 +11,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
+const helmet_1 = __importDefault(require("helmet"));
+const cors_1 = __importDefault(require("cors"));
 const crypto_1 = __importDefault(require("crypto"));
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
-const tempAuth_1 = __importDefault(require("./middleware/tempAuth"));
 const routes_1 = __importDefault(require("./api/routes"));
 const app = (0, express_1.default)();
+// Security middleware
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+    crossOriginEmbedderPolicy: false, // Allow embedding for development
+}));
+// CORS configuration
+app.use((0, cors_1.default)({
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL || false
+        : ['http://localhost:3000', 'http://localhost:5173'], // Common dev ports
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 // Security-focused session configuration
 const sessionSecret = process.env.SESSION_SECRET || crypto_1.default.randomBytes(32).toString('hex');
 if (!process.env.SESSION_SECRET) {
@@ -34,8 +56,8 @@ app.use((0, express_session_1.default)({
     name: 'sfl.session', // Custom session name
 }));
 app.use(express_1.default.json({ limit: '10mb' })); // Reasonable payload limit
-// Temporary authentication middleware - replace with real auth
-app.use('/api', tempAuth_1.default);
+app.use(express_1.default.urlencoded({ extended: true }));
+// API routes (authentication now handled within routes)
 app.use('/api', routes_1.default);
 app.get('/', (req, res) => {
     res.send('SFL Prompt Studio Backend is running!');
