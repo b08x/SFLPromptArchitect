@@ -31,7 +31,11 @@ const authRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   // Skip rate limiting for successful requests
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
+  // Handle Docker/proxy environment correctly
+  skipFailedRequests: false,
+  // Use correct IP identification
+  keyGenerator: (req) => req.ip || 'unknown'
 });
 
 // More lenient rate limiting for general auth endpoints
@@ -44,7 +48,11 @@ const generalAuthRateLimit = rateLimit({
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  // Handle Docker/proxy environment correctly
+  skipFailedRequests: false,
+  // Use correct IP identification
+  keyGenerator: (req) => req.ip || 'unknown'
 });
 
 /**

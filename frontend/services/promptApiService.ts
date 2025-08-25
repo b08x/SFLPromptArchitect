@@ -65,7 +65,7 @@ export const savePrompt = async (prompt: Omit<PromptSFL, 'id' | 'createdAt' | 'u
   const url = isEditing ? `${API_BASE_URL}/prompts/${prompt.id}` : `${API_BASE_URL}/prompts`;
   const method = isEditing ? 'PUT' : 'POST';
 
-  const response = await fetch(url, {
+  const response = await authService.authenticatedFetch(url, {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export const savePrompt = async (prompt: Omit<PromptSFL, 'id' | 'createdAt' | 'u
  * }
  */
 export const deletePrompt = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/prompts/${id}`, {
+  const response = await authService.authenticatedFetch(`${API_BASE_URL}/prompts/${id}`, {
     method: 'DELETE',
   });
 

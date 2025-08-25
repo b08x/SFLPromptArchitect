@@ -32,6 +32,9 @@ declare module 'express-session' {
 
 const app = express();
 
+// Enable trust proxy for containerized environments
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: {

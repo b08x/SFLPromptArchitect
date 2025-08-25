@@ -6,7 +6,7 @@ import GeminiController from './controllers/geminiController';
 import WorkflowExecutionController from './controllers/workflowExecutionController';
 import ProviderController from './controllers/providerController';
 import authRoutes from './routes/auth';
-import authMiddleware from '../middleware/authMiddleware';
+import authMiddleware, { optionalAuthMiddleware } from '../middleware/authMiddleware';
 
 /**
  * @file defines the routes for the application's API
@@ -19,13 +19,12 @@ const router = Router();
 // Authentication routes (public)
 router.use('/auth', authRoutes);
 
-// Protected routes requiring authentication
-// Prompt routes
-router.post('/prompts', authMiddleware, PromptController.createPrompt);
-router.get('/prompts', authMiddleware, PromptController.getPrompts);
-router.get('/prompts/:id', authMiddleware, PromptController.getPromptById);
-router.put('/prompts/:id', authMiddleware, PromptController.updatePrompt);
-router.delete('/prompts/:id', authMiddleware, PromptController.deletePrompt);
+// Prompt routes (optional authentication for setup)
+router.post('/prompts', optionalAuthMiddleware, PromptController.createPrompt);
+router.get('/prompts', optionalAuthMiddleware, PromptController.getPrompts);
+router.get('/prompts/:id', optionalAuthMiddleware, PromptController.getPromptById);
+router.put('/prompts/:id', optionalAuthMiddleware, PromptController.updatePrompt);
+router.delete('/prompts/:id', optionalAuthMiddleware, PromptController.deletePrompt);
 
 // Workflow routes
 router.post('/workflows', authMiddleware, WorkflowController.createWorkflow);
@@ -42,25 +41,25 @@ router.post('/workflows/stop/:jobId', authMiddleware, WorkflowExecutionControlle
 // Model routes (protected)
 router.get('/models', authMiddleware, ModelController.getModels);
 
-// Gemini routes (protected)
-router.post('/gemini/test-prompt', authMiddleware, GeminiController.testPrompt);
-router.post('/gemini/generate-sfl', authMiddleware, GeminiController.generateSFLFromGoal);
-router.post('/gemini/regenerate-sfl', authMiddleware, GeminiController.regenerateSFLFromSuggestion);
-router.post('/gemini/generate-workflow', authMiddleware, GeminiController.generateWorkflowFromGoal);
+// Gemini routes (optional authentication for initial setup)
+router.post('/gemini/test-prompt', optionalAuthMiddleware, GeminiController.testPrompt);
+router.post('/gemini/generate-sfl', optionalAuthMiddleware, GeminiController.generateSFLFromGoal);
+router.post('/gemini/regenerate-sfl', optionalAuthMiddleware, GeminiController.regenerateSFLFromSuggestion);
+router.post('/gemini/generate-workflow', optionalAuthMiddleware, GeminiController.generateWorkflowFromGoal);
 
-// Provider validation routes (protected - contains sensitive API key operations)
-router.get('/providers/status', authMiddleware, ProviderController.getProviderStatus);
-router.get('/providers/available', authMiddleware, ProviderController.getAvailableProviders);
-router.get('/providers/health', authMiddleware, ProviderController.checkProviderHealth);
-router.get('/providers/preferred', authMiddleware, ProviderController.getPreferredProvider);
-router.post('/providers/validate', authMiddleware, ProviderController.validateProvider);
+// Provider validation routes (optional authentication for setup)
+router.get('/providers/status', optionalAuthMiddleware, ProviderController.getProviderStatus);
+router.get('/providers/available', optionalAuthMiddleware, ProviderController.getAvailableProviders);
+router.get('/providers/health', optionalAuthMiddleware, ProviderController.checkProviderHealth);
+router.get('/providers/preferred', optionalAuthMiddleware, ProviderController.getPreferredProvider);
+router.post('/providers/validate', optionalAuthMiddleware, ProviderController.validateProvider);
 
-// Secure API key management routes (highly sensitive - requires authentication)
-router.post('/providers/save-key', authMiddleware, ProviderController.saveApiKey);
-router.delete('/providers/clear-keys', authMiddleware, ProviderController.clearApiKeys);
-router.get('/providers/stored-keys', authMiddleware, ProviderController.getStoredKeys);
+// Secure API key management routes (optional authentication for setup)
+router.post('/providers/save-key', optionalAuthMiddleware, ProviderController.saveApiKey);
+router.delete('/providers/clear-keys', optionalAuthMiddleware, ProviderController.clearApiKeys);
+router.get('/providers/stored-keys', optionalAuthMiddleware, ProviderController.getStoredKeys);
 
-// AI proxy routes (protected)
-router.post('/proxy/generate', authMiddleware, ProviderController.proxyGenerate);
+// AI proxy routes (optional authentication)
+router.post('/proxy/generate', optionalAuthMiddleware, ProviderController.proxyGenerate);
 
 export default router;
