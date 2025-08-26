@@ -22,6 +22,7 @@ import {
 } from '../../services/ai/aiSdkService';
 import { UnifiedAIService } from '../../services/unifiedAIService';
 import { AIProvider } from '../../types/aiProvider';
+import { MODEL_CONFIG, getProviderConfig } from '../../config/model-config';
 
 /**
  * Interface for session-stored API keys with encryption
@@ -93,6 +94,139 @@ class ProviderController {
       res.status(500).json({
         success: false,
         error: 'Failed to get available providers',
+        details: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Get provider capabilities including models and configuration
+   * @route GET /api/providers/capabilities
+   */
+  static async getProviderCapabilities(req: Request, res: Response): Promise<void> {
+    try {
+      const supportedProviders = getSupportedProviders();
+      const providerCapabilities: Record<string, any> = {};
+
+      // Build capabilities response for each supported provider
+      for (const provider of supportedProviders) {
+        const config = getProviderConfig(provider);
+        
+        if (config) {
+          // Transform backend model config to frontend-compatible format
+          const models = config.models.map(model => {
+            // Build constraints dynamically from model's default parameters
+            const constraints: Record<string, any> = {};
+            
+            // Always include temperature and maxTokens
+            constraints.temperature = {
+              min: 0.0,
+              max: provider === 'cohere' ? 5.0 : (provider === 'groq' || provider === 'openai' ? 2.0 : 1.0),
+              step: 0.1,
+              default: model.defaultParameters.temperature || 0.7
+            };
+            
+            constraints.maxTokens = {
+              min: 1,
+              max: model.capabilities.maxOutputTokens,
+              step: 1,
+              default: model.defaultParameters.maxTokens || 1024
+            };
+            
+            // Add provider-specific parameters based on model's actual parameters
+            if (model.defaultParameters.hasOwnProperty('top_p') || config.parameterMappings.top_p) {
+              constraints.top_p = { min: 0.0, max: 1.0, step: 0.05, default: model.defaultParameters.top_p || 1.0 };
+            }
+            
+            if (model.defaultParameters.hasOwnProperty('top_k') || config.parameterMappings.top_k) {
+              constraints.top_k = { 
+                min: 0, 
+                max: provider === 'anthropic' ? 200 : 40, 
+                step: 1, 
+                default: model.defaultParameters.top_k || (provider === 'anthropic' ? 200 : 20)
+              };
+            }
+            
+            // OpenAI-specific parameters
+            if (provider === 'openai') {
+              if (model.defaultParameters.hasOwnProperty('presence_penalty')) {
+                constraints.presence_penalty = { min: -2.0, max: 2.0, step: 0.1, default: model.defaultParameters.presence_penalty || 0.0 };
+              }
+              if (model.defaultParameters.hasOwnProperty('frequency_penalty')) {
+                constraints.frequency_penalty = { min: -2.0, max: 2.0, step: 0.1, default: model.defaultParameters.frequency_penalty || 0.0 };
+              }
+            }
+            
+            // Cohere-specific parameters
+            if (provider === 'cohere') {
+              if (model.defaultParameters.hasOwnProperty('p')) {
+                constraints.p = { min: 0.01, max: 0.99, step: 0.01, default: model.defaultParameters.p || 0.75 };
+              }
+              if (model.defaultParameters.hasOwnProperty('k')) {
+                constraints.k = { min: 0, max: 500, step: 1, default: model.defaultParameters.k || 0 };
+              }
+            }
+            
+            // Groq/Mistral-specific parameters
+            if (provider === 'groq' && model.defaultParameters.hasOwnProperty('seed')) {
+              constraints.seed = { min: 0, max: 999999, step: 1, default: model.defaultParameters.seed || 0 };
+            }
+            
+            return {
+              id: model.id,
+              name: model.name,
+              provider,
+              description: model.description,
+              contextLength: model.capabilities.maxContextTokens,
+              supportedParameters: Object.keys(constraints),
+              constraints,
+              pricing: {
+                input: model.inputCostPer1K,
+                output: model.outputCostPer1K,
+              },
+            };
+          });
+
+          providerCapabilities[provider] = {
+            name: config.name,
+            models,
+            parameters: {
+              // Standard parameters available across providers
+              temperature: { 
+                min: 0.0, 
+                max: provider === 'cohere' ? 5.0 : (provider === 'groq' || provider === 'openai' ? 2.0 : 1.0), 
+                step: 0.1, 
+                default: 0.7 
+              },
+              maxTokens: { 
+                min: 1, 
+                max: Math.max(...models.map(m => m.constraints.maxTokens.max)), 
+                step: 1, 
+                default: 1024 
+              },
+              // Add provider-specific common parameters
+              ...(config.supportedFeatures.includes('streaming') && {
+                stream: { min: false, max: true, step: 1, default: false }
+              })
+            },
+            features: config.supportedFeatures,
+            baseUrl: config.baseUrl,
+            requiresApiKey: config.requiresApiKey,
+          };
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          providers: providerCapabilities,
+        },
+      });
+    } catch (error) {
+      console.error('Error getting provider capabilities:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get provider capabilities',
         details: error instanceof Error ? error.message : String(error),
       });
     }

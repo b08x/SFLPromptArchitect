@@ -50,6 +50,7 @@ router.post('/gemini/generate-workflow', optionalAuthMiddleware, GeminiControlle
 // Provider validation routes (optional authentication for setup)
 router.get('/providers/status', optionalAuthMiddleware, ProviderController.getProviderStatus);
 router.get('/providers/available', optionalAuthMiddleware, ProviderController.getAvailableProviders);
+router.get('/providers/capabilities', optionalAuthMiddleware, ProviderController.getProviderCapabilities);
 router.get('/providers/health', optionalAuthMiddleware, ProviderController.checkProviderHealth);
 router.get('/providers/preferred', optionalAuthMiddleware, ProviderController.getPreferredProvider);
 router.post('/providers/validate', optionalAuthMiddleware, ProviderController.validateProvider);
