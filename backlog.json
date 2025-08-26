@@ -1,98 +1,29 @@
 {
-  "backlog": [
+  "backlog_tasks": [
     {
-      "task_id": "SEC-001",
-      "title": "Implement Production-Ready Authentication",
-      "description": "The current system uses a temporary, insecure authentication middleware (`tempAuth.ts`) that hardcodes a single system user for all requests. This is a critical security vulnerability that must be replaced with a robust authentication mechanism before any production deployment.",
-      "priority": "Critical",
-      "related_files": [
-        "backend/src/middleware/tempAuth.ts",
-        "backend/src/app.ts",
-        "backend/src/services/promptService.ts"
-      ],
-      "llm_assistant_prompt": {
-        "role": "You are a senior full-stack developer specializing in API security.",
-        "task": "Develop a complete plan and provide the necessary code to replace the insecure temporary authentication middleware in the SFL Prompt Studio backend with a secure, JWT-based authentication system.",
-        "instructions": [
-          "1. **Analyze Existing Code:** Review `backend/src/middleware/tempAuth.ts` to understand what needs to be replaced. Note how it currently injects a user object into the request.",
-          "2. **Propose Architecture:** Design a JWT-based authentication flow. Your plan should include:",
-          "   - User registration endpoint (`/api/auth/register`) that hashes passwords using `bcrypt`.",
-          "   - User login endpoint (`/api/auth/login`) that validates credentials and returns a JWT.",
-          "   - A new middleware (`authMiddleware.ts`) that verifies the JWT from the `Authorization` header and attaches the authenticated user object (containing at least the user `id`) to the request.",
-          "3. **Provide Code:** Write the full TypeScript code for the new authentication service, the two auth endpoints, and the `authMiddleware.ts`.",
-          "4. **Integration Steps:** Explain how to integrate the new middleware into `backend/src/app.ts`, replacing the existing `tempAuthMiddleware`. Show how to protect specific routes (e.g., the prompt creation endpoint in `promptController.ts`) so they require a valid JWT.",
-          "5. **Update Services:** Show how services like `promptService.ts` in the `createPrompt` and `updatePrompt` methods will now correctly receive a real user ID from the new middleware instead of the hardcoded one."
-        ]
-      }
+      "title": "Refactor Database Backup Strategy",
+      "description": "The current database backup strategy relies on a `db-backup` container with an internal cron job, which is a fragile operational pattern. This task involves refactoring the backup process to use a more reliable host-level cron job that executes the provided `backup.sh` script, ensuring backups are decoupled from the application container lifecycle.",
+      "system_prompt": "Refactor the database backup solution in the SFL Prompt Studio project. The current approach uses a container-based cron job in `docker-compose.yml` to run `backup.sh`. The new solution must remove the `db-backup` service from `docker-compose.yml` and provide a revised `documentation/DATABASE_BACKUP.md` file with instructions for setting up a host-level cron job to run the `backup.sh` script. Ensure the instructions are clear and detail the necessary host-level dependencies and configurations for the host cron job. The script should still use Docker commands to perform the backup but should be triggered from the host system."
     },
     {
-      "task_id": "SEC-002",
-      "title": "Implement Secure Secrets Management for API Keys",
-      "description": "API keys for various AI providers are currently managed via a `.env` file, as shown in `backend/.env.example`. This method is not secure for production, posing a risk of accidental exposure and making key rotation difficult.",
-      "priority": "Critical",
-      "related_files": [
-        "backend/.env.example",
-        "backend/src/config/env.ts",
-        "backend/src/services/unifiedAIService.ts"
-      ],
-      "llm_assistant_prompt": {
-        "role": "You are a DevOps engineer with expertise in cloud security and secrets management.",
-        "task": "Create a detailed implementation plan to migrate API key management from environment variables to a secure secrets management solution like HashiCorp Vault or AWS Secrets Manager.",
-        "instructions": [
-          "1. **Recommend a Solution:** Based on a containerized deployment (`docker-compose.yml`), recommend either HashiCorp Vault or AWS Secrets Manager, explaining the trade-offs.",
-          "2. **Integration Plan:** Provide a step-by-step guide for integrating the chosen secrets manager with the Node.js backend.",
-          "3. **Code Modifications:** Show the necessary code changes in `backend/src/config/env.ts` to fetch secrets at runtime instead of reading from `process.env`. The configuration should gracefully handle local development (where `.env` might still be used) versus production.",
-          "4. **Service Update:** Demonstrate how the `UnifiedAIService` would be modified to retrieve the API key from the new configuration system just before creating a provider-specific service instance.",
-          "5. **Docker Configuration:** Provide an example of how the `docker-compose.yml` file should be updated to grant the backend service the necessary permissions or environment variables to connect to the secrets manager securely."
-        ]
-      }
+      "title": "Secure Secrets Manager Fallback",
+      "description": "The `SecretsManager` service in `backend/src/config/secrets.ts` has an insecure fallback mechanism that retrieves secrets from environment variables if the Vault connection fails. This is a critical security vulnerability in a production environment. This task is to remove this fallback and implement a fail-fast approach for production (`NODE_ENV=production`) where the application will not start if it cannot connect to and authenticate with Vault.",
+      "system_prompt": "Modify the `SecretsManager` service located at `backend/src/config/secrets.ts`. Your objective is to eliminate the insecure fallback to environment variables in a production environment. The service must check the `NODE_ENV` environment variable. If `NODE_ENV` is set to 'production', the service must throw an immediate error and terminate the application startup if it fails to connect to Vault or retrieve a required secret. For other environments (e.g., 'development'), the current fallback behavior can be retained. Ensure to add comments explaining the security rationale for this change."
     },
     {
-      "task_id": "DEP-001",
-      "title": "Correct Backend Docker Container Startup Command",
-      "description": "The `docker-compose.yml` file incorrectly starts the backend service using a development command (`npm start`, which maps to `nodemon`). However, the `backend/Dockerfile` is designed for a production build, creating compiled JavaScript in a `dist/` directory. This mismatch is the root cause of the issue described in `TYPESCRIPT_ISSUE.md`.",
-      "priority": "Critical",
-      "related_files": [
-        "docker-compose.yml",
-        "backend/Dockerfile",
-        "backend/package.json",
-        "backend/TYPESCRIPT_ISSUE.md"
-      ],
-      "llm_assistant_prompt": {
-        "role": "You are a senior DevOps engineer specializing in Docker and Node.js applications.",
-        "task": "Correct the `docker-compose.yml` file to properly run the production build of the backend service, resolving the issue outlined in `TYPESCRIPT_ISSUE.md`.",
-        "instructions": [
-          "1. **Analyze the Problem:** Examine the `backend` service definition in `docker-compose.yml`. Note that its `command` is `npm start`. Now, check `backend/package.json` to see that the `start` script runs `nodemon src/index.ts`, which is for development.",
-          "2. **Review the Dockerfile:** Look at `backend/Dockerfile`. It uses a multi-stage build. Stage 2 copies the compiled output from `/app/dist` and sets the `CMD` to `[\"node\", \"dist/index.js\"]`. This is the intended production command.",
-          "3. **Propose the Fix:** Modify the `backend` service in `docker-compose.yml`. The `command` key should either be removed entirely (to let the Dockerfile's `CMD` take over) or be explicitly set to `node dist/index.js`. Explain why removing the command is often the preferred approach to respect the image's intended behavior.",
-          "4. **Provide the Corrected Code:** Output the corrected `services.backend` section of the `docker-compose.yml` file."
-        ]
-      }
+      "title": "Update OpenAPI Specification",
+      "description": "The OpenAPI specification at `documentation/api/openapi.yaml` is outdated and references a `tempAuth` security scheme that is no longer in use. The new authentication system is JWT-based, as implemented in `backend/src/middleware/authMiddleware.ts`. This task is to update the OpenAPI specification to accurately reflect the current API and security model, removing the old temporary scheme and correctly documenting the JWT authentication requirements for protected endpoints.",
+      "system_prompt": "Revise the OpenAPI specification file at `documentation/api/openapi.yaml`. Replace the `tempAuth` security scheme with a new JWT-based authentication scheme. For all endpoints that require authentication (e.g., `/prompts`, `/workflows`), update the `security` field to reference the new JWT scheme. Ensure the description for the security scheme and any relevant endpoint documentation is updated to reflect the use of JWT tokens. Do not change any other parts of the specification."
     },
     {
-      "task_id": "OPS-001",
-      "title": "Implement Automated Database Backup Strategy",
-      "description": "The project's `todo.md` file specifies a need for a database backup and recovery plan using `pg_dump`. This is a critical operational requirement to prevent data loss but has not yet been implemented.",
-      "priority": "High",
-      "related_files": [
-        "todo.md",
-        "docker-compose.yml",
-        "database/migrations/001_initial_schema.sql"
-      ],
-      "llm_assistant_prompt": {
-        "role": "You are a Database Reliability Engineer (DBRE).",
-        "task": "Create a shell script and provide instructions for setting up automated daily backups for the PostgreSQL database running in Docker, as specified in `todo.md`.",
-        "instructions": [
-          "1. **Create a Backup Script:** Write a robust shell script (`backup.sh`) that uses `pg_dump` to create a compressed backup of the PostgreSQL database.",
-          "   - The script must use environment variables for the database credentials (`POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`) and the backup destination path.",
-          "   - The backup filename should include a timestamp (e.g., `sfl_db_backup_YYYY-MM-DD_HHMMSS.sql.gz`).",
-          "   - The script should include basic error handling and log its output.",
-          "2. **Docker Integration:** Provide two strategies for running this script automatically:",
-          "   - **Strategy A (Cron in a new service):** Show how to add a new service to the `docker-compose.yml` file (e.g., `db-backup`) that uses the official PostgreSQL image, mounts the backup script and a volume for backup storage, and runs the script on a cron schedule.",
-          "   - **Strategy B (Host Cron):** Explain how to run the backup script from the host machine's crontab using `docker-compose exec`.",
-          "3. **Recovery Steps:** Briefly outline the steps required to restore the database from a backup file using `pg_restore`."
-        ]
-      }
+      "title": "Synchronize Documentation with Code Implementation",
+      "description": "The `README.md` lists `OpenRouter` as a supported provider, but the `AIProviderFactory.ts` explicitly throws an error when it is called, stating it is not yet implemented. This creates an inconsistency between documentation and code. This task is to update the `README.md` to accurately reflect the current state of the code by either removing `OpenRouter` from the list of supported providers or explicitly marking its status as 'Planned' or 'Work in Progress'.",
+      "system_prompt": "Review the `README.md` and `AIProviderFactory.ts`. Identify any discrepancies between the list of supported AI providers in the documentation and their actual implementation status in the code. Update the `README.md` to accurately reflect the current state of the `AIProviderFactory.ts` file, ensuring there is no conflicting information regarding which providers are fully supported, which are in development, and which are planned. The goal is to ensure the documentation is a single source of truth for the codebase."
+    },
+    {
+      "title": "Improve JSON Parsing Robustness",
+      "description": "The `parseJsonFromText` function in `unifiedAIService.ts` uses a series of brittle strategies to extract JSON from AI-generated text, including substring extraction between the first `{` and last `}`. This can lead to parsing errors with malformed or incomplete JSON. This task is to refactor this function to be more robust, potentially by using a dedicated, fault-tolerant JSON parsing library that can handle partial or malformed content more reliably, or by implementing a more sophisticated state-machine parser. The goal is to prevent execution failures when the AI returns non-standard JSON.",
+      "system_prompt": "Analyze the `parseJsonFromText` function within `backend/src/services/unifiedAIService.ts`. The current implementation uses a series of substring-based heuristics to extract JSON content. This approach is fragile and prone to failure with non-standard AI output. Your task is to propose and implement a more robust parsing strategy. Consider using a streaming or state-based parser, or a library designed for this specific problem (e.g., `json-stream` or a similar package). The refactored function must handle edge cases gracefully, such as incomplete JSON objects or text that contains non-JSON content, and should not fail loudly."
     }
   ]
 }
