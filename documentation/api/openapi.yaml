@@ -15,11 +15,11 @@ servers:
 
 components:
   securitySchemes:
-    tempAuth:
-      type: apiKey
-      in: header
-      name: X-Temp-Auth
-      description: Temporary authentication token for development
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token-based authentication. Include the token in the Authorization header as 'Bearer <token>'
 
   schemas:
     PromptSFL:
@@ -90,7 +90,7 @@ paths:
     post:
       summary: Create a new SFL-structured prompt
       security:
-        - tempAuth: []
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -110,7 +110,7 @@ paths:
     post:
       summary: Create a new workflow
       security:
-        - tempAuth: []
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -130,7 +130,7 @@ paths:
     get:
       summary: Get AI provider status
       security:
-        - tempAuth: []
+        - bearerAuth: []
       responses:
         '200':
           description: Provider status retrieved
@@ -145,7 +145,7 @@ paths:
     post:
       summary: Generate SFL from goal
       security:
-        - tempAuth: []
+        - bearerAuth: []
       requestBody:
         content:
           application/json:

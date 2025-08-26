@@ -1,8 +1,74 @@
+## Table of Contents
+
+- [SFL Prompt Studio](#sfl-prompt-studio)
+  - [Objective](#objective)
+  - [GenAI Development Process](#genai-development-process)
+    - [Examples of how this process was used for development include](#examples-of-how-this-process-was-used-for-development-include)
+  - [Systemic Functional Linguistics Framework Implementation](#systemic-functional-linguistics-framework-implementation)
+    - [1. SFL Framework Core Components](#1-sfl-framework-core-components)
+      - [1.1 Field Component (Experiential Metafunction)](#11-field-component-experiential-metafunction)
+      - [1.2 Tenor Component (Interpersonal Metafunction)](#12-tenor-component-interpersonal-metafunction)
+      - [1.3 Mode Component (Textual Metafunction)](#13-mode-component-textual-metafunction)
+    - [1.4 Complete SFL Prompt Structure](#14-complete-sfl-prompt-structure)
+    - [1.5 SFL-to-Prompt Generation Algorithm](#15-sfl-to-prompt-generation-algorithm)
+  - [2. Prompt Wizard: AI-Powered SFL Generation](#2-prompt-wizard-ai-powered-sfl-generation)
+    - [2.1 Natural Language to SFL Conversion Process](#21-natural-language-to-sfl-conversion-process)
+    - [2.2 Iterative Refinement Capabilities](#22-iterative-refinement-capabilities)
+  - [3. Agent Orchestrator: Workflow Creation and Execution](#3-agent-orchestrator-workflow-creation-and-execution)
+    - [3.1 Natural Language to Workflow Conversion](#31-natural-language-to-workflow-conversion)
+    - [3.2 Task Dependency Resolution Algorithm](#32-task-dependency-resolution-algorithm)
+    - [3.3 Workflow Execution Engine](#33-workflow-execution-engine)
+    - [3.4 Orchestration Pattern Examples](#34-orchestration-pattern-examples)
+      - [3.4.1 Sequential Pattern](#341-sequential-pattern)
+      - [3.4.2 Fan-Out Pattern](#342-fan-out-pattern)
+      - [3.4.3 Map-Reduce Pattern](#343-map-reduce-pattern)
+  - [4. Technology Stack Specifications](#4-technology-stack-specifications)
+    - [4.1 Frontend Architecture](#41-frontend-architecture)
+    - [4.2 Backend Architecture](#42-backend-architecture)
+    - [4.3 Database Schema Design](#43-database-schema-design)
+    - [4.4 AI Provider Integration Layer](#44-ai-provider-integration-layer)
+    - [4.5 Deployment Architecture](#45-deployment-architecture)
+  - [5. Setup and Configuration Procedures](#5-setup-and-configuration-procedures)
+    - [5.1 Prerequisites Verification](#51-prerequisites-verification)
+    - [5.2 Docker-Based Installation (Recommended)](#52-docker-based-installation-recommended)
+    - [5.3 Manual Installation Procedure](#53-manual-installation-procedure)
+    - [5.4 Environment Variables Specification](#54-environment-variables-specification)
+    - [5.5 API Key Configuration and Validation](#55-api-key-configuration-and-validation)
+    - [5.6 Database Migration and Seeding](#56-database-migration-and-seeding)
+  - [6. Roadmap and Future Development](#6-roadmap-and-future-development)
+    - [6.1 Version 0.6.0 - Enhanced Multi-Provider Support](#61-version-060---enhanced-multi-provider-support)
+    - [6.2 Version 0.7.0 - Advanced Analytics and Collaboration](#62-version-070---advanced-analytics-and-collaboration)
+    - [6.3 Research and Development Initiatives](#63-research-and-development-initiatives)
+      - [6.3.1 SFL Theory Enhancement](#631-sfl-theory-enhancement)
+      - [6.3.2 AI Model Optimization](#632-ai-model-optimization)
+
 # SFL Prompt Studio
 
-## Systemic Functional Linguistics Framework Implementation
+## Objective
 
-The overarching goal of the SFL Prompt Studio is to streamline the creation and management of AI prompts and complex, multi-task AI workflows. It achieves this by implementing a framework based on Systemic Functional Linguistics (SFL) which breaks down language into three core metafunctions: Field (ideational content), Tenor (social relationships), and Mode (textual organization). The system's specific task is to programmatically generate prompts that are more effective, consistent, and contextually aware by allowing users to define these linguistic components in a structured way. The system also enables the orchestration of these prompts into multi-step workflows, addressing the need for more complex, automated AI-driven processes.
+The overarching goal of the SFL Prompt Studio is to streamline the creation and management of LLM prompts and complex, multi-task AI workflows. It achieves this by implementing a framework based on Systemic Functional Linguistics (SFL) which breaks down language into three core metafunctions: Field (ideational content), Tenor (social relationships), and Mode (textual organization). The system's specific task is to programmatically generate prompts that are more effective, consistent, and contextually aware by allowing users to define these linguistic components in a structured way. The system also enables the orchestration of these prompts into multi-step workflows.
+
+## GenAI Development Process
+
+Phase 1: Initial Development with [Google AI Studio](https://aistudio.google.com/apps)
+
+The initial application's core logic and user interface were created in [Google AI Studio](https://aistudio.google.com/apps).
+
+Phase 2: Local Development with [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview)
+
+After the initial application was defined, subsequent feature development and enhancements were conducted locally using a [collection of specialized AI subagents](https://github.com/b08x/claude-code-sub-agents) designed to use with Claude Code. The core philosophy of this phase was to delegate complex tasks to these specialized agents rather than solving them manually.
+
+The development follows the [Agent Dispatch Protocol](https://github.com/b08x/claude-code-sub-agents/blob/development/CLAUDE.md#agent-dispatch-protocol-follow-once-the-agent-organizer-sub-agent-being-called-or-used), where non-trivial tasks such as code generation, refactoring, or feature implementation are handed off to a master orchestrator agent. This agent-organizer will then assemble an optimal team of specialized subagents, manage the collaboration, and orchestrate the workflow.
+
+### Examples of how this process was used for development include
+
+  Feature Implementation: A request to "design and implement the ExportStep.tsx function" was handled by the [agent-organizer](https://github.com/b08x/claude-code-sub-agents/blob/development/agents/agent-organizer.md), which then delegated tasks to a team of agents including a [backend-architect](https://github.com/b08x/claude-code-sub-agents/blob/development/agents/development/backend-architect.md) to design the store, a [frontend-developer](https://github.com/b08x/claude-code-sub-agents/blob/development/agents/development/frontend-developer.md) to create the UI, and a [test-automator](https://github.com/b08x/claude-code-sub-agents/blob/development/agents/quality-testing/test-automator.md) to build a test suite.
+
+    Complex System Implementation: For building a complex workspace management system, a 5-agent team was assembled to handle design, architecture, and implementation across different domains.
+
+    Error Resolution: When build errors occurred, the agent-organizer used nested agent coordination to call a code-reviewer-pro to identify syntax errors and then delegated to a typescript-pro agent to systematically fix them.
+
+## Systemic Functional Linguistics Framework Implementation
 
 ### 1. SFL Framework Core Components
 
@@ -879,10 +945,6 @@ SELECT COUNT(*) FROM workflow_executions;
 ---
 
 **Version**: 0.5.1  
-**Last Updated**: January 2025  
+**Last Updated**: August 26th 2025  
 **License**: MIT  
-**Repository**: <https://github.com/your-username/sfl-prompt-studio>
-
-**Contributors**: SFL Prompt Studio Development Team  
-**Academic Advisors**: Dr. [Name], Computational Linguistics, [University]  
-**Industry Partners**: [List enterprise partners and integrations]
+**Repository**: <https://github.com/b08x/sfl-prompt-studio>
