@@ -1,29 +1,75 @@
-{
-  "backlog_tasks": [
-    {
-      "title": "Refactor Database Backup Strategy",
-      "description": "The current database backup strategy relies on a `db-backup` container with an internal cron job, which is a fragile operational pattern. This task involves refactoring the backup process to use a more reliable host-level cron job that executes the provided `backup.sh` script, ensuring backups are decoupled from the application container lifecycle.",
-      "system_prompt": "Refactor the database backup solution in the SFL Prompt Studio project. The current approach uses a container-based cron job in `docker-compose.yml` to run `backup.sh`. The new solution must remove the `db-backup` service from `docker-compose.yml` and provide a revised `documentation/DATABASE_BACKUP.md` file with instructions for setting up a host-level cron job to run the `backup.sh` script. Ensure the instructions are clear and detail the necessary host-level dependencies and configurations for the host cron job. The script should still use Docker commands to perform the backup but should be triggered from the host system."
-    },
-    {
-      "title": "Secure Secrets Manager Fallback",
-      "description": "The `SecretsManager` service in `backend/src/config/secrets.ts` has an insecure fallback mechanism that retrieves secrets from environment variables if the Vault connection fails. This is a critical security vulnerability in a production environment. This task is to remove this fallback and implement a fail-fast approach for production (`NODE_ENV=production`) where the application will not start if it cannot connect to and authenticate with Vault.",
-      "system_prompt": "Modify the `SecretsManager` service located at `backend/src/config/secrets.ts`. Your objective is to eliminate the insecure fallback to environment variables in a production environment. The service must check the `NODE_ENV` environment variable. If `NODE_ENV` is set to 'production', the service must throw an immediate error and terminate the application startup if it fails to connect to Vault or retrieve a required secret. For other environments (e.g., 'development'), the current fallback behavior can be retained. Ensure to add comments explaining the security rationale for this change."
-    },
-    {
-      "title": "Update OpenAPI Specification",
-      "description": "The OpenAPI specification at `documentation/api/openapi.yaml` is outdated and references a `tempAuth` security scheme that is no longer in use. The new authentication system is JWT-based, as implemented in `backend/src/middleware/authMiddleware.ts`. This task is to update the OpenAPI specification to accurately reflect the current API and security model, removing the old temporary scheme and correctly documenting the JWT authentication requirements for protected endpoints.",
-      "system_prompt": "Revise the OpenAPI specification file at `documentation/api/openapi.yaml`. Replace the `tempAuth` security scheme with a new JWT-based authentication scheme. For all endpoints that require authentication (e.g., `/prompts`, `/workflows`), update the `security` field to reference the new JWT scheme. Ensure the description for the security scheme and any relevant endpoint documentation is updated to reflect the use of JWT tokens. Do not change any other parts of the specification."
-    },
-    {
-      "title": "Synchronize Documentation with Code Implementation",
-      "description": "The `README.md` lists `OpenRouter` as a supported provider, but the `AIProviderFactory.ts` explicitly throws an error when it is called, stating it is not yet implemented. This creates an inconsistency between documentation and code. This task is to update the `README.md` to accurately reflect the current state of the code by either removing `OpenRouter` from the list of supported providers or explicitly marking its status as 'Planned' or 'Work in Progress'.",
-      "system_prompt": "Review the `README.md` and `AIProviderFactory.ts`. Identify any discrepancies between the list of supported AI providers in the documentation and their actual implementation status in the code. Update the `README.md` to accurately reflect the current state of the `AIProviderFactory.ts` file, ensuring there is no conflicting information regarding which providers are fully supported, which are in development, and which are planned. The goal is to ensure the documentation is a single source of truth for the codebase."
-    },
-    {
-      "title": "Improve JSON Parsing Robustness",
-      "description": "The `parseJsonFromText` function in `unifiedAIService.ts` uses a series of brittle strategies to extract JSON from AI-generated text, including substring extraction between the first `{` and last `}`. This can lead to parsing errors with malformed or incomplete JSON. This task is to refactor this function to be more robust, potentially by using a dedicated, fault-tolerant JSON parsing library that can handle partial or malformed content more reliably, or by implementing a more sophisticated state-machine parser. The goal is to prevent execution failures when the AI returns non-standard JSON.",
-      "system_prompt": "Analyze the `parseJsonFromText` function within `backend/src/services/unifiedAIService.ts`. The current implementation uses a series of substring-based heuristics to extract JSON content. This approach is fragile and prone to failure with non-standard AI output. Your task is to propose and implement a more robust parsing strategy. Consider using a streaming or state-based parser, or a library designed for this specific problem (e.g., `json-stream` or a similar package). The refactored function must handle edge cases gracefully, such as incomplete JSON objects or text that contains non-JSON content, and should not fail loudly."
-    }
-  ]
-}
+[
+  {
+    "task_id": "BACKEND-2",
+    "title": "Backend: Refactor AI Services and Factory",
+    "description": "Remove the custom `AIProviderFactory` and `BaseAIService` classes, replacing them with a new service that uses the Vercel AI SDK's unified API.",
+    "instructions": [
+      "Delete the files: `backend/src/services/ai/AIProviderFactory.ts`, `backend/src/services/ai/BaseAIService.ts`, `backend/src/services/ai/AnthropicService.ts`, `backend/src/services/ai/GeminiService.ts`, and `backend/src/services/ai/OpenAIService.ts`.",
+      "Create a new file, `backend/src/services/ai/aiSdkService.ts`.",
+      "Within `aiSdkService.ts`, import the `generateText` and `streamText` functions from the `ai` package.",
+      "Import the provider creation functions for each specific provider (e.g., `createOpenAI`, `createAnthropic`, `createGoogleGenerativeAI`, `createCohere`, `createMistral`, `createGroq`, `createOpenRouter`, `createOllama`).",
+      "Implement a function `getProviderInstance(provider: string, apiKey: string, baseUrl?: string)` that returns the correct Vercel AI SDK provider object, passing the `apiKey` and `baseUrl` where required. For Ollama, the base URL should be configurable to support local instances.",
+      "Implement a function, `generateCompletion(request)`, that uses `getProviderInstance` to get the correct provider and model, then calls `generateText` from the AI SDK, passing the prompt and parameters.",
+      "Implement `streamCompletion(request, onChunk)` using the `streamText` function from the AI SDK to handle real-time data transfer."
+    ]
+  },
+  {
+    "task_id": "BACKEND-3",
+    "title": "Backend: Update API Controllers and Services",
+    "description": "Modify API controllers to use the new `aiSdkService` and centralize API key management.",
+    "instructions": [
+      "In `backend/src/api/controllers/providerController.ts`, update `validateProvider` to use the new AI SDK provider creation functions. These functions will throw an error on an invalid key, which can be caught to determine validation failure.",
+      "Refactor the `getProviderStatus` endpoint to return a list of providers by checking for the existence of their respective API keys in environment variables or a secure store.",
+      "In `backend/src/api/controllers/geminiController.ts` and `unifiedAIService.ts`, replace all calls to the old service classes with calls to the new `aiSdkService`.",
+      "Ensure the proxy endpoints (`/api/proxy/generate`) pass the `provider`, `model`, and parameters from the request body to the `aiSdkService`."
+    ]
+  },
+  {
+    "task_id": "BACKEND-4",
+    "title": "Backend: Implement Specific Provider Details",
+    "description": "Add code to handle each provider's unique parameters and features.",
+    "instructions": [
+      "Create a centralized `model-config.ts` file that exports an object containing the supported models and their unique parameters for each provider (e.g., `top_k` for Anthropic, `safetySettings` for Google).",
+      "**For OpenRouter**: Use `createOpenRouter` and note that it supports a wide range of models and tool calls, which can be handled by passing the model name as a string.",
+      "**For Ollama**: Use a community provider like `ollama-ai-provider-v2`. The `createOllama` function can be customized with a base URL to point to a local instance.",
+      "**For Anthropic**: Use `@ai-sdk/anthropic` and handle the `system` message separately, as it is a top-level parameter in their API. Also, be aware of their cache control options (`providerOptions.anthropic.cacheControl`).",
+      "**For Cohere**: Use `@ai-sdk/cohere` and map parameters like `input_type` and `truncate` via the `providerOptions` object.",
+      "**For Mistral**: Use `@ai-sdk/mistral` and handle `safePrompt` or other provider-specific settings via `providerOptions`. The SDK also supports their native structured outputs via JSON Schema.",
+      "**For Google Generative AI**: Use `@ai-sdk/google` and implement support for `safetySettings` and other provider-specific options. Note that it also has specific requirements for implicit caching, such as minimum token counts.",
+      "**For Groq**: Use `@ai-sdk/groq` for its fast inference speeds and handle any specific parameters for reasoning formats or parallel tool calls via `providerOptions`. The SDK handles authentication with the `Authorization` header."
+    ]
+  },
+  {
+    "task_id": "FRONTEND-1",
+    "title": "Frontend: Update ProviderSwitcher Component",
+    "description": "Modify the `ProviderSwitcher.tsx` component to reflect the new provider list and remove the insecure local API key storage.",
+    "instructions": [
+      "In `frontend/components/ProviderSwitcher.tsx`, replace the `PROVIDER_CONFIGS` import from `modelCapabilities.ts`.",
+      "Create a new API client function to fetch the list of available providers and their models from a new backend endpoint (e.g., `/api/providers/available`).",
+      "Remove all logic related to `localStorage.getItem` and `localStorage.setItem` for API keys, as keys should no longer be handled on the client side.",
+      "Adjust the component state and logic to correctly display the providers and models returned from the backend, and update the UI to use the new models.",
+      "Remove the API key status check logic from the UI since API keys will be managed securely on the backend."
+    ]
+  },
+  {
+    "task_id": "FRONTEND-2",
+    "title": "Frontend: Implement New API Client for AI Calls",
+    "description": "Refactor the frontend's AI service to make streaming API calls to the refactored backend.",
+    "instructions": [
+      "In `frontend/services/aiService.ts`, refactor the `testPrompt` and other AI-related functions.",
+      "Update the API calls to match the new backend endpoints, ensuring the request body correctly sends the selected `provider`, `model`, and `parameters`.",
+      "Implement a new function to handle **streaming responses** by fetching the data stream and updating the UI in real-time. This can be done with a library like `useChat` from `@ai-sdk/react` if the frontend is a React application using the Next.js App Router."
+    ]
+  },
+  {
+    "task_id": "TESTING-1",
+    "title": "Testing: Create Unit and Integration Tests",
+    "description": "Write and update tests to validate the Vercel AI SDK integration.",
+    "instructions": [
+      "Create a set of new integration tests that call the backend's `/api/proxy/generate` endpoint for each supported provider (OpenRouter, Ollama, Anthropic, Cohere, Mistral, Google Generative AI, and Groq).",
+      "For each provider, verify that the response is received and that the output is as expected.",
+      "Specifically test the streaming functionality to ensure data is returned in chunks and that the full response is properly reconstructed.",
+      "Validate that passing provider-specific parameters (e.g., `safetySettings` for Google) correctly influences the model's behavior without causing errors."
+    ]
+  }
+]

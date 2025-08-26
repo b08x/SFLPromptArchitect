@@ -1,0 +1,92 @@
+[
+  {
+    "task_id": "UI-SETTINGS-1",
+    "title": "Frontend: Create Dynamic Provider-Specific Settings UI",
+    "description": "Refactor the UI settings page to dynamically render different control panels based on the selected AI provider. This will replace the single, static settings form.",
+    "instructions": [
+      "Navigate to the `frontend/components/settings/ProviderSetupPage.tsx` file.",
+      "Replace the static form with a new component that conditionally renders different sub-components for each provider (e.g., `<OpenAISettings />`, `<AnthropicSettings />`, `<OllamaSettings />`).",
+      "Implement a `switch` statement or a mapping object to select which sub-component to render based on the active provider from the application state.",
+      "Ensure the core `ProviderSetupPage` component passes the necessary configuration data and update functions down to the specific settings components.",
+      "Add a default 'unsupported' or 'coming soon' view for providers that don't yet have dedicated settings UI."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-2",
+    "title": "Frontend: Implement Specific Settings for Anthropic Models",
+    "description": "Create a dedicated UI component for Anthropic models, exposing parameters like 'top_p', 'top_k', 'temperature', and the 'system' message field.",
+    "instructions": [
+      "Create a new file at `frontend/components/settings/AnthropicSettings.tsx`.",
+      "Inside this component, use standard UI controls (sliders, number inputs, text areas) to manage the following parameters: `temperature` (range 0-1), `top_p` (range 0-1), `top_k` (range 0-200), and `maxTokens` (range 1-8192).",
+      "Include a text area for the `system` message parameter.",
+      "On each change, call a prop function (e.g., `onUpdate`) passed from the parent component to update the application state with the new values.",
+      "This UI will be a sub-component rendered by `ProviderSetupPage.tsx`."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-3",
+    "title": "Frontend: Implement Specific Settings for Google Generative AI Models",
+    "description": "Create a dedicated UI component for Google Gemini models, including specific controls for 'thinking budgets' and safety settings.",
+    "instructions": [
+      "Create a new file at `frontend/components/settings/GeminiSettings.tsx`.",
+      "Add UI controls for `temperature` (range 0-2), `topK` (range 1-40), and `topP` (range 0-1).",
+      "Implement an advanced section with a number input for `thinkingBudget`, a feature available on Gemini 2.5 Pro, 2.5 Flash, and 2.5 Flash-Lite models. The control should have a slider and number input with a tooltip explaining its purpose: to limit the number of tokens the model uses for internal reasoning.",
+      "Include an option to set `thinkingBudget` to `-1` for dynamic thinking and `0` to disable it, per the Gemini API documentation.",
+      "Add a collapsible section for `safetySettings` with dropdowns or radio buttons for each category (e.g., Harmful, Sexual, etc.) and a threshold level (e.g., `HARM_BLOCK_NONE`, `HARM_BLOCK_LOW_AND_ABOVE`).",
+      "The UI should only show the `thinkingBudget` control when a thinking-capable model (like `gemini-2.5-pro` or `gemini-2.5-flash`) is selected, demonstrating a dynamic UI pattern."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-4",
+    "title": "Frontend: Implement Specific Settings for OpenRouter and Groq Models",
+    "description": "Create a UI component for providers that act as gateways, like OpenRouter and Groq, handling their specific capabilities and parameters.",
+    "instructions": [
+      "Create a new file at `frontend/components/settings/OpenRouterSettings.tsx`.",
+      "For OpenRouter, the primary UI element will be a dropdown to select from the wide range of supported models. The list of models should be fetched from the backend's `getImplementedProviders` endpoint.",
+      "For Groq, the UI will be a simplified version, primarily including a model selector and standard parameters like `temperature` and `maxTokens`."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-5",
+    "title": "Frontend: Implement Specific Settings for Ollama Models",
+    "description": "Create a dedicated UI component for Ollama models, including a configurable base URL and model selection.",
+    "instructions": [
+      "Create a new file at `frontend/components/settings/OllamaSettings.tsx`.",
+      "Add a text input field for the `baseURL`, with a default value of `http://localhost:11434` or a similar local address. The UI should provide a clear label indicating this is for a local server instance.",
+      "Include a dropdown or list for model selection. This list should be populated dynamically from the backend, which in turn would query the local Ollama instance for available models.",
+      "Include a button to test the connection to the specified base URL.",
+      "Add a status indicator (e.g., a green/red dot) to show the connection status."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-6",
+    "title": "Frontend: Implement Token Management Settings",
+    "description": "Add UI controls and indicators for token management, which are crucial for cost and performance control, especially for long contexts.",
+    "instructions": [
+      "Add a `maxTokens` input field to each provider's settings component, ensuring the valid range is enforced based on the provider's capabilities.",
+      "Integrate a live token counter that estimates the number of tokens in the user's prompt and conversation history. This gives the user a visual budget indicator.",
+      "Display a warning or a visual indicator when the total estimated tokens exceed the model's `maxTokens` limit, which is a common reason for incomplete responses."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-7",
+    "title": "Frontend: Update ProviderSwitcher to Fetch Models and Capabilities",
+    "description": "Refactor `ProviderSwitcher.tsx` to fetch the list of available providers, models, and their capabilities from the backend instead of using a hardcoded configuration.",
+    "instructions": [
+      "Update `frontend/components/ProviderSwitcher.tsx` to remove the hardcoded `PROVIDER_CONFIGS` import.",
+      "Use the `fetch` API or a dedicated service to call the backend's new API endpoint (e.g., `/api/providers/capabilities`) that returns a dynamic list of supported providers and their models and parameters.",
+      "Use this fetched data to populate the provider and model dropdowns dynamically, ensuring the UI reflects the backend's live configuration.",
+      "The component should show a loading state while fetching the data and an error state if the API call fails."
+    ]
+  },
+  {
+    "task_id": "UI-SETTINGS-8",
+    "title": "Frontend: Final Integration and Testing",
+    "description": "Ensure that the refactored UI correctly interacts with the backend and that all settings are applied correctly to API calls.",
+    "instructions": [
+      "Perform end-to-end testing to verify that selecting a provider, model, and adjusting parameters in the UI correctly sends the corresponding data to the backend.",
+      "Confirm that the backend applies these parameters correctly to the Vercel AI SDK calls.",
+      "Test edge cases, such as entering an invalid `thinkingBudget` value or a `maxTokens` value outside the supported range, and ensure the UI provides appropriate error messages."
+    ]
+  }
+]
