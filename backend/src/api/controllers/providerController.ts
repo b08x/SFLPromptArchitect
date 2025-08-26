@@ -12,9 +12,16 @@ import {
   hasValidProvider,
   getPreferredProvider,
   validateProviderApiKey,
-  type AIProvider,
+  type AIProvider as ValidatedAIProvider,
 } from '../../services/providerValidationService';
+import {
+  testProviderConnection,
+  getProviderInstance,
+  getSupportedProviders,
+  AIServiceError
+} from '../../services/ai/aiSdkService';
 import { UnifiedAIService } from '../../services/unifiedAIService';
+import { AIProvider } from '../../types/aiProvider';
 
 /**
  * Interface for session-stored API keys with encryption
@@ -135,9 +142,9 @@ class ProviderController {
         return;
       }
 
-      // Validate provider type
-      const validProviders: AIProvider[] = ['google', 'openai', 'openrouter', 'anthropic'];
-      if (!validProviders.includes(provider)) {
+      // Validate provider type using supported providers from aiSdkService
+      const validProviders = getSupportedProviders();
+      if (!validProviders.includes(provider as AIProvider)) {
         res.status(400).json({
           success: false,
           error: `Invalid provider. Must be one of: ${validProviders.join(', ')}`,
@@ -145,15 +152,53 @@ class ProviderController {
         return;
       }
 
-      const result = await validateProviderApiKey(provider, apiKey, baseUrl);
-
-      res.json({
-        success: true,
-        data: {
-          provider,
-          validation: result,
-        },
-      });
+      // Use aiSdkService to validate the provider by testing connection
+      try {
+        const isValid = await testProviderConnection(provider as AIProvider, apiKey, baseUrl);
+        const result = {
+          success: isValid,
+          error: isValid ? undefined : 'API key validation failed'
+        };
+        
+        // Additional validation using provider instance creation
+        if (isValid) {
+          try {
+            getProviderInstance(provider as AIProvider, apiKey, baseUrl);
+          } catch (error) {
+            if (error instanceof AIServiceError) {
+              res.json({
+                success: true,
+                data: {
+                  provider,
+                  validation: { success: false, error: error.message },
+                },
+              });
+              return;
+            }
+            throw error;
+          }
+        }
+        
+        res.json({
+          success: true,
+          data: {
+            provider,
+            validation: result,
+          },
+        });
+      } catch (error) {
+        const errorMessage = error instanceof AIServiceError 
+          ? error.message 
+          : 'Provider validation failed';
+        
+        res.json({
+          success: true,
+          data: {
+            provider,
+            validation: { success: false, error: errorMessage },
+          },
+        });
+      }
     } catch (error) {
       console.error('Error validating provider:', error);
       res.status(500).json({
@@ -219,9 +264,9 @@ class ProviderController {
         return;
       }
 
-      // Validate provider type
-      const validProviders: AIProvider[] = ['google', 'openai', 'openrouter', 'anthropic'];
-      if (!validProviders.includes(provider)) {
+      // Validate provider type using supported providers from aiSdkService
+      const validProviders = getSupportedProviders();
+      if (!validProviders.includes(provider as AIProvider)) {
         res.status(400).json({
           success: false,
           error: `Invalid provider. Must be one of: ${validProviders.join(', ')}`,
@@ -239,12 +284,27 @@ class ProviderController {
         return;
       }
 
-      // Validate the API key before storing
-      const validation = await validateProviderApiKey(provider, sanitizedApiKey, baseUrl);
-      if (!validation.success) {
+      // Validate the API key before storing using aiSdkService
+      try {
+        const isValid = await testProviderConnection(provider as AIProvider, sanitizedApiKey, baseUrl);
+        if (!isValid) {
+          res.status(400).json({
+            success: false,
+            error: 'Invalid API key: Provider validation failed',
+          });
+          return;
+        }
+        
+        // Additional validation using provider instance creation
+        getProviderInstance(provider as AIProvider, sanitizedApiKey, baseUrl);
+      } catch (error) {
+        const errorMessage = error instanceof AIServiceError 
+          ? error.message 
+          : 'API key validation failed';
+        
         res.status(400).json({
           success: false,
-          error: `Invalid API key: ${validation.error}`,
+          error: `Invalid API key: ${errorMessage}`,
         });
         return;
       }
@@ -311,9 +371,9 @@ class ProviderController {
         return;
       }
 
-      // Validate provider type
-      const validProviders: AIProvider[] = ['google', 'openai', 'openrouter', 'anthropic'];
-      if (!validProviders.includes(provider)) {
+      // Validate provider type using supported providers from aiSdkService
+      const validProviders = getSupportedProviders();
+      if (!validProviders.includes(provider as AIProvider)) {
         res.status(400).json({
           success: false,
           error: `Invalid provider. Must be one of: ${validProviders.join(', ')}`,

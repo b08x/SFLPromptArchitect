@@ -257,6 +257,10 @@ export class SecretsManager {
       'openai_api_key': 'OPENAI_API_KEY',
       'anthropic_api_key': 'ANTHROPIC_API_KEY',
       'openrouter_api_key': 'OPENROUTER_API_KEY',
+      'ollama_api_key': 'OLLAMA_API_KEY',
+      'cohere_api_key': 'COHERE_API_KEY',
+      'mistral_api_key': 'MISTRAL_API_KEY',
+      'groq_api_key': 'GROQ_API_KEY',
       'database_url': 'DATABASE_URL',
       'redis_url': 'REDIS_URL',
       'jwt_secret': 'JWT_SECRET',
@@ -282,12 +286,16 @@ export class SecretsManager {
       'google': 'google_ai_api_key',
       'openai': 'openai_api_key',
       'anthropic': 'anthropic_api_key',
-      'openrouter': 'openrouter_api_key'
+      'openrouter': 'openrouter_api_key',
+      'ollama': 'ollama_api_key',
+      'cohere': 'cohere_api_key',
+      'mistral': 'mistral_api_key',
+      'groq': 'groq_api_key'
     };
 
     const secretKey = keyMap[provider];
     if (!secretKey) {
-      throw new Error(`Unknown AI provider: ${provider}`);
+      throw new Error(`Unknown AI provider: ${provider}. Supported providers: ${Object.keys(keyMap).join(', ')}`);
     }
 
     return this.getSecret('ai-providers', secretKey);

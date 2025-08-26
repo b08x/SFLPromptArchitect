@@ -5,8 +5,7 @@
  * Acts as a bridge between the legacy GeminiService interface and the new multi-provider architecture.
  */
 
-import { aiProviderFactory } from './ai/AIProviderFactory';
-import { BaseAIService, AIServiceConfig } from './ai/BaseAIService';
+import { generateCompletion, CompletionRequest, AIResponse, AIServiceError } from './ai/aiSdkService';
 import { AIProvider, AIRequest, ModelParameters } from '../types/aiProvider';
 import { PromptSFL, Workflow } from '../types';
 import GeminiService from './geminiService';
@@ -79,169 +78,225 @@ export class UnifiedAIService {
 
   /**
    * Test a prompt with specified or default provider
-   * Now supports session-aware API key retrieval
+   * Now uses aiSdkService for all providers including Google
    */
   async testPrompt(
     promptText: string, 
     providerConfig?: ProviderAwareRequest | SessionAwareRequest
   ): Promise<string> {
-    if (!providerConfig?.provider || providerConfig.provider === 'google') {
-      // Use legacy Gemini service for backward compatibility
-      return await GeminiService.testPrompt(promptText);
+    try {
+      // Default to Google provider if none specified (backward compatibility)
+      const provider = providerConfig?.provider || 'google';
+      
+      // Use new aiSdkService for all providers
+      const apiKey = await this.getApiKey({
+        ...providerConfig,
+        provider
+      });
+      
+      const request: CompletionRequest = {
+        provider,
+        model: providerConfig?.model || this.getDefaultModelForProvider(provider),
+        parameters: providerConfig?.parameters || this.getDefaultParametersForProvider(provider),
+        prompt: promptText,
+        apiKey,
+        baseUrl: providerConfig?.baseUrl
+      };
+
+      const response = await generateCompletion(request);
+      return response.text;
+    } catch (error) {
+      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
+      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
+          !(error instanceof AIServiceError)) {
+        console.warn('aiSdkService failed for Google provider, falling back to legacy GeminiService:', error);
+        return await GeminiService.testPrompt(promptText);
+      }
+      throw error;
     }
-
-    // Use new provider system
-    const aiService = await this.createAIService(providerConfig);
-    const request: AIRequest = {
-      provider: providerConfig.provider,
-      model: providerConfig.model || this.getDefaultModelForProvider(providerConfig.provider),
-      parameters: providerConfig.parameters || this.getDefaultParametersForProvider(providerConfig.provider),
-      prompt: promptText
-    };
-
-    const response = await aiService.generateCompletion(request);
-    return response.text;
   }
 
   /**
    * Generate SFL prompt from goal with specified or default provider
+   * Now uses aiSdkService for all providers
    */
   async generateSFLFromGoal(
     goal: string,
     sourceDocContent?: string,
     providerConfig?: ProviderAwareRequest
   ): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> {
-    if (!providerConfig?.provider || providerConfig.provider === 'google') {
-      // Use legacy Gemini service for backward compatibility
-      return await GeminiService.generateSFLFromGoal(goal, sourceDocContent);
+    try {
+      // Default to Google provider if none specified (backward compatibility)
+      const provider = providerConfig?.provider || 'google';
+      
+      // Use aiSdkService for all providers
+      const apiKey = await this.getApiKey({
+        ...providerConfig,
+        provider
+      });
+      const systemInstruction = this.getSFLSystemInstruction();
+      
+      const userContent = sourceDocContent
+        ? `Source document for style reference:\n\n---\n\n${sourceDocContent}\n\n----\n\nUser's goal: "${goal}"`
+        : `Here is the user's goal: "${goal}"`;
+
+      const request: CompletionRequest = {
+        provider,
+        model: providerConfig?.model || this.getDefaultModelForProvider(provider),
+        parameters: providerConfig?.parameters || this.getDefaultParametersForProvider(provider),
+        prompt: userContent,
+        systemMessage: systemInstruction,
+        apiKey,
+        baseUrl: providerConfig?.baseUrl
+      };
+
+      const response = await generateCompletion(request);
+      const jsonData = this.parseJsonFromText(response.text);
+      
+      // Ensure targetAudience is an array
+      if (jsonData.sflTenor && typeof jsonData.sflTenor.targetAudience === 'string') {
+        jsonData.sflTenor.targetAudience = [jsonData.sflTenor.targetAudience];
+      }
+      if (jsonData.sflTenor && !jsonData.sflTenor.targetAudience) {
+        jsonData.sflTenor.targetAudience = [];
+      }
+
+      return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
+    } catch (error) {
+      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
+      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
+          !(error instanceof AIServiceError)) {
+        console.warn('aiSdkService failed for Google provider SFL generation, falling back to legacy GeminiService:', error);
+        return await GeminiService.generateSFLFromGoal(goal, sourceDocContent);
+      }
+      throw error;
     }
-
-    // For non-Gemini providers, we need to adapt the prompt structure
-    const aiService = await this.createAIService(providerConfig);
-    const systemInstruction = this.getSFLSystemInstruction();
-    
-    const userContent = sourceDocContent
-      ? `Source document for style reference:\n\n---\n\n${sourceDocContent}\n\n----\n\nUser's goal: "${goal}"`
-      : `Here is the user's goal: "${goal}"`;
-
-    const request: AIRequest = {
-      provider: providerConfig.provider,
-      model: providerConfig.model || this.getDefaultModelForProvider(providerConfig.provider),
-      parameters: providerConfig.parameters || this.getDefaultParametersForProvider(providerConfig.provider),
-      prompt: userContent,
-      systemMessage: systemInstruction
-    };
-
-    const response = await aiService.generateCompletion(request);
-    const jsonData = this.parseJsonFromText(response.text);
-    
-    // Ensure targetAudience is an array
-    if (jsonData.sflTenor && typeof jsonData.sflTenor.targetAudience === 'string') {
-      jsonData.sflTenor.targetAudience = [jsonData.sflTenor.targetAudience];
-    }
-    if (jsonData.sflTenor && !jsonData.sflTenor.targetAudience) {
-      jsonData.sflTenor.targetAudience = [];
-    }
-
-    return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
   }
 
   /**
    * Regenerate SFL prompt from suggestion with specified or default provider
+   * Now uses aiSdkService for all providers
    */
   async regenerateSFLFromSuggestion(
     currentPrompt: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>,
     suggestion: string,
     providerConfig?: ProviderAwareRequest
   ): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> {
-    if (!providerConfig?.provider || providerConfig.provider === 'google') {
-      // Use legacy Gemini service for backward compatibility
-      return await GeminiService.regenerateSFLFromSuggestion(currentPrompt, suggestion);
+    try {
+      // Default to Google provider if none specified (backward compatibility)
+      const provider = providerConfig?.provider || 'google';
+      
+      // Use aiSdkService for all providers
+      const apiKey = await this.getApiKey({
+        ...providerConfig,
+        provider
+      });
+      const systemInstruction = this.getSFLRegenerationSystemInstruction();
+      
+      const { sourceDocument, ...promptForPayload } = currentPrompt;
+      const userContent = `
+      Here is the current prompt JSON:
+      ${JSON.stringify(promptForPayload)}
+      
+      ${sourceDocument ? `This prompt is associated with the following source document for stylistic reference:\n---\n${sourceDocument.content}\n---\n` : ''}
+
+      Here is my suggestion for how to change it:
+      "${suggestion}"
+
+      Now, provide the complete, revised JSON object.
+      `;
+
+      const request: CompletionRequest = {
+        provider,
+        model: providerConfig?.model || this.getDefaultModelForProvider(provider),
+        parameters: providerConfig?.parameters || this.getDefaultParametersForProvider(provider),
+        prompt: userContent,
+        systemMessage: systemInstruction,
+        apiKey,
+        baseUrl: providerConfig?.baseUrl
+      };
+
+      const response = await generateCompletion(request);
+      const jsonData = this.parseJsonFromText(response.text);
+      
+      // Ensure targetAudience is an array
+      if (jsonData.sflTenor && typeof jsonData.sflTenor.targetAudience === 'string') {
+        jsonData.sflTenor.targetAudience = [jsonData.sflTenor.targetAudience];
+      }
+      if (jsonData.sflTenor && !jsonData.sflTenor.targetAudience) {
+        jsonData.sflTenor.targetAudience = [];
+      }
+      
+      // Preserve the source document from the original prompt
+      jsonData.sourceDocument = sourceDocument;
+
+      return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
+    } catch (error) {
+      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
+      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
+          !(error instanceof AIServiceError)) {
+        console.warn('aiSdkService failed for Google provider SFL regeneration, falling back to legacy GeminiService:', error);
+        return await GeminiService.regenerateSFLFromSuggestion(currentPrompt, suggestion);
+      }
+      throw error;
     }
-
-    // For non-Gemini providers, we need to adapt the prompt structure
-    const aiService = await this.createAIService(providerConfig);
-    const systemInstruction = this.getSFLRegenerationSystemInstruction();
-    
-    const { sourceDocument, ...promptForPayload } = currentPrompt;
-    const userContent = `
-    Here is the current prompt JSON:
-    ${JSON.stringify(promptForPayload)}
-    
-    ${sourceDocument ? `This prompt is associated with the following source document for stylistic reference:\n---\n${sourceDocument.content}\n---\n` : ''}
-
-    Here is my suggestion for how to change it:
-    "${suggestion}"
-
-    Now, provide the complete, revised JSON object.
-    `;
-
-    const request: AIRequest = {
-      provider: providerConfig.provider,
-      model: providerConfig.model || this.getDefaultModelForProvider(providerConfig.provider),
-      parameters: providerConfig.parameters || this.getDefaultParametersForProvider(providerConfig.provider),
-      prompt: userContent,
-      systemMessage: systemInstruction
-    };
-
-    const response = await aiService.generateCompletion(request);
-    const jsonData = this.parseJsonFromText(response.text);
-    
-    // Ensure targetAudience is an array
-    if (jsonData.sflTenor && typeof jsonData.sflTenor.targetAudience === 'string') {
-      jsonData.sflTenor.targetAudience = [jsonData.sflTenor.targetAudience];
-    }
-    if (jsonData.sflTenor && !jsonData.sflTenor.targetAudience) {
-      jsonData.sflTenor.targetAudience = [];
-    }
-    
-    // Preserve the source document from the original prompt
-    jsonData.sourceDocument = sourceDocument;
-
-    return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
   }
 
   /**
    * Generate workflow from goal with specified or default provider
+   * Now uses aiSdkService for all providers
    */
   async generateWorkflowFromGoal(
     goal: string,
     providerConfig?: ProviderAwareRequest
   ): Promise<Workflow> {
-    if (!providerConfig?.provider || providerConfig.provider === 'google') {
-      // Use legacy Gemini service for backward compatibility
-      return await GeminiService.generateWorkflowFromGoal(goal);
+    try {
+      // Default to Google provider if none specified (backward compatibility)
+      const provider = providerConfig?.provider || 'google';
+      
+      // Use aiSdkService for all providers
+      const apiKey = await this.getApiKey({
+        ...providerConfig,
+        provider
+      });
+      const systemInstruction = this.getWorkflowSystemInstruction();
+
+      const request: CompletionRequest = {
+        provider,
+        model: providerConfig?.model || this.getDefaultModelForProvider(provider),
+        parameters: providerConfig?.parameters || this.getDefaultParametersForProvider(provider),
+        prompt: `User's goal: "${goal}"`,
+        systemMessage: systemInstruction,
+        apiKey,
+        baseUrl: providerConfig?.baseUrl
+      };
+
+      const response = await generateCompletion(request);
+      const jsonData = this.parseJsonFromText(response.text);
+      
+      if (!jsonData.name || !jsonData.description || !Array.isArray(jsonData.tasks)) {
+        throw new Error("Generated workflow is missing required fields (name, description, tasks).");
+      }
+      
+      jsonData.id = `wf-custom-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+
+      return jsonData as Workflow;
+    } catch (error) {
+      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
+      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
+          !(error instanceof AIServiceError)) {
+        console.warn('aiSdkService failed for Google provider workflow generation, falling back to legacy GeminiService:', error);
+        return await GeminiService.generateWorkflowFromGoal(goal);
+      }
+      throw error;
     }
-
-    // For non-Gemini providers, we need to adapt the prompt structure
-    const aiService = await this.createAIService(providerConfig);
-    const systemInstruction = this.getWorkflowSystemInstruction();
-
-    const request: AIRequest = {
-      provider: providerConfig.provider,
-      model: providerConfig.model || this.getDefaultModelForProvider(providerConfig.provider),
-      parameters: providerConfig.parameters || this.getDefaultParametersForProvider(providerConfig.provider),
-      prompt: `User's goal: "${goal}"`,
-      systemMessage: systemInstruction
-    };
-
-    const response = await aiService.generateCompletion(request);
-    const jsonData = this.parseJsonFromText(response.text);
-    
-    if (!jsonData.name || !jsonData.description || !Array.isArray(jsonData.tasks)) {
-      throw new Error("Generated workflow is missing required fields (name, description, tasks).");
-    }
-    
-    jsonData.id = `wf-custom-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-
-    return jsonData as Workflow;
   }
 
   /**
-   * Create AI service instance for the specified provider
+   * Get API key for the specified provider from various sources
    * Now supports session-aware API key retrieval and secure configuration
    */
-  private async createAIService(config: ProviderAwareRequest | SessionAwareRequest): Promise<BaseAIService> {
+  private async getApiKey(config: ProviderAwareRequest | SessionAwareRequest): Promise<string> {
     if (!config.provider) {
       throw new Error('Provider is required');
     }
@@ -275,18 +330,7 @@ export class UnifiedAIService {
       throw new Error(`No API key available for provider: ${config.provider}`);
     }
 
-    let baseUrl = config.baseUrl;
-    if (!baseUrl && 'sessionBaseUrls' in config && config.sessionBaseUrls) {
-      baseUrl = config.sessionBaseUrls[config.provider];
-    }
-
-    const serviceConfig: AIServiceConfig = {
-      apiKey,
-      baseUrl,
-      timeout: 30000
-    };
-
-    return aiProviderFactory.createService(config.provider, serviceConfig);
+    return apiKey;
   }
 
   /**
@@ -332,6 +376,14 @@ export class UnifiedAIService {
           return process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || '';
         case 'openrouter':
           return process.env.OPENROUTER_API_KEY || '';
+        case 'ollama':
+          return process.env.OLLAMA_API_KEY || 'local';
+        case 'cohere':
+          return process.env.COHERE_API_KEY || '';
+        case 'mistral':
+          return process.env.MISTRAL_API_KEY || '';
+        case 'groq':
+          return process.env.GROQ_API_KEY || '';
         default:
           throw new Error(`No API key found for provider: ${provider}`);
       }
@@ -351,6 +403,14 @@ export class UnifiedAIService {
         return 'gemini-2.5-flash';
       case 'openrouter':
         return 'openai/gpt-4';
+      case 'ollama':
+        return 'llama3.2:1b';
+      case 'cohere':
+        return 'command';
+      case 'mistral':
+        return 'mistral-tiny';
+      case 'groq':
+        return 'llama3-8b-8192';
       default:
         throw new Error(`No default model configured for provider: ${provider}`);
     }
@@ -391,6 +451,28 @@ export class UnifiedAIService {
           top_p: 1.0,
           presence_penalty: 0,
           frequency_penalty: 0
+        };
+      case 'ollama':
+        return {
+          ...baseParams,
+          top_p: 1.0,
+          top_k: 40
+        };
+      case 'cohere':
+        return {
+          ...baseParams,
+          p: 1.0,
+          k: 0
+        };
+      case 'mistral':
+        return {
+          ...baseParams,
+          top_p: 1.0
+        };
+      case 'groq':
+        return {
+          ...baseParams,
+          top_p: 1.0
         };
       default:
         return baseParams;

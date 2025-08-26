@@ -6,7 +6,7 @@
 
 import config from '../config/env';
 
-export type AIProvider = 'google' | 'openai' | 'openrouter' | 'anthropic';
+export type AIProvider = 'google' | 'openai' | 'openrouter' | 'anthropic' | 'ollama' | 'cohere' | 'mistral' | 'groq';
 
 export interface ProviderConfig {
   apiKey: string;
@@ -31,11 +31,24 @@ export interface ProviderAvailability {
  * @returns Promise resolving to array of provider availability information
  */
 export async function detectAvailableProviders(): Promise<ProviderAvailability[]> {
-  const [geminiApiKey, openaiApiKey, openrouterApiKey, anthropicApiKey] = await Promise.all([
+  const [
+    geminiApiKey, 
+    openaiApiKey, 
+    openrouterApiKey, 
+    anthropicApiKey,
+    ollamaApiKey,
+    cohereApiKey,
+    mistralApiKey,
+    groqApiKey
+  ] = await Promise.all([
     config.getGeminiApiKey().catch(() => ''),
     config.getOpenaiApiKey().catch(() => ''),
     config.getOpenrouterApiKey().catch(() => ''),
-    config.getAnthropicApiKey().catch(() => '')
+    config.getAnthropicApiKey().catch(() => ''),
+    config.getOllamaApiKey().catch(() => ''),
+    config.getCohereApiKey().catch(() => ''),
+    config.getMistralApiKey().catch(() => ''),
+    config.getGroqApiKey().catch(() => '')
   ]);
 
   const providers: ProviderAvailability[] = [
@@ -58,6 +71,26 @@ export async function detectAvailableProviders(): Promise<ProviderAvailability[]
       provider: 'anthropic',
       hasApiKey: !!anthropicApiKey,
       isConfigured: !!(anthropicApiKey && config.anthropicDefaultModel),
+    },
+    {
+      provider: 'ollama',
+      hasApiKey: !!ollamaApiKey || true, // Ollama can work without API key for local instances
+      isConfigured: !!(config.ollamaDefaultModel), // Only need default model
+    },
+    {
+      provider: 'cohere',
+      hasApiKey: !!cohereApiKey,
+      isConfigured: !!(cohereApiKey && config.cohereDefaultModel),
+    },
+    {
+      provider: 'mistral',
+      hasApiKey: !!mistralApiKey,
+      isConfigured: !!(mistralApiKey && config.mistralDefaultModel),
+    },
+    {
+      provider: 'groq',
+      hasApiKey: !!groqApiKey,
+      isConfigured: !!(groqApiKey && config.groqDefaultModel),
     },
   ];
 
@@ -106,6 +139,42 @@ export async function getProviderConfig(provider: AIProvider): Promise<ProviderC
         return {
           apiKey,
           defaultModel: config.anthropicDefaultModel,
+        };
+      }
+
+      case 'ollama': {
+        const apiKey = await config.getOllamaApiKey().catch(() => 'local');
+        return {
+          apiKey: apiKey || 'local', // Ollama can work with local mode
+          defaultModel: config.ollamaDefaultModel,
+          baseUrl: 'http://localhost:11434',
+        };
+      }
+
+      case 'cohere': {
+        const apiKey = await config.getCohereApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.cohereDefaultModel,
+        };
+      }
+
+      case 'mistral': {
+        const apiKey = await config.getMistralApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.mistralDefaultModel,
+        };
+      }
+
+      case 'groq': {
+        const apiKey = await config.getGroqApiKey();
+        if (!apiKey) return null;
+        return {
+          apiKey,
+          defaultModel: config.groqDefaultModel,
         };
       }
 

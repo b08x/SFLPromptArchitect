@@ -37,6 +37,14 @@ interface Config {
   getOpenrouterApiKey(): Promise<string>;
   /** Get the API key for accessing Anthropic's Claude service */
   getAnthropicApiKey(): Promise<string>;
+  /** Get the API key for accessing Ollama service */
+  getOllamaApiKey(): Promise<string>;
+  /** Get the API key for accessing Cohere service */
+  getCohereApiKey(): Promise<string>;
+  /** Get the API key for accessing Mistral service */
+  getMistralApiKey(): Promise<string>;
+  /** Get the API key for accessing Groq service */
+  getGroqApiKey(): Promise<string>;
   /** Get JWT signing secret */
   getJWTSecret(): Promise<string>;
   /** Get session secret */
@@ -57,6 +65,14 @@ interface Config {
   openrouterBaseUrl: string;
   /** Anthropic default model */
   anthropicDefaultModel: string;
+  /** Ollama default model */
+  ollamaDefaultModel: string;
+  /** Cohere default model */
+  cohereDefaultModel: string;
+  /** Mistral default model */
+  mistralDefaultModel: string;
+  /** Groq default model */
+  groqDefaultModel: string;
   /** Whether grounding is enabled */
   enableGrounding: boolean;
   /** The current environment (development, production, test) */
@@ -113,6 +129,22 @@ export default {
     return await secretsManager.getProviderApiKey('anthropic');
   },
 
+  async getOllamaApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('ollama');
+  },
+
+  async getCohereApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('cohere');
+  },
+
+  async getMistralApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('mistral');
+  },
+
+  async getGroqApiKey(): Promise<string> {
+    return await secretsManager.getProviderApiKey('groq');
+  },
+
   async getJWTSecret(): Promise<string> {
     return await secretsManager.getJWTSecret();
   },
@@ -133,6 +165,10 @@ export default {
   openrouterDefaultModel: process.env.OPENROUTER_DEFAULT_MODEL || 'openai/gpt-4',
   openrouterBaseUrl: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
   anthropicDefaultModel: process.env.ANTHROPIC_DEFAULT_MODEL || 'claude-3-sonnet',
+  ollamaDefaultModel: process.env.OLLAMA_DEFAULT_MODEL || 'llama3.2:1b',
+  cohereDefaultModel: process.env.COHERE_DEFAULT_MODEL || 'command',
+  mistralDefaultModel: process.env.MISTRAL_DEFAULT_MODEL || 'mistral-tiny',
+  groqDefaultModel: process.env.GROQ_DEFAULT_MODEL || 'llama3-8b-8192',
   enableGrounding: process.env.ENABLE_GROUNDING === 'true',
   nodeEnv: process.env.NODE_ENV || 'development',
   port: process.env.PORT || 4000,

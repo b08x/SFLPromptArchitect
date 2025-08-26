@@ -13,8 +13,8 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Workflow, Task } from '../types';
 import { buildOrchestratorPrompt } from '../prompts/orchestratorPrompt';
 import { validateWorkflow, hasCircularDependencies, ValidationResult, ValidatedWorkflow } from '../validation/workflowSchemas';
-import { createGeminiOrchestrationService, GeminiOrchestrationService } from './ai/GeminiService';
-import { AIServiceConfig } from './ai/BaseAIService';
+// These services are being refactored - using legacy Gemini service for now
+import GeminiService from './geminiService';
 
 /**
  * @constant {string|undefined} API_KEY
@@ -28,14 +28,18 @@ if (!API_KEY) {
 }
 
 /**
- * @constant {GeminiOrchestrationService} orchestrationService
+ * @constant {any} orchestrationService
  * @description Enhanced Gemini service with guaranteed JSON mode for orchestration.
  * @private
  */
-const orchestrationService = createGeminiOrchestrationService({
-  apiKey: API_KEY || "MISSING_API_KEY",
-  baseUrl: 'https://generativelanguage.googleapis.com/v1beta'
-});
+// TODO: Replace with new AI SDK service
+// const orchestrationService = createGeminiOrchestrationService({
+//   apiKey: API_KEY || "MISSING_API_KEY",
+//   baseUrl: 'https://generativelanguage.googleapis.com/v1beta'
+// });
+
+// Temporary fallback - use legacy service for now
+const orchestrationService = GeminiService;
 
 /**
  * @interface OrchestratorResponse
@@ -174,21 +178,10 @@ class OrchestratorService {
       console.log("Orchestrator: [API_CALL] Using guaranteed JSON mode");
       console.log("Orchestrator: [API_CALL] Model: gemini-2.5-flash");
       console.log("Orchestrator: [API_CALL] Temperature: 0.3");
-      const response = await orchestrationService.generateOrchestrationCompletion({
-        provider: 'google',
-        prompt: orchestratorPrompt,
-        model: 'gemini-2.5-flash',
-        parameters: {
-          temperature: 0.3, // Lower temperature for more consistent structure
-          topK: 40,
-          topP: 0.8
-        }
-      });
-
-      const text = response.text || "{}";
+      // TODO: Replace with proper orchestration method
+      const text = await orchestrationService.testPrompt(orchestratorPrompt);
       console.log("Orchestrator: [API_RESPONSE] Received response from Gemini API");
-      console.log("Orchestrator: [API_RESPONSE] Response type:", typeof response);
-      console.log("Orchestrator: [API_RESPONSE] Has text field:", !!response.text);
+      console.log("Orchestrator: [API_RESPONSE] Response type:", typeof text);
       console.log("Orchestrator: [API_RESPONSE] Starting JSON parsing...");
 
       // Parse JSON response (guaranteed JSON mode)
@@ -331,7 +324,7 @@ class OrchestratorService {
    * @since 2.1.0
    */
   isConfigured(): boolean {
-    return !!API_KEY && orchestrationService.isConfigured();
+    return !!API_KEY; // GeminiService doesn't have isConfigured method
   }
 }
 

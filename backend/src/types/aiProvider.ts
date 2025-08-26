@@ -4,7 +4,7 @@
  * These types mirror the frontend types to ensure consistency across the application.
  */
 
-export type AIProvider = 'google' | 'openai' | 'openrouter' | 'anthropic';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'ollama' | 'cohere' | 'mistral' | 'groq';
 
 /**
  * Base parameters that all AI providers support
@@ -86,13 +86,79 @@ export interface OpenRouterParameters extends BaseModelParameters {
 }
 
 /**
+ * Ollama specific parameters (for local models)
+ */
+export interface OllamaParameters extends BaseModelParameters {
+  /** Top-P/nucleus sampling parameter (0.0 to 1.0) */
+  top_p?: number;
+  /** Top-K sampling parameter */
+  top_k?: number;
+  /** Repetition penalty */
+  repeat_penalty?: number;
+  /** System message */
+  system?: string;
+  /** Custom options for Ollama */
+  options?: Record<string, any>;
+}
+
+/**
+ * Cohere specific parameters
+ */
+export interface CohereParameters extends BaseModelParameters {
+  /** Top-P/nucleus sampling parameter (0.0 to 1.0) */
+  p?: number;
+  /** Top-K sampling parameter */
+  k?: number;
+  /** Frequency penalty (0.0 to 1.0) */
+  frequency_penalty?: number;
+  /** Presence penalty (0.0 to 1.0) */
+  presence_penalty?: number;
+  /** System message */
+  preamble?: string;
+  /** Stop sequences */
+  stop_sequences?: string[];
+}
+
+/**
+ * Mistral specific parameters
+ */
+export interface MistralParameters extends BaseModelParameters {
+  /** Top-P/nucleus sampling parameter (0.0 to 1.0) */
+  top_p?: number;
+  /** System message */
+  system?: string;
+  /** Random seed for reproducibility */
+  random_seed?: number;
+  /** Safe mode for content filtering */
+  safe_mode?: boolean;
+}
+
+/**
+ * Groq specific parameters
+ */
+export interface GroqParameters extends BaseModelParameters {
+  /** Top-P/nucleus sampling parameter (0.0 to 1.0) */
+  top_p?: number;
+  /** System message */
+  system?: string;
+  /** Stop sequences */
+  stop?: string | string[];
+  /** Random seed for reproducibility */
+  seed?: number;
+}
+
+/**
  * Union type for all provider-specific parameters
  */
 export type ModelParameters = 
   | GeminiParameters 
   | OpenAIParameters 
   | AnthropicParameters 
-  | OpenRouterParameters;
+  | OpenRouterParameters
+  | OllamaParameters
+  | CohereParameters
+  | MistralParameters
+  | GroqParameters;
 
 /**
  * Request configuration for AI API calls

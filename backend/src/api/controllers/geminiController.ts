@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import GeminiService from '../../services/geminiService';
+import { generateCompletion, CompletionRequest, AIServiceError } from '../../services/ai/aiSdkService';
 import UnifiedAIService, { ProviderAwareRequest } from '../../services/unifiedAIService';
-import { aiProviderFactory } from '../../services/ai/AIProviderFactory';
 import { AIProvider, ModelParameters } from '../../types/aiProvider';
 
 class GeminiController {
@@ -12,19 +11,46 @@ class GeminiController {
         return res.status(400).json({ message: 'promptText is required' });
       }
 
-      // Create provider configuration from request
-      const providerConfig: ProviderAwareRequest = {
-        provider: provider as AIProvider,
-        model,
-        parameters,
-        apiKey,
-        baseUrl
-      };
-
-      const result = await UnifiedAIService.testPrompt(promptText, providerConfig);
-      res.status(200).json({ text: result });
+      // Use aiSdkService directly for better control and streaming support
+      if (provider && provider !== 'google') {
+        // For non-Google providers, use aiSdkService directly
+        if (!apiKey) {
+          return res.status(400).json({ message: 'API key is required for non-Google providers' });
+        }
+        
+        const request: CompletionRequest = {
+          provider: provider as AIProvider,
+          model: model || 'gpt-4', // Default model, should be provider-specific
+          prompt: promptText,
+          parameters: parameters || { temperature: 0.7, maxTokens: 4096 },
+          apiKey,
+          baseUrl
+        };
+        
+        const result = await generateCompletion(request);
+        res.status(200).json({ text: result.text });
+      } else {
+        // For Google/Gemini or legacy support, use UnifiedAIService
+        const providerConfig: ProviderAwareRequest = {
+          provider: provider as AIProvider,
+          model,
+          parameters,
+          apiKey,
+          baseUrl
+        };
+        
+        const result = await UnifiedAIService.testPrompt(promptText, providerConfig);
+        res.status(200).json({ text: result });
+      }
     } catch (error) {
-      next(error);
+      if (error instanceof AIServiceError) {
+        res.status(500).json({ 
+          message: `AI service error: ${error.message}`,
+          provider: error.provider 
+        });
+      } else {
+        next(error);
+      }
     }
   }
 
@@ -55,7 +81,14 @@ class GeminiController {
       res.status(200).json(result);
     } catch (error) {
       console.error('Error in generateSFLFromGoal controller:', error);
-      next(error);
+      if (error instanceof AIServiceError) {
+        res.status(500).json({ 
+          message: `AI service error: ${error.message}`,
+          provider: error.provider 
+        });
+      } else {
+        next(error);
+      }
     }
   }
 
@@ -78,7 +111,14 @@ class GeminiController {
       const result = await UnifiedAIService.regenerateSFLFromSuggestion(currentPrompt, suggestion, providerConfig);
       res.status(200).json(result);
     } catch (error) {
-      next(error);
+      if (error instanceof AIServiceError) {
+        res.status(500).json({ 
+          message: `AI service error: ${error.message}`,
+          provider: error.provider 
+        });
+      } else {
+        next(error);
+      }
     }
   }
 
@@ -101,7 +141,14 @@ class GeminiController {
       const result = await UnifiedAIService.generateWorkflowFromGoal(goal, providerConfig);
       res.status(200).json(result);
     } catch (error) {
-      next(error);
+      if (error instanceof AIServiceError) {
+        res.status(500).json({ 
+          message: `AI service error: ${error.message}`,
+          provider: error.provider 
+        });
+      } else {
+        next(error);
+      }
     }
   }
 }
