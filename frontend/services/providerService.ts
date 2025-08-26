@@ -124,16 +124,19 @@ export async function getProviderConfigurations(): Promise<ProviderData[]> {
     const storedResponse = await getStoredProviders();
     const storedProviders = storedResponse.providers || [];
     
+    // Get full provider capabilities from backend
+    const capabilities = await getProviderCapabilities();
+    
     // Map provider data with configurations
     const providerData: ProviderData[] = providers.map((provider) => {
       const hasStoredKey = storedProviders.includes(provider.provider);
+      const config = capabilities[provider.provider];
       
       return {
         ...provider,
         hasApiKey: hasStoredKey,
         isConfigured: hasStoredKey,
-        // Provider configurations will be loaded dynamically as needed
-        // to avoid heavy data transfer for all providers at once
+        config: config, // Include the full provider configuration
       };
     });
     
@@ -145,29 +148,71 @@ export async function getProviderConfigurations(): Promise<ProviderData[]> {
 }
 
 /**
+ * Gets provider capabilities from the backend API (replaces static configuration)
+ */
+export async function getProviderCapabilities(): Promise<Record<string, ProviderConfig>> {
+  try {
+    const response = await authService.authenticatedFetch(`${API_BASE}/providers/capabilities`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get provider capabilities: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Unknown error getting provider capabilities');
+    }
+    
+    // Transform backend response to frontend format
+    const capabilities: Record<string, ProviderConfig> = {};
+    
+    for (const [providerKey, providerData] of Object.entries(data.data.providers)) {
+      const provider = providerKey as AIProvider;
+      const config = providerData as any;
+      
+      capabilities[provider] = {
+        provider,
+        name: config.name,
+        description: `AI provider: ${config.name}`,
+        models: config.models,
+        defaultParameters: config.models[0]?.constraints ? 
+          Object.fromEntries(
+            Object.entries(config.models[0].constraints).map(([key, constraint]: [string, any]) => 
+              [key, constraint.default]
+            )
+          ) : {},
+        supportedFeatures: config.features,
+        baseUrl: config.baseUrl,
+        requiresApiKey: config.requiresApiKey,
+      };
+    }
+    
+    return capabilities;
+  } catch (error) {
+    console.error('Error getting provider capabilities from backend:', error);
+    throw new Error(`Failed to fetch provider capabilities: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
  * Gets detailed configuration for a specific provider including models
  */
 export async function getProviderConfiguration(provider: AIProvider): Promise<ProviderConfig> {
-  // For now, return static configurations since the backend doesn't yet 
-  // expose model lists via API. This will be replaced with dynamic fetching
-  // once the backend API is enhanced
-  const staticConfigs = await import('../config/modelCapabilities');
-  const config = staticConfigs.PROVIDER_CONFIGS[provider];
-  
-  if (!config) {
-    throw new Error(`Provider ${provider} not found`);
+  try {
+    // Use new dynamic capabilities endpoint
+    const capabilities = await getProviderCapabilities();
+    const config = capabilities[provider];
+    
+    if (!config) {
+      throw new Error(`Provider ${provider} not found`);
+    }
+    
+    return config;
+  } catch (error) {
+    console.error('Error getting provider configuration:', error);
+    throw error;
   }
-  
-  return {
-    provider: config.provider,
-    name: config.name,
-    description: config.description,
-    models: config.models,
-    defaultParameters: config.defaultParameters,
-    supportedFeatures: config.supportedFeatures,
-    baseUrl: config.baseUrl,
-    requiresApiKey: config.apiKeyRequired,
-  };
 }
 
 /**
@@ -391,6 +436,40 @@ export async function getStoredProviders(): Promise<{ success: boolean; provider
       success: false,
       error: error instanceof Error ? error.message : 'Network error getting stored providers',
     };
+  }
+}
+
+/**
+ * Validate parameters against model constraints
+ */
+export async function validateParameters(provider: AIProvider, modelId: string, parameters: any): Promise<{ valid: boolean; errors: string[] }> {
+  try {
+    const config = await getProviderConfiguration(provider);
+    const model = config.models.find(m => m.id === modelId);
+    
+    if (!model) {
+      return { valid: false, errors: [`Model ${modelId} not found for provider ${provider}`] };
+    }
+    
+    const constraints = model.constraints;
+    const errors: string[] = [];
+
+    Object.entries(parameters).forEach(([key, value]) => {
+      const constraint = constraints[key as keyof typeof constraints];
+      if (constraint && typeof value === 'number') {
+        if (value < constraint.min || value > constraint.max) {
+          errors.push(`${key} must be between ${constraint.min} and ${constraint.max}`);
+        }
+      }
+    });
+
+    return {
+      valid: errors.length === 0,
+      errors,
+    };
+  } catch (error) {
+    console.error('Error validating parameters:', error);
+    return { valid: false, errors: ['Failed to validate parameters - provider configuration unavailable'] };
   }
 }
 

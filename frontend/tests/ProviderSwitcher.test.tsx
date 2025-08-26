@@ -217,7 +217,39 @@ describe('ProviderSwitcher Component', () => {
       await waitFor(() => {
         expect(screen.getByText(/Network error/i)).toBeInTheDocument();
         expect(screen.getByText(/Retry/i)).toBeInTheDocument();
+        expect(screen.getByText(/Refresh Page/i)).toBeInTheDocument();
       });
+    });
+
+    test('should auto-retry network errors up to 2 times', async () => {
+      const networkError = new Error('fetch failed');
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      
+      mockProviderService.getProviderConfigurations
+        .mockRejectedValueOnce(networkError)
+        .mockRejectedValueOnce(networkError)
+        .mockRejectedValueOnce(networkError)
+        .mockResolvedValueOnce(mockProviderData);
+
+      render(
+        <ProviderSwitcher
+          currentConfig={mockActiveConfig}
+          onConfigChange={mockOnConfigChange}
+        />
+      );
+
+      // Should auto-retry up to 2 times for network errors
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Retrying provider load (attempt 1/2)...');
+        expect(consoleSpy).toHaveBeenCalledWith('Retrying provider load (attempt 2/2)...');
+      }, { timeout: 5000 });
+
+      await waitFor(() => {
+        expect(screen.getByText(/fetch failed \(Auto-retry failed\)/i)).toBeInTheDocument();
+      }, { timeout: 6000 });
+
+      expect(mockProviderService.getProviderConfigurations).toHaveBeenCalledTimes(3);
+      consoleSpy.mockRestore();
     });
 
     test('should allow retrying failed provider loads', async () => {
@@ -285,6 +317,34 @@ describe('ProviderSwitcher Component', () => {
 
       // Should show models from mockProviderConfig
       expect(screen.getByText(/GPT-4 Omni/)).toBeInTheDocument();
+    });
+
+    test('should handle model loading errors with retry', async () => {
+      const user = userEvent.setup();
+      const error = new Error('Model fetch failed');
+      
+      mockProviderService.getProviderConfiguration
+        .mockResolvedValueOnce(mockProviderConfig) // Initial load succeeds
+        .mockRejectedValueOnce(error); // Provider change fails
+
+      render(
+        <ProviderSwitcher
+          currentConfig={mockActiveConfig}
+          onConfigChange={mockOnConfigChange}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/anthropic/i)).toBeInTheDocument();
+      });
+
+      const anthropicButton = screen.getByText(/anthropic/i);
+      await user.click(anthropicButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Model Loading Error/i)).toBeInTheDocument();
+        expect(screen.getByText(/Retry Models/i)).toBeInTheDocument();
+      });
     });
   });
 
@@ -473,6 +533,26 @@ describe('ProviderSwitcher Component', () => {
       // Should not import any static configuration
       const component = screen.getByTestId('arrows-icon').closest('div');
       expect(component).toBeInTheDocument();
+    });
+
+    test('should fail completely if backend is unavailable (no static fallback)', async () => {
+      const error = new Error('Backend completely unavailable');
+      mockProviderService.getProviderConfigurations.mockRejectedValue(error);
+
+      render(
+        <ProviderSwitcher
+          currentConfig={mockActiveConfig}
+          onConfigChange={mockOnConfigChange}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/Backend completely unavailable/i)).toBeInTheDocument();
+      });
+
+      // Should NOT show any providers from static config
+      expect(screen.queryByText(/openai/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/anthropic/i)).not.toBeInTheDocument();
     });
   });
 

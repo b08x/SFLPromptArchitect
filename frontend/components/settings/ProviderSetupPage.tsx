@@ -1,21 +1,21 @@
 /**
  * @file ProviderSetupPage.tsx
- * @description This component provides the AI Provider Configuration interface.
- * It allows users to select AI providers (Google, OpenAI, OpenRouter), 
- * enter API keys, and validate them. This is the foundational component
- * for the multi-provider AI integration system.
+ * @description Dynamic AI Provider Configuration interface with provider-specific components.
+ * This component provides a dynamic system that renders different provider-specific 
+ * settings components based on user selection. It maintains backward compatibility
+ * while enabling extensible provider-specific customizations.
  *
  * @requires react
+ * @requires ./providers - Provider-specific components
  * @requires ../icons/CogIcon
  */
 
 import React, { useState, useEffect } from 'react';
 import CogIcon from '../icons/CogIcon';
-import ArrowPathIcon from '../icons/ArrowPathIcon';
-import CheckCircleIcon from '../icons/CheckCircleIcon';
-import XCircleIcon from '../icons/XCircleIcon';
+// Note: Provider-specific components handle their own validation UI and icons
 import { AIProvider } from '../../services/aiService';
 import { saveProviderApiKey, validateStoredProvider } from '../../services/providerService';
+import { getProviderComponent, providerMetadata, ValidationStatus } from './providers';
 
 /**
  * @interface ProviderSetupPageProps
@@ -26,10 +26,6 @@ interface ProviderSetupPageProps {
   onSetupComplete?: () => void;
 }
 
-/**
- * Validation status type for API key validation
- */
-type ValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
 
 /**
  * The main Provider Setup Page component.
@@ -63,7 +59,7 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
           if (data.success && data.data.providers.length > 0) {
             // Set the first stored provider as default
             const firstProvider = data.data.providers[0] as AIProvider;
-            if (['google', 'openai', 'openrouter', 'anthropic'].includes(firstProvider)) {
+            if (Object.keys(providerMetadata).includes(firstProvider)) {
               setSelectedProvider(firstProvider);
               setValidationStatus('valid'); // Assume stored keys are valid
             }
@@ -92,8 +88,8 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
     setValidationError('');
   };
 
-  const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setApiKey(event.target.value);
+  const handleApiKeyChange = (value: string) => {
+    setApiKey(value);
     // Reset validation status when API key changes
     if (validationStatus !== 'idle') {
       setValidationStatus('idle');
@@ -103,6 +99,7 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
     }
   };
 
+  // Model change handler - kept for backward compatibility but not used in dynamic components
   const handleModelChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedModel(event.target.value);
   };
@@ -146,6 +143,12 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
       setSelectedModel('');
     }
   };
+  // Get the appropriate component for the selected provider
+  const ProviderComponent = getProviderComponent(selectedProvider);
+  
+  // Get available providers for selection
+  const availableProviders = Object.keys(providerMetadata) as AIProvider[];
+  
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page Header */}
@@ -169,191 +172,57 @@ const ProviderSetupPage: React.FC<ProviderSetupPageProps> = ({ onSetupComplete }
           </p>
           
           <div className="space-y-4">
-            {/* Google Provider Option */}
-            <label className="flex items-center p-4 border border-border-secondary rounded-md hover:bg-surface-hover transition-colors cursor-pointer">
-              <input
-                type="radio"
-                name="provider"
-                value="google"
-                checked={selectedProvider === 'google'}
-                onChange={handleProviderChange}
-                className="w-4 h-4 text-accent-primary bg-surface border-border-interactive focus:ring-accent-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface"
-              />
-              <div className="ml-3">
-                <div className="text-text-primary font-medium">Google Gemini</div>
-                <div className="text-text-tertiary text-sm">
-                  Access to Google's Gemini models including Flash and Pro versions
-                </div>
-              </div>
-            </label>
-
-            {/* OpenAI Provider Option */}
-            <label className="flex items-center p-4 border border-border-secondary rounded-md hover:bg-surface-hover transition-colors cursor-pointer">
-              <input
-                type="radio"
-                name="provider"
-                value="openai"
-                checked={selectedProvider === 'openai'}
-                onChange={handleProviderChange}
-                className="w-4 h-4 text-accent-primary bg-surface border-border-interactive focus:ring-accent-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface"
-              />
-              <div className="ml-3">
-                <div className="text-text-primary font-medium">OpenAI</div>
-                <div className="text-text-tertiary text-sm">
-                  Access to OpenAI's GPT models including GPT-4 and GPT-3.5
-                </div>
-              </div>
-            </label>
-
-            {/* OpenRouter Provider Option */}
-            <label className="flex items-center p-4 border border-border-secondary rounded-md hover:bg-surface-hover transition-colors cursor-pointer">
-              <input
-                type="radio"
-                name="provider"
-                value="openrouter"
-                checked={selectedProvider === 'openrouter'}
-                onChange={handleProviderChange}
-                className="w-4 h-4 text-accent-primary bg-surface border-border-interactive focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface"
-              />
-              <div className="ml-3">
-                <div className="text-text-primary font-medium">OpenRouter</div>
-                <div className="text-text-tertiary text-sm">
-                  Access to multiple models through OpenRouter's unified API
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        {/* API Key Configuration Section */}
-        <div>
-          <h2 className="text-xl font-semibold text-text-primary mb-4">
-            API Key Configuration
-          </h2>
-          <p className="text-text-secondary mb-6">
-            Enter your API key for the selected provider to enable AI model access.
-          </p>
-          
-          <div className="space-y-4">
-            {/* API Key Input */}
-            <div>
-              <label htmlFor="apiKey" className="block text-sm font-medium text-text-primary mb-2">
-                API Key
-              </label>
-              <input
-                type="password"
-                id="apiKey"
-                name="apiKey"
-                value={apiKey}
-                onChange={handleApiKeyChange}
-                placeholder="Enter your API key..."
-                className="w-full px-4 py-3 bg-surface border border-border-secondary rounded-md text-text-primary placeholder-text-tertiary focus:ring-2 focus:ring-accent-primary focus:border-accent-primary transition-colors"
-              />
-              <p className="mt-2 text-sm text-text-tertiary">
-                Your API key is encrypted and stored securely on our servers. It is never exposed to client-side code.
-              </p>
-            </div>
-
-            {/* Validation Button */}
-            <div className="flex justify-start">
-              <button
-                type="button"
-                onClick={handleValidate}
-                disabled={!apiKey.trim() || validationStatus === 'validating'}
-                className="flex items-center space-x-2 px-6 py-2 bg-primary-action text-text-primary font-medium rounded-md hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {validationStatus === 'validating' && (
-                  <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                )}
-                <span>
-                  {validationStatus === 'validating' ? 'Validating...' : 'Validate API Key'}
-                </span>
-              </button>
-            </div>
-
-            {/* Validation Status Display */}
-            {validationStatus !== 'idle' && (
-              <div className="flex items-center space-x-2">
-                {validationStatus === 'validating' && (
-                  <>
-                    <ArrowPathIcon className="w-5 h-5 text-accent-primary animate-spin" />
-                    <span className="text-accent-primary font-medium">Validating API key...</span>
-                  </>
-                )}
-                {validationStatus === 'valid' && (
-                  <>
-                    <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                    <span className="text-green-500 font-medium">API key is valid</span>
-                    {isLoadingModels && (
-                      <>
-                        <ArrowPathIcon className="w-4 h-4 text-accent-primary animate-spin ml-4" />
-                        <span className="text-accent-primary">Loading models...</span>
-                      </>
-                    )}
-                  </>
-                )}
-                {validationStatus === 'invalid' && (
-                  <>
-                    <XCircleIcon className="w-5 h-5 text-red-500" />
-                    <div className="flex flex-col">
-                      <span className="text-red-500 font-medium">API key validation failed</span>
-                      {validationError && (
-                        <span className="text-red-400 text-sm mt-1">{validationError}</span>
+            {availableProviders.map((provider) => {
+              const metadata = providerMetadata[provider];
+              return (
+                <label 
+                  key={provider}
+                  className="flex items-center p-4 border border-border-secondary rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="provider"
+                    value={provider}
+                    checked={selectedProvider === provider}
+                    onChange={handleProviderChange}
+                    className="w-4 h-4 text-accent-primary bg-surface border-border-interactive focus:ring-accent-primary focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface"
+                  />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-text-primary font-medium">{metadata.name}</span>
+                      {!metadata.isSupported && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                          Coming Soon
+                        </span>
                       )}
                     </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Model Selection Dropdown (UX-01-D) */}
-            {validationStatus === 'valid' && availableModels.length > 0 && (
-              <div>
-                <label htmlFor="modelSelect" className="block text-sm font-medium text-text-primary mb-2">
-                  Select Model
+                    <div className="text-text-tertiary text-sm">
+                      {metadata.description}
+                    </div>
+                  </div>
                 </label>
-                <select
-                  id="modelSelect"
-                  name="modelSelect"
-                  value={selectedModel}
-                  onChange={handleModelChange}
-                  disabled={isLoadingModels}
-                  className="w-full px-4 py-3 bg-surface border border-border-secondary rounded-md text-text-primary focus:ring-2 focus:ring-accent-primary focus:border-accent-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">Choose a model...</option>
-                  {availableModels.map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-                {selectedModel && (
-                  <p className="mt-2 text-sm text-text-tertiary">
-                    Selected model: <span className="font-medium text-text-secondary">{selectedModel}</span>
-                  </p>
-                )}
-              </div>
-            )}
+              );
+            })}
           </div>
         </div>
 
-        {/* Status Messages */}
+        {/* Dynamic Provider-Specific Configuration */}
         <div className="border-t border-border-secondary pt-6">
-          {validationStatus === 'idle' && (
-            <div className="text-sm text-text-tertiary">
-              Select a provider and enter your API key to begin validation.
-            </div>
-          )}
-          {validationStatus === 'valid' && availableModels.length === 0 && !isLoadingModels && (
-            <div className="text-sm text-yellow-600">
-              API key is valid, but no models could be loaded. You can still proceed with manual model specification.
-            </div>
-          )}
-          {validationStatus === 'valid' && selectedModel && (
-            <div className="text-sm text-green-600">
-              Configuration complete! You're ready to use {selectedProvider} with the {selectedModel} model.
-            </div>
-          )}
+          <h2 className="text-xl font-semibold text-text-primary mb-4">
+            {providerMetadata[selectedProvider].name} Configuration
+          </h2>
+          
+          {/* Render the provider-specific component */}
+          <ProviderComponent
+            provider={selectedProvider}
+            apiKey={apiKey}
+            onApiKeyChange={handleApiKeyChange}
+            onValidate={handleValidate}
+            validationStatus={validationStatus}
+            validationError={validationError}
+            isValidating={validationStatus === 'validating'}
+            onSetupComplete={onSetupComplete}
+          />
         </div>
       </div>
 

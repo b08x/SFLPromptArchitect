@@ -8,7 +8,7 @@
 import { useChat, UseChatOptions, Message } from 'ai/react';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AIProvider } from '../services/providerService';
-import { getProviderConfiguration, validateParameters } from '../config/modelCapabilities';
+import { getProviderConfiguration, validateParameters } from '../services/providerService';
 import authService from '../services/authService';
 
 /**

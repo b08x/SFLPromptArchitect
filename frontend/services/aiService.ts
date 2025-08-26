@@ -8,7 +8,7 @@
 
 import authService from './authService';
 import { generateAIResponse, AIProvider, ModelInfo } from './providerService';
-import { getProviderConfiguration, validateParameters } from '../config/modelCapabilities';
+import { getProviderConfiguration, ProviderConfig, validateParameters } from './providerService';
 
 /**
  * Configuration options for AI generation requests

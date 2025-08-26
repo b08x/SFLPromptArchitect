@@ -109,7 +109,7 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
   /**
    * Load initial provider data from backend
    */
-  const loadProviders = useCallback(async () => {
+  const loadProviders = useCallback(async (retryAttempt = 0) => {
     try {
       setLoading(prev => ({ ...prev, providers: true }));
       setErrors(prev => ({ ...prev, providers: undefined }));
@@ -125,9 +125,21 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
       
     } catch (error) {
       console.error('Error loading providers:', error);
+      
+      // Enhanced error handling with retry logic
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load providers';
+      const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('Network');
+      
+      // Auto-retry network errors up to 2 times
+      if (isNetworkError && retryAttempt < 2) {
+        console.log(`Retrying provider load (attempt ${retryAttempt + 1}/2)...`);
+        setTimeout(() => loadProviders(retryAttempt + 1), 1000 * (retryAttempt + 1));
+        return;
+      }
+      
       setErrors(prev => ({
         ...prev,
-        providers: error instanceof Error ? error.message : 'Failed to load providers'
+        providers: `${errorMessage}${isNetworkError ? ' (Auto-retry failed)' : ''}`
       }));
     } finally {
       setLoading(prev => ({ ...prev, providers: false }));
@@ -137,25 +149,46 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
   /**
    * Load configuration for a specific provider
    */
-  const loadProviderConfig = useCallback(async (provider: AIProvider) => {
+  const loadProviderConfig = useCallback(async (provider: AIProvider, retryAttempt = 0) => {
     try {
       setLoading(prev => ({ ...prev, models: true }));
       setErrors(prev => ({ ...prev, models: undefined }));
       
+      // First try to use the config already loaded in availableProviders
+      const existingProviderData = availableProviders.find(p => p.provider === provider);
+      if (existingProviderData?.config) {
+        setCurrentProviderConfig(existingProviderData.config);
+        setLoading(prev => ({ ...prev, models: false }));
+        return;
+      }
+      
+      // Fallback to API call if config not available
       const config = await getProviderConfiguration(provider);
       setCurrentProviderConfig(config);
       
     } catch (error) {
       console.error('Error loading provider config:', error);
+      
+      // Enhanced error handling with retry logic for model loading
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load models';
+      const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('Network');
+      
+      // Auto-retry network errors up to 2 times
+      if (isNetworkError && retryAttempt < 2) {
+        console.log(`Retrying model load for ${provider} (attempt ${retryAttempt + 1}/2)...`);
+        setTimeout(() => loadProviderConfig(provider, retryAttempt + 1), 1000 * (retryAttempt + 1));
+        return;
+      }
+      
       setErrors(prev => ({
         ...prev,
-        models: error instanceof Error ? error.message : 'Failed to load models'
+        models: `${errorMessage}${isNetworkError ? ' (Auto-retry failed)' : ''}`
       }));
       setCurrentProviderConfig(null);
     } finally {
       setLoading(prev => ({ ...prev, models: false }));
     }
-  }, []);
+  }, [availableProviders]);
 
   /**
    * Initial load and provider change effects
@@ -374,15 +407,26 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
 
       {/* Error State */}
       {errors.providers && (
-        <div className="flex items-center space-x-2 p-2 bg-red-900 bg-opacity-20 border border-red-500 rounded">
-          <XCircleIcon className="w-4 h-4 text-red-500" />
-          <span className="text-xs text-red-400">{errors.providers}</span>
-          <button
-            onClick={loadProviders}
-            className="text-xs text-red-400 underline hover:text-red-300"
-          >
-            Retry
-          </button>
+        <div className="p-3 bg-red-900 bg-opacity-20 border border-red-500 rounded space-y-2">
+          <div className="flex items-center space-x-2">
+            <XCircleIcon className="w-4 h-4 text-red-500" />
+            <span className="text-xs text-red-400 font-medium">Provider Loading Error</span>
+          </div>
+          <p className="text-xs text-red-300">{errors.providers}</p>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => loadProviders(0)}
+              className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-2 py-1 text-xs border border-red-500 text-red-400 rounded hover:bg-red-900 hover:bg-opacity-30 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
         </div>
       )}
 
@@ -431,7 +475,19 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
         <div className="space-y-2">
           <label className="block text-xs font-medium text-[#95aac0]">Model</label>
           {errors.models ? (
-            <div className="text-xs text-red-400">{errors.models}</div>
+            <div className="p-2 bg-red-900 bg-opacity-20 border border-red-500 rounded space-y-1">
+              <div className="flex items-center space-x-1">
+                <XCircleIcon className="w-3 h-3 text-red-500" />
+                <span className="text-xs text-red-400 font-medium">Model Loading Error</span>
+              </div>
+              <p className="text-xs text-red-300">{errors.models}</p>
+              <button
+                onClick={() => loadProviderConfig(currentConfig.provider, 0)}
+                className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              >
+                Retry Models
+              </button>
+            </div>
           ) : (
             <select
               value={currentConfig.model}

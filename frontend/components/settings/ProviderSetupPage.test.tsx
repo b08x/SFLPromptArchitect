@@ -218,3 +218,6 @@ describe('ProviderSetupPage', () => {
     });
   });
 });
+
+// Additional tests for provider-specific components would go in separate test files
+// e.g., GoogleSettings.test.tsx, OpenAISettings.test.tsx, etc.

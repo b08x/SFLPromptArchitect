@@ -14,7 +14,7 @@ import {
   ProviderStatus, 
   ModelParameters 
 } from '../types/aiProvider';
-import { PROVIDER_CONFIGS, validateParameters } from '../config/modelCapabilities';
+import { getProviderCapabilities, validateParameters } from './providerService';
 
 /**
  * Event types for provider configuration changes
