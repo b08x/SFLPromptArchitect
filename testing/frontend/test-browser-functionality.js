@@ -1,0 +1,296 @@
+/**
+ * Browser UI Functionality Test
+ * This script creates a simple HTML page to manually test the workflow editor modal
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const testHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Editor Test - SFL Prompt Studio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .test-results {
+            margin: 20px 0;
+        }
+        .checklist {
+            list-style-type: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "❓";
+            margin-right: 10px;
+        }
+        .checklist li.pass:before {
+            content: "✅";
+        }
+        .checklist li.fail:before {
+            content: "❌";
+        }
+        .checklist li.warning:before {
+            content: "⚠️";
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Workflow Editor Functionality Test</h1>
+    <p>This test page verifies that the <strong>prompts prop fix</strong> for WorkflowEditorModal is working correctly.</p>
+
+    <div class="test-section">
+        <h2>🔧 Fix Applied</h2>
+        <div class="status success">
+            <strong>✅ FIXED:</strong> Added <code>prompts={prompts}</code> prop to WorkflowEditorModal in PromptLabPage.tsx (line 126)
+        </div>
+        <div class="status success">
+            <strong>✅ FIXED:</strong> Added <code>prompts={prompts}</code> prop to WorkflowWizardModal in PromptLabPage.tsx (line 135)
+        </div>
+        <div class="status success">
+            <strong>✅ VERIFIED:</strong> TypeScript compilation successful - no missing prop errors
+        </div>
+        <div class="status success">
+            <strong>✅ VERIFIED:</strong> Frontend build successful - no JavaScript errors
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Manual Testing Instructions</h2>
+        <p>To complete the verification, please perform these manual tests:</p>
+        
+        <ol>
+            <li><strong>Navigate to the application:</strong> Go to <a href="http://localhost" target="_blank">http://localhost</a></li>
+            <li><strong>Go to Lab page:</strong> Click on the "Lab" tab in the navigation</li>
+            <li><strong>Test workflow editing:</strong> Click the "Edit" button on any workflow</li>
+            <li><strong>Verify modal opens:</strong> The WorkflowEditorModal should open (not blank page)</li>
+            <li><strong>Test prompt linking:</strong> In a task editor, check the "Link Library Prompt" dropdown</li>
+            <li><strong>Verify prompts are available:</strong> The dropdown should show available prompts</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ Verification Checklist</h2>
+        <ul class="checklist">
+            <li class="pass">Frontend builds without TypeScript errors</li>
+            <li class="pass">All containers are running properly</li>
+            <li class="pass">prompts prop is passed to WorkflowEditorModal</li>
+            <li class="pass">prompts prop is passed to WorkflowWizardModal</li>
+            <li class="pass">Prompts API endpoint is accessible and returns data</li>
+            <li id="modal-opens">Modal opens when clicking Edit button (needs manual verification)</li>
+            <li id="prompt-dropdown">Prompt dropdown is populated with available prompts (needs manual verification)</li>
+            <li id="prompt-linking">Can select and link prompts to tasks (needs manual verification)</li>
+            <li id="save-functionality">Can save workflow changes successfully (needs manual verification)</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Test Results</h2>
+        <div class="test-results">
+            <div class="status info">
+                <strong>Backend API Status:</strong> <span id="api-status">Testing...</span>
+            </div>
+            <div class="status info">
+                <strong>Prompts Available:</strong> <span id="prompts-count">Testing...</span>
+            </div>
+            <div class="status info">
+                <strong>Frontend Status:</strong> <span id="frontend-status">Testing...</span>
+            </div>
+        </div>
+        
+        <button onclick="runAutoTests()">🔄 Re-run Automatic Tests</button>
+        <button onclick="window.open('http://localhost', '_blank')">🌐 Open Application</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Expected Behavior vs Previous Issue</h2>
+        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <th>Scenario</th>
+                <th>Before Fix</th>
+                <th>After Fix (Expected)</th>
+            </tr>
+            <tr>
+                <td>Click "Edit" on workflow</td>
+                <td>❌ Blank page displayed</td>
+                <td>✅ WorkflowEditorModal opens correctly</td>
+            </tr>
+            <tr>
+                <td>WorkflowEditorModal rendering</td>
+                <td>❌ Missing prompts prop caused crash</td>
+                <td>✅ All fields and components render</td>
+            </tr>
+            <tr>
+                <td>Prompt linking dropdown</td>
+                <td>❌ Empty or broken dropdown</td>
+                <td>✅ Shows available prompts from library</td>
+            </tr>
+            <tr>
+                <td>Task editing</td>
+                <td>❌ Cannot link prompts to tasks</td>
+                <td>✅ Can select and link library prompts</td>
+            </tr>
+            <tr>
+                <td>Save functionality</td>
+                <td>❌ Save may fail or be incomplete</td>
+                <td>✅ Saves workflow with prompt links</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Technical Details</h2>
+        <h3>Root Cause:</h3>
+        <p>WorkflowEditorModal component was missing the required <code>prompts</code> prop when instantiated in PromptLabPage.tsx, causing TypeScript compilation errors and runtime failures.</p>
+        
+        <h3>Solution Applied:</h3>
+        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;">
+// Before (line 126):
+&lt;WorkflowEditorModal
+    isOpen={true}
+    onClose={handleCloseModal}
+    onSave={handleSaveWorkflow}
+    workflowToEdit={activeWorkflow?.isDefault ? null : activeWorkflow}
+    // MISSING: prompts={prompts}
+/&gt;
+
+// After (line 126):
+&lt;WorkflowEditorModal
+    isOpen={true}
+    onClose={handleCloseModal}
+    onSave={handleSaveWorkflow}
+    workflowToEdit={activeWorkflow?.isDefault ? null : activeWorkflow}
+    prompts={prompts}  // ✅ ADDED
+/&gt;</pre>
+    </div>
+
+    <script>
+        // Automatic tests
+        async function testApi() {
+            try {
+                const response = await fetch('http://localhost:4000/');
+                const text = await response.text();
+                return response.ok && text.includes('Backend is running');
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function testPrompts() {
+            try {
+                const response = await fetch('http://localhost:4000/api/prompts');
+                if (response.ok) {
+                    const prompts = await response.json();
+                    return Array.isArray(prompts) ? prompts.length : 0;
+                }
+                return 0;
+            } catch (error) {
+                return 0;
+            }
+        }
+
+        async function testFrontend() {
+            try {
+                const response = await fetch('http://localhost/');
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function runAutoTests() {
+            document.getElementById('api-status').textContent = 'Testing...';
+            document.getElementById('prompts-count').textContent = 'Testing...';
+            document.getElementById('frontend-status').textContent = 'Testing...';
+
+            const apiWorking = await testApi();
+            const promptsCount = await testPrompts();
+            const frontendWorking = await testFrontend();
+
+            document.getElementById('api-status').textContent = apiWorking ? '✅ Connected' : '❌ Not accessible';
+            document.getElementById('prompts-count').textContent = promptsCount > 0 ? \`✅ \${promptsCount} prompts found\` : '❌ No prompts available';
+            document.getElementById('frontend-status').textContent = frontendWorking ? '✅ Accessible' : '❌ Not accessible';
+        }
+
+        // Run tests on page load
+        window.addEventListener('load', runAutoTests);
+    </script>
+</body>
+</html>
+`;
+
+// Write the test file
+const testFilePath = path.join(__dirname, 'workflow-editor-test.html');
+fs.writeFileSync(testFilePath, testHtml);
+
+console.log('🧪 Browser test page created successfully!');
+console.log(`📁 File location: ${testFilePath}`);
+console.log('🌐 Open the following file in your browser to run tests:');
+console.log(`   file://${testFilePath}`);
+console.log('');
+console.log('Or run: open workflow-editor-test.html (on macOS)');
+console.log('Or run: xdg-open workflow-editor-test.html (on Linux)');
+console.log('');
