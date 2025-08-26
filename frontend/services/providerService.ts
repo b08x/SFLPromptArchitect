@@ -6,7 +6,7 @@
 
 import authService from './authService';
 
-export type AIProvider = 'google' | 'openai' | 'openrouter' | 'anthropic';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'ollama' | 'cohere' | 'mistral' | 'groq';
 
 export interface ProviderValidationResult {
   success: boolean;
@@ -30,6 +30,44 @@ export interface ProviderHealthResponse {
   healthy: boolean;
   preferredProvider: AIProvider | null;
   requiresSetup: boolean;
+}
+
+/**
+ * Model information with capabilities and constraints
+ */
+export interface ModelInfo {
+  id: string;
+  name: string;
+  provider: AIProvider;
+  description?: string;
+  contextLength: number;
+  supportedParameters: string[];
+  constraints: Record<string, { min: number; max: number; step: number; default: any }>;
+  pricing?: {
+    input: number; // per 1K tokens
+    output: number; // per 1K tokens
+  };
+}
+
+/**
+ * Provider configuration with models and capabilities
+ */
+export interface ProviderConfig {
+  provider: AIProvider;
+  name: string;
+  description: string;
+  models: ModelInfo[];
+  defaultParameters: Record<string, any>;
+  supportedFeatures: string[];
+  baseUrl?: string;
+  requiresApiKey: boolean;
+}
+
+/**
+ * Comprehensive provider data with availability and configuration
+ */
+export interface ProviderData extends ProviderAvailability {
+  config?: ProviderConfig;
 }
 
 const API_BASE = '/api';
@@ -70,6 +108,66 @@ export async function getAvailableProviders(): Promise<{ providers: ProviderAvai
   }
   
   return data.data;
+}
+
+/**
+ * Gets comprehensive provider data including models and capabilities
+ * This is the main function used by ProviderSwitcher for dynamic configuration
+ */
+export async function getProviderConfigurations(): Promise<ProviderData[]> {
+  try {
+    // Get availability data
+    const availabilityResponse = await getAvailableProviders();
+    const providers = availabilityResponse.providers;
+    
+    // Get stored providers to check which have valid keys
+    const storedResponse = await getStoredProviders();
+    const storedProviders = storedResponse.providers || [];
+    
+    // Map provider data with configurations
+    const providerData: ProviderData[] = providers.map((provider) => {
+      const hasStoredKey = storedProviders.includes(provider.provider);
+      
+      return {
+        ...provider,
+        hasApiKey: hasStoredKey,
+        isConfigured: hasStoredKey,
+        // Provider configurations will be loaded dynamically as needed
+        // to avoid heavy data transfer for all providers at once
+      };
+    });
+    
+    return providerData;
+  } catch (error) {
+    console.error('Error getting provider configurations:', error);
+    throw error;
+  }
+}
+
+/**
+ * Gets detailed configuration for a specific provider including models
+ */
+export async function getProviderConfiguration(provider: AIProvider): Promise<ProviderConfig> {
+  // For now, return static configurations since the backend doesn't yet 
+  // expose model lists via API. This will be replaced with dynamic fetching
+  // once the backend API is enhanced
+  const staticConfigs = await import('../config/modelCapabilities');
+  const config = staticConfigs.PROVIDER_CONFIGS[provider];
+  
+  if (!config) {
+    throw new Error(`Provider ${provider} not found`);
+  }
+  
+  return {
+    provider: config.provider,
+    name: config.name,
+    description: config.description,
+    models: config.models,
+    defaultParameters: config.defaultParameters,
+    supportedFeatures: config.supportedFeatures,
+    baseUrl: config.baseUrl,
+    requiresApiKey: config.apiKeyRequired,
+  };
 }
 
 /**

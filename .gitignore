@@ -40,3 +40,5 @@ SFL-Prompt-Architect.code-workspace
 .claude/
 /logs/**
 /backups/**
+backend/dist/
+frontend/dist/

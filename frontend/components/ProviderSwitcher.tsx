@@ -1,25 +1,40 @@
 /**
  * @file ProviderSwitcher.tsx
- * @description This component provides dynamic AI provider switching functionality.
- * It allows users to quickly switch between configured providers, select models,
- * and adjust parameters in real-time without needing to navigate to settings.
+ * @description Secure dynamic AI provider switching component with backend integration.
+ * Provides runtime provider switching without client-side API key storage.
+ * 
+ * SECURITY FEATURES:
+ * - NO client-side API key storage or handling
+ * - Dynamic provider/model fetching from backend
+ * - Session-based secure API key management
+ * - Supports all 8 AI providers through backend proxy
  *
  * @requires react
+ * @requires ../services/providerService
  * @requires ../types/aiProvider
- * @requires ../config/modelCapabilities
  */
 
-import React, { useState, useEffect } from 'react';
-import { AIProvider, ActiveProviderConfig, ModelParameters } from '../types/aiProvider';
-import { PROVIDER_CONFIGS, getProviderModels, getParameterConstraints } from '../config/modelCapabilities';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { 
+  AIProvider, 
+  ActiveProviderConfig, 
+  ModelParameters,
+} from '../types/aiProvider';
+import { 
+  getProviderConfigurations,
+  getProviderConfiguration,
+  getStoredProviders,
+  ProviderData,
+  ProviderConfig,
+  ModelInfo,
+} from '../services/providerService';
 import CogIcon from './icons/CogIcon';
 import ArrowsRightLeftIcon from './icons/ArrowsRightLeftIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
 import XCircleIcon from './icons/XCircleIcon';
 
 /**
- * @interface ProviderSwitcherProps
- * @description Defines the props for the ProviderSwitcher component.
+ * Props interface for the secure ProviderSwitcher component
  */
 interface ProviderSwitcherProps {
   /** Current active provider configuration */
@@ -33,12 +48,26 @@ interface ProviderSwitcherProps {
 }
 
 /**
- * A compact component for switching AI providers and configuring parameters
- * at runtime. Designed to be embedded in other interfaces where quick
- * provider switching is needed.
- *
- * @param {ProviderSwitcherProps} props - The component props
- * @returns {JSX.Element} The rendered provider switcher
+ * Loading states for async operations
+ */
+interface LoadingState {
+  providers: boolean;
+  models: boolean;
+  validation: boolean;
+}
+
+/**
+ * Error states for better UX
+ */
+interface ErrorState {
+  providers?: string;
+  models?: string;
+  validation?: string;
+}
+
+/**
+ * Secure provider switcher component that integrates with backend API
+ * for dynamic provider/model management without client-side secrets.
  */
 const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
   currentConfig,
@@ -46,67 +75,149 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
   compact = false,
   showAdvanced = false
 }) => {
-  // Local state for UI management
+  // Component state
   const [isExpanded, setIsExpanded] = useState(!compact);
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [parameterConstraints, setParameterConstraints] = useState<any>({});
-  const [hasValidApiKey, setHasValidApiKey] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<ProviderData[]>([]);
+  const [currentProviderConfig, setCurrentProviderConfig] = useState<ProviderConfig | null>(null);
+  const [storedProviders, setStoredProviders] = useState<AIProvider[]>([]);
+  
+  // Loading and error states
+  const [loading, setLoading] = useState<LoadingState>({
+    providers: true,
+    models: false,
+    validation: false,
+  });
+  
+  const [errors, setErrors] = useState<ErrorState>({});
 
-  // Load available models when provider changes
-  useEffect(() => {
-    const models = getProviderModels(currentConfig.provider);
-    setAvailableModels(models.map(model => model.id));
+  // Memoized values for performance
+  const availableModels = useMemo(() => {
+    return currentProviderConfig?.models || [];
+  }, [currentProviderConfig]);
+
+  const parameterConstraints = useMemo(() => {
+    if (!currentProviderConfig || !currentConfig.model) return {};
     
-    // Update parameter constraints for current model
-    const constraints = getParameterConstraints(currentConfig.provider, currentConfig.model);
-    setParameterConstraints(constraints);
-  }, [currentConfig.provider, currentConfig.model]);
+    const model = currentProviderConfig.models.find(m => m.id === currentConfig.model);
+    return model?.constraints || {};
+  }, [currentProviderConfig, currentConfig.model]);
 
-  // Check if API key is configured for the current provider
-  useEffect(() => {
-    const hasKey = Boolean(currentConfig.apiKey);
-    setHasValidApiKey(hasKey);
-  }, [currentConfig.apiKey, currentConfig.provider]);
+  const hasValidApiKey = useMemo(() => {
+    return storedProviders.includes(currentConfig.provider);
+  }, [storedProviders, currentConfig.provider]);
 
   /**
-   * Handle provider change
+   * Load initial provider data from backend
    */
-  const handleProviderChange = (newProvider: AIProvider) => {
-    const providerConfig = PROVIDER_CONFIGS[newProvider];
-    const firstModel = providerConfig.models[0];
-    
-    // Load API key from localStorage
-    const savedApiKey = localStorage.getItem(`sfl-api-key-${newProvider}`) || '';
-    
-    const newConfig: ActiveProviderConfig = {
-      provider: newProvider,
-      model: firstModel.id,
-      parameters: providerConfig.defaultParameters,
-      apiKey: savedApiKey,
-      baseUrl: providerConfig.baseUrl
-    };
-    
-    onConfigChange(newConfig);
-  };
+  const loadProviders = useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, providers: true }));
+      setErrors(prev => ({ ...prev, providers: undefined }));
+      
+      // Load provider configurations and stored keys
+      const [providerData, storedData] = await Promise.all([
+        getProviderConfigurations(),
+        getStoredProviders()
+      ]);
+      
+      setAvailableProviders(providerData);
+      setStoredProviders(storedData.providers || []);
+      
+    } catch (error) {
+      console.error('Error loading providers:', error);
+      setErrors(prev => ({
+        ...prev,
+        providers: error instanceof Error ? error.message : 'Failed to load providers'
+      }));
+    } finally {
+      setLoading(prev => ({ ...prev, providers: false }));
+    }
+  }, []);
+
+  /**
+   * Load configuration for a specific provider
+   */
+  const loadProviderConfig = useCallback(async (provider: AIProvider) => {
+    try {
+      setLoading(prev => ({ ...prev, models: true }));
+      setErrors(prev => ({ ...prev, models: undefined }));
+      
+      const config = await getProviderConfiguration(provider);
+      setCurrentProviderConfig(config);
+      
+    } catch (error) {
+      console.error('Error loading provider config:', error);
+      setErrors(prev => ({
+        ...prev,
+        models: error instanceof Error ? error.message : 'Failed to load models'
+      }));
+      setCurrentProviderConfig(null);
+    } finally {
+      setLoading(prev => ({ ...prev, models: false }));
+    }
+  }, []);
+
+  /**
+   * Initial load and provider change effects
+   */
+  useEffect(() => {
+    loadProviders();
+  }, [loadProviders]);
+
+  useEffect(() => {
+    loadProviderConfig(currentConfig.provider);
+  }, [currentConfig.provider, loadProviderConfig]);
+
+  /**
+   * Handle provider change with secure backend integration
+   */
+  const handleProviderChange = useCallback(async (newProvider: AIProvider) => {
+    try {
+      const config = await getProviderConfiguration(newProvider);
+      const firstModel = config.models[0];
+      
+      if (!firstModel) {
+        throw new Error(`No models available for provider ${newProvider}`);
+      }
+      
+      const newConfig: ActiveProviderConfig = {
+        provider: newProvider,
+        model: firstModel.id,
+        parameters: config.defaultParameters,
+        apiKey: '', // API keys are managed server-side
+        baseUrl: config.baseUrl
+      };
+      
+      onConfigChange(newConfig);
+      
+    } catch (error) {
+      console.error('Error changing provider:', error);
+      setErrors(prev => ({
+        ...prev,
+        validation: error instanceof Error ? error.message : 'Failed to change provider'
+      }));
+    }
+  }, [onConfigChange]);
 
   /**
    * Handle model change
    */
-  const handleModelChange = (modelId: string) => {
-    const providerConfig = PROVIDER_CONFIGS[currentConfig.provider];
+  const handleModelChange = useCallback((modelId: string) => {
+    if (!currentProviderConfig) return;
+    
     const newConfig: ActiveProviderConfig = {
       ...currentConfig,
       model: modelId,
-      parameters: providerConfig.defaultParameters
+      parameters: currentProviderConfig.defaultParameters
     };
     
     onConfigChange(newConfig);
-  };
+  }, [currentConfig, currentProviderConfig, onConfigChange]);
 
   /**
    * Handle parameter change
    */
-  const handleParameterChange = (paramName: string, value: number | string) => {
+  const handleParameterChange = useCallback((paramName: string, value: number | string | boolean) => {
     const newParameters = {
       ...currentConfig.parameters,
       [paramName]: value
@@ -118,14 +229,63 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
     };
     
     onConfigChange(newConfig);
-  };
+  }, [currentConfig, onConfigChange]);
+
+  /**
+   * Apply parameter preset
+   */
+  const applyParameterPreset = useCallback((presetType: 'precise' | 'balanced' | 'creative') => {
+    if (!currentProviderConfig) return;
+    
+    const baseTemp = currentProviderConfig.defaultParameters.temperature || 1.0;
+    const constraint = parameterConstraints.temperature;
+    
+    let temperature = baseTemp;
+    
+    switch (presetType) {
+      case 'precise':
+        temperature = 0.2;
+        break;
+      case 'balanced':
+        temperature = baseTemp;
+        break;
+      case 'creative':
+        temperature = constraint ? Math.min(1.5, constraint.max) : 1.5;
+        break;
+    }
+    
+    handleParameterChange('temperature', temperature);
+  }, [currentProviderConfig, parameterConstraints.temperature, handleParameterChange]);
 
   /**
    * Render parameter control for a specific parameter
    */
-  const renderParameterControl = (paramName: string, constraint: any) => {
+  const renderParameterControl = useCallback((paramName: string, constraint: any) => {
     const currentValue = (currentConfig.parameters as any)[paramName] ?? constraint.default;
     
+    // Handle boolean parameters
+    if (typeof constraint.default === 'boolean') {
+      return (
+        <div key={paramName} className="space-y-1">
+          <label className="block text-xs font-medium text-[#95aac0] capitalize">
+            {paramName.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={currentValue}
+              onChange={(e) => handleParameterChange(paramName, e.target.checked)}
+              className="form-checkbox h-4 w-4 text-[#e2a32d] bg-[#212934] border-[#5c6f7e] rounded focus:border-[#e2a32d]"
+            />
+            <span className="text-xs text-[#95aac0]">
+              {currentValue ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    
+    // Handle numeric parameters
     return (
       <div key={paramName} className="space-y-1">
         <label className="block text-xs font-medium text-[#95aac0] capitalize">
@@ -153,17 +313,21 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
         </div>
       </div>
     );
-  };
+  }, [currentConfig.parameters, handleParameterChange]);
 
-  const currentProviderConfig = PROVIDER_CONFIGS[currentConfig.provider];
-
+  /**
+   * Render compact view
+   */
   if (compact && !isExpanded) {
+    const providerData = availableProviders.find(p => p.provider === currentConfig.provider);
+    const providerName = providerData?.provider || currentConfig.provider;
+    
     return (
       <div className="flex items-center space-x-2 bg-[#333e48] px-3 py-2 rounded-lg border border-[#5c6f7e]">
         <div className="flex items-center space-x-1">
           <div className={`w-2 h-2 rounded-full ${hasValidApiKey ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-sm text-gray-200 font-medium">
-            {currentProviderConfig.name}
+          <span className="text-sm text-gray-200 font-medium capitalize">
+            {providerName}
           </span>
         </div>
         <div className="text-xs text-[#95aac0]">
@@ -179,6 +343,9 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
     );
   }
 
+  /**
+   * Render full expanded view
+   */
   return (
     <div className="bg-[#333e48] border border-[#5c6f7e] rounded-lg p-4 space-y-4">
       {/* Header */}
@@ -197,35 +364,60 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
         )}
       </div>
 
-      {/* Provider Selection */}
-      <div className="space-y-2">
-        <label className="block text-xs font-medium text-[#95aac0]">Provider</label>
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.keys(PROVIDER_CONFIGS) as AIProvider[]).map((provider) => {
-            const config = PROVIDER_CONFIGS[provider];
-            const isSelected = currentConfig.provider === provider;
-            const hasKey = Boolean(localStorage.getItem(`sfl-api-key-${provider}`));
-            
-            return (
-              <button
-                key={provider}
-                onClick={() => handleProviderChange(provider)}
-                className={`flex items-center space-x-2 p-2 rounded border text-left transition-colors ${
-                  isSelected
-                    ? 'border-[#e2a32d] bg-[#e2a32d] bg-opacity-10'
-                    : 'border-[#5c6f7e] hover:border-[#95aac0]'
-                }`}
-              >
-                <div className={`w-2 h-2 rounded-full ${hasKey ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className="text-xs text-gray-200">{config.name}</span>
-              </button>
-            );
-          })}
+      {/* Loading State */}
+      {loading.providers && (
+        <div className="flex items-center justify-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#e2a32d]"></div>
+          <span className="ml-2 text-sm text-[#95aac0]">Loading providers...</span>
         </div>
-      </div>
+      )}
+
+      {/* Error State */}
+      {errors.providers && (
+        <div className="flex items-center space-x-2 p-2 bg-red-900 bg-opacity-20 border border-red-500 rounded">
+          <XCircleIcon className="w-4 h-4 text-red-500" />
+          <span className="text-xs text-red-400">{errors.providers}</span>
+          <button
+            onClick={loadProviders}
+            className="text-xs text-red-400 underline hover:text-red-300"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Provider Selection */}
+      {!loading.providers && !errors.providers && (
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-[#95aac0]">Provider</label>
+          <div className="grid grid-cols-2 gap-2">
+            {availableProviders.map((providerData) => {
+              const isSelected = currentConfig.provider === providerData.provider;
+              const hasKey = storedProviders.includes(providerData.provider);
+              
+              return (
+                <button
+                  key={providerData.provider}
+                  onClick={() => handleProviderChange(providerData.provider)}
+                  className={`flex items-center space-x-2 p-2 rounded border text-left transition-colors ${
+                    isSelected
+                      ? 'border-[#e2a32d] bg-[#e2a32d] bg-opacity-10'
+                      : 'border-[#5c6f7e] hover:border-[#95aac0]'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${hasKey ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-xs text-gray-200 capitalize">
+                    {providerData.provider}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* API Key Status */}
-      {!hasValidApiKey && (
+      {!hasValidApiKey && !loading.providers && (
         <div className="flex items-center space-x-2 p-2 bg-red-900 bg-opacity-20 border border-red-500 rounded">
           <XCircleIcon className="w-4 h-4 text-red-500" />
           <span className="text-xs text-red-400">
@@ -235,23 +427,24 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
       )}
 
       {/* Model Selection */}
-      {hasValidApiKey && (
+      {hasValidApiKey && !loading.models && (
         <div className="space-y-2">
           <label className="block text-xs font-medium text-[#95aac0]">Model</label>
-          <select
-            value={currentConfig.model}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="w-full px-3 py-2 bg-[#212934] border border-[#5c6f7e] text-gray-200 rounded text-sm focus:border-[#e2a32d] focus:outline-none"
-          >
-            {availableModels.map((modelId) => {
-              const modelInfo = getProviderModels(currentConfig.provider).find(m => m.id === modelId);
-              return (
-                <option key={modelId} value={modelId}>
-                  {modelInfo?.name || modelId}
+          {errors.models ? (
+            <div className="text-xs text-red-400">{errors.models}</div>
+          ) : (
+            <select
+              value={currentConfig.model}
+              onChange={(e) => handleModelChange(e.target.value)}
+              className="w-full px-3 py-2 bg-[#212934] border border-[#5c6f7e] text-gray-200 rounded text-sm focus:border-[#e2a32d] focus:outline-none"
+            >
+              {availableModels.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
                 </option>
-              );
-            })}
-          </select>
+              ))}
+            </select>
+          )}
         </div>
       )}
 
@@ -268,36 +461,24 @@ const ProviderSwitcher: React.FC<ProviderSwitcherProps> = ({
       )}
 
       {/* Quick Parameter Presets */}
-      {hasValidApiKey && showAdvanced && (
+      {hasValidApiKey && showAdvanced && parameterConstraints.temperature && (
         <div className="space-y-2">
           <label className="block text-xs font-medium text-[#95aac0]">Quick Presets</label>
           <div className="grid grid-cols-3 gap-1">
             <button
-              onClick={() => handleParameterChange('temperature', 0.2)}
+              onClick={() => applyParameterPreset('precise')}
               className="px-2 py-1 text-xs bg-[#212934] border border-[#5c6f7e] rounded text-gray-200 hover:border-[#e2a32d] transition-colors"
             >
               Precise
             </button>
             <button
-              onClick={() => {
-                const defaultParams = currentProviderConfig.defaultParameters;
-                Object.entries(defaultParams).forEach(([key, value]) => {
-                  if (typeof value === 'number') {
-                    handleParameterChange(key, value);
-                  }
-                });
-              }}
+              onClick={() => applyParameterPreset('balanced')}
               className="px-2 py-1 text-xs bg-[#212934] border border-[#5c6f7e] rounded text-gray-200 hover:border-[#e2a32d] transition-colors"
             >
               Balanced
             </button>
             <button
-              onClick={() => {
-                const constraint = parameterConstraints.temperature;
-                if (constraint) {
-                  handleParameterChange('temperature', Math.min(1.5, constraint.max));
-                }
-              }}
+              onClick={() => applyParameterPreset('creative')}
               className="px-2 py-1 text-xs bg-[#212934] border border-[#5c6f7e] rounded text-gray-200 hover:border-[#e2a32d] transition-colors"
             >
               Creative

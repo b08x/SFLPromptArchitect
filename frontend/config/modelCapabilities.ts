@@ -181,6 +181,154 @@ const OPENROUTER_MODELS: ModelInfo[] = [
 ];
 
 /**
+ * Ollama models configuration (local models)
+ */
+const OLLAMA_MODELS: ModelInfo[] = [
+  {
+    id: 'llama3.2:latest',
+    name: 'Llama 3.2',
+    provider: 'ollama',
+    description: 'Meta\'s Llama 3.2 model running locally',
+    contextLength: 131072,
+    supportedParameters: ['temperature', 'maxTokens', 'top_p', 'top_k', 'repeat_penalty', 'system'],
+    constraints: {
+      temperature: { min: 0.0, max: 2.0, step: 0.1, default: 0.8 },
+      maxTokens: { min: 1, max: 4096, step: 1, default: 1024 },
+      top_p: { min: 0.0, max: 1.0, step: 0.05, default: 0.9 },
+      top_k: { min: 1, max: 100, step: 1, default: 40 },
+      repeat_penalty: { min: 0.5, max: 2.0, step: 0.1, default: 1.1 },
+    },
+  },
+  {
+    id: 'mistral:7b',
+    name: 'Mistral 7B',
+    provider: 'ollama',
+    description: 'Mistral 7B model running locally',
+    contextLength: 32768,
+    supportedParameters: ['temperature', 'maxTokens', 'top_p', 'top_k', 'repeat_penalty', 'system'],
+    constraints: {
+      temperature: { min: 0.0, max: 2.0, step: 0.1, default: 0.7 },
+      maxTokens: { min: 1, max: 4096, step: 1, default: 1024 },
+      top_p: { min: 0.0, max: 1.0, step: 0.05, default: 0.9 },
+      top_k: { min: 1, max: 100, step: 1, default: 40 },
+      repeat_penalty: { min: 0.5, max: 2.0, step: 0.1, default: 1.1 },
+    },
+  },
+];
+
+/**
+ * Cohere models configuration
+ */
+const COHERE_MODELS: ModelInfo[] = [
+  {
+    id: 'command-r-plus',
+    name: 'Command R+',
+    provider: 'cohere',
+    description: 'Cohere\'s most powerful model for complex tasks',
+    contextLength: 128000,
+    supportedParameters: ['temperature', 'maxTokens', 'p', 'k', 'frequency_penalty', 'presence_penalty', 'preamble'],
+    constraints: {
+      temperature: { min: 0.0, max: 5.0, step: 0.1, default: 0.3 },
+      maxTokens: { min: 1, max: 4096, step: 1, default: 1024 },
+      p: { min: 0.01, max: 0.99, step: 0.01, default: 0.75 },
+      k: { min: 0, max: 500, step: 1, default: 0 },
+      frequency_penalty: { min: 0.0, max: 1.0, step: 0.01, default: 0.0 },
+      presence_penalty: { min: 0.0, max: 1.0, step: 0.01, default: 0.0 },
+    },
+    pricing: { input: 3.00, output: 15.00 },
+  },
+  {
+    id: 'command-r',
+    name: 'Command R',
+    provider: 'cohere',
+    description: 'Balanced model for general use',
+    contextLength: 128000,
+    supportedParameters: ['temperature', 'maxTokens', 'p', 'k', 'frequency_penalty', 'presence_penalty', 'preamble'],
+    constraints: {
+      temperature: { min: 0.0, max: 5.0, step: 0.1, default: 0.3 },
+      maxTokens: { min: 1, max: 4096, step: 1, default: 1024 },
+      p: { min: 0.01, max: 0.99, step: 0.01, default: 0.75 },
+      k: { min: 0, max: 500, step: 1, default: 0 },
+      frequency_penalty: { min: 0.0, max: 1.0, step: 0.01, default: 0.0 },
+      presence_penalty: { min: 0.0, max: 1.0, step: 0.01, default: 0.0 },
+    },
+    pricing: { input: 0.50, output: 1.50 },
+  },
+];
+
+/**
+ * Mistral models configuration
+ */
+const MISTRAL_MODELS: ModelInfo[] = [
+  {
+    id: 'mistral-large-latest',
+    name: 'Mistral Large',
+    provider: 'mistral',
+    description: 'Mistral\'s flagship model for complex reasoning',
+    contextLength: 32768,
+    supportedParameters: ['temperature', 'maxTokens', 'top_p', 'random_seed', 'safe_mode', 'system'],
+    constraints: {
+      temperature: { min: 0.0, max: 1.0, step: 0.1, default: 0.7 },
+      maxTokens: { min: 1, max: 4096, step: 1, default: 1024 },
+      top_p: { min: 0.0, max: 1.0, step: 0.05, default: 1.0 },
+      random_seed: { min: 0, max: 999999, step: 1, default: 0 },
+    },
+    pricing: { input: 4.00, output: 12.00 },
+  },
+  {
+    id: 'mistral-small-latest',
+    name: 'Mistral Small',
+    provider: 'mistral',
+    description: 'Cost-effective model for everyday tasks',
+    contextLength: 32768,
+    supportedParameters: ['temperature', 'maxTokens', 'top_p', 'random_seed', 'safe_mode', 'system'],
+    constraints: {
+      temperature: { min: 0.0, max: 1.0, step: 0.1, default: 0.7 },
+      maxTokens: { min: 1, max: 4096, step: 1, default: 1024 },
+      top_p: { min: 0.0, max: 1.0, step: 0.05, default: 1.0 },
+      random_seed: { min: 0, max: 999999, step: 1, default: 0 },
+    },
+    pricing: { input: 1.00, output: 3.00 },
+  },
+];
+
+/**
+ * Groq models configuration
+ */
+const GROQ_MODELS: ModelInfo[] = [
+  {
+    id: 'llama-3.1-70b-versatile',
+    name: 'Llama 3.1 70B',
+    provider: 'groq',
+    description: 'Meta\'s Llama 3.1 70B on Groq\'s fast inference',
+    contextLength: 131072,
+    supportedParameters: ['temperature', 'maxTokens', 'top_p', 'seed', 'stop', 'system'],
+    constraints: {
+      temperature: { min: 0.0, max: 2.0, step: 0.1, default: 1.0 },
+      maxTokens: { min: 1, max: 8000, step: 1, default: 1024 },
+      top_p: { min: 0.0, max: 1.0, step: 0.05, default: 1.0 },
+      seed: { min: 0, max: 999999, step: 1, default: 0 },
+    },
+    pricing: { input: 0.59, output: 0.79 },
+  },
+  {
+    id: 'mixtral-8x7b-32768',
+    name: 'Mixtral 8x7B',
+    provider: 'groq',
+    description: 'Mixtral 8x7B MoE model on Groq',
+    contextLength: 32768,
+    supportedParameters: ['temperature', 'maxTokens', 'top_p', 'seed', 'stop', 'system'],
+    constraints: {
+      temperature: { min: 0.0, max: 2.0, step: 0.1, default: 1.0 },
+      maxTokens: { min: 1, max: 8000, step: 1, default: 1024 },
+      top_p: { min: 0.0, max: 1.0, step: 0.05, default: 1.0 },
+      seed: { min: 0, max: 999999, step: 1, default: 0 },
+    },
+    pricing: { input: 0.27, output: 0.27 },
+  },
+];
+
+/**
  * Provider configurations
  */
 export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
@@ -240,6 +388,67 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
       top_p: 1.0,
     },
     supportedFeatures: ['text', 'multimodal', 'code', 'reasoning', 'multiple-providers'],
+  },
+  ollama: {
+    provider: 'ollama',
+    name: 'Ollama',
+    description: 'Local AI models via Ollama',
+    apiKeyRequired: false,
+    baseUrl: 'http://localhost:11434',
+    models: OLLAMA_MODELS,
+    defaultParameters: {
+      temperature: 0.8,
+      maxTokens: 1024,
+      top_p: 0.9,
+      top_k: 40,
+      repeat_penalty: 1.1,
+    },
+    supportedFeatures: ['text', 'local', 'privacy'],
+  },
+  cohere: {
+    provider: 'cohere',
+    name: 'Cohere',
+    description: 'Cohere\'s language models',
+    apiKeyRequired: true,
+    models: COHERE_MODELS,
+    defaultParameters: {
+      temperature: 0.3,
+      maxTokens: 1024,
+      p: 0.75,
+      k: 0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+    },
+    supportedFeatures: ['text', 'generation', 'classification'],
+  },
+  mistral: {
+    provider: 'mistral',
+    name: 'Mistral AI',
+    description: 'Mistral\'s efficient language models',
+    apiKeyRequired: true,
+    models: MISTRAL_MODELS,
+    defaultParameters: {
+      temperature: 0.7,
+      maxTokens: 1024,
+      top_p: 1.0,
+      random_seed: 0,
+      safe_mode: false,
+    },
+    supportedFeatures: ['text', 'multilingual', 'code'],
+  },
+  groq: {
+    provider: 'groq',
+    name: 'Groq',
+    description: 'Ultra-fast AI inference via Groq',
+    apiKeyRequired: true,
+    models: GROQ_MODELS,
+    defaultParameters: {
+      temperature: 1.0,
+      maxTokens: 1024,
+      top_p: 1.0,
+      seed: 0,
+    },
+    supportedFeatures: ['text', 'fast-inference', 'code'],
   },
 };
 
