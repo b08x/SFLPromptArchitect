@@ -8,6 +8,7 @@
  */
 
 import { Task, DataStore, PromptSFL, Workflow } from '../types';
+import authService from './authService';
 
 /**
  * @constant {string} API_BASE_URL - The base URL for the workflow-related API endpoints.
@@ -125,11 +126,8 @@ export const executeTask = async (task: Task, dataStore: DataStore, prompts: Pro
         }
     } else {
         // For server-side tasks, call the backend
-        const response = await fetch(`${API_BASE_URL}/run-task`, {
+        const response = await authService.authenticatedFetch(`${API_BASE_URL}/run-task`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ task, dataStore }),
         });
 
@@ -258,9 +256,8 @@ export const saveWorkflow = async (workflow: { id?: string; name: string; tasks:
     const url = workflow.id ? `${API_BASE_URL}/${workflow.id}` : API_BASE_URL;
     const method = workflow.id ? 'PUT' : 'POST';
 
-    const response = await fetch(url, {
+    const response = await authService.authenticatedFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: workflow.name, tasks: workflow.tasks }),
     });
 
@@ -278,7 +275,7 @@ export const saveWorkflow = async (workflow: { id?: string; name: string; tasks:
  * @throws {Error} Throws an error if the API request fails.
  */
 export const getWorkflows = async (): Promise<{ id: string; name: string }[]> => {
-    const response = await fetch(API_BASE_URL);
+    const response = await authService.authenticatedFetch(API_BASE_URL);
     if (!response.ok) {
         throw new Error('Failed to fetch workflows');
     }
@@ -293,7 +290,7 @@ export const getWorkflows = async (): Promise<{ id: string; name: string }[]> =>
  * @throws {Error} Throws an error if the API request fails.
  */
 export const getWorkflowById = async (id: string): Promise<{ id: string; name: string; tasks: Task[] }> => {
-    const response = await fetch(`${API_BASE_URL}/${id}`);
+    const response = await authService.authenticatedFetch(`${API_BASE_URL}/${id}`);
     if (!response.ok) {
         throw new Error(`Failed to fetch workflow with id ${id}`);
     }
@@ -308,7 +305,7 @@ export const getWorkflowById = async (id: string): Promise<{ id: string; name: s
  * @throws {Error} Throws an error if the API request fails.
  */
 export const deleteWorkflow = async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+    const response = await authService.authenticatedFetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
     if (!response.ok) {
         throw new Error('Failed to delete workflow');
     }
@@ -356,11 +353,8 @@ export const orchestrateWorkflow = async (userRequest: string): Promise<Workflow
         throw new Error('Request description is too long. Please limit to 2000 characters.');
     }
 
-    const response = await fetch(`${API_BASE_URL}/orchestrate`, {
+    const response = await authService.authenticatedFetch(`${API_BASE_URL}/orchestrate`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ request: userRequest.trim() }),
     });
 

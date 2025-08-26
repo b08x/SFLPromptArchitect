@@ -12,6 +12,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Workflow, DataStore, TaskStateMap, TaskStatus, Task, PromptSFL, WorkflowExecution } from '../types';
 import { topologicalSort, executeTask } from '../services/workflowEngine';
+import authService from '../services/authService';
 
 /**
  * A custom hook to manage the execution of a workflow.
@@ -249,7 +250,7 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
         // For async execution, send stop request to backend
         if (executionMode === 'async' && currentExecution?.jobId) {
             try {
-                await fetch(`/api/workflows/stop/${currentExecution.jobId}`, {
+                await authService.authenticatedFetch(`/api/workflows/stop/${currentExecution.jobId}`, {
                     method: 'POST',
                 });
             } catch (error) {
@@ -299,11 +300,8 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             initializeStates(workflow.tasks);
 
             // Send workflow to backend for async execution
-            const response = await fetch('/api/workflows/execute', {
+            const response = await authService.authenticatedFetch('/api/workflows/execute', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     workflow,
                     userInput: stagedUserInput,

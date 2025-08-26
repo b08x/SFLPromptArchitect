@@ -41,10 +41,10 @@ const getStagedUserInput = (data: any): StagedUserInput | null => {
 /**
  * Renders badges/pills indicating what types of input are staged.
  * @param {StagedUserInput} stagedInput - The staged user input data.
- * @returns {JSX.Element[]} An array of badge elements.
+ * @returns {React.ReactElement[]} An array of badge elements.
  */
-const renderStagedInputBadges = (stagedInput: StagedUserInput): JSX.Element[] => {
-    const badges: JSX.Element[] = [];
+const renderStagedInputBadges = (stagedInput: StagedUserInput): React.ReactElement[] => {
+    const badges: React.ReactElement[] = [];
     
     if (stagedInput.text && stagedInput.text.trim().length > 0) {
         badges.push(
@@ -82,7 +82,7 @@ const renderStagedInputBadges = (stagedInput: StagedUserInput): JSX.Element[] =>
  * @param {any} props.data - The JSON data to render.
  * @param {number} [props.level=0] - The current nesting level, used for indentation.
  * @param {string} [props.parentKey] - The key of the parent object, used to identify special sections.
- * @returns {JSX.Element} A styled, interactive JSON tree view.
+ * @returns {React.ReactElement} A styled, interactive JSON tree view.
  */
 const JsonViewer: React.FC<{ data: any; level?: number; parentKey?: string }> = ({ data, level = 0, parentKey }) => {
     const [isCollapsed, setIsCollapsed] = useState(level > 0);
@@ -141,7 +141,7 @@ const JsonViewer: React.FC<{ data: any; level?: number; parentKey?: string }> = 
  *
  * @param {object} props - The component props.
  * @param {DataStore} props.dataStore - The Data Store object to display.
- * @returns {JSX.Element} The rendered Data Store viewer component.
+ * @returns {React.ReactElement} The rendered Data Store viewer component.
  */
 const DataStoreViewer: React.FC<{ dataStore: DataStore }> = ({ dataStore }) => {
     const [copied, setCopied] = useState(false);

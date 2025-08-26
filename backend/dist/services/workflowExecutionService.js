@@ -39,44 +39,41 @@ const templateString = (template, dataStore) => {
 };
 const executeGeminiPrompt = (prompt, agentConfig) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
-    const model = (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.model) || 'gemini-2.5-flash';
     const response = yield ai.models.generateContent({
-        model: model,
+        model: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.model) || 'gemini-1.5-flash',
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
             temperature: agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.temperature,
             topK: agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.topK,
             topP: agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.topP,
-            systemInstruction: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.systemInstruction) ? { role: "system", parts: [{ text: agentConfig.systemInstruction }] } : undefined,
+            systemInstruction: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.systemInstruction) || undefined,
         },
     });
     return ((_e = (_d = (_c = (_b = (_a = response.candidates) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.parts) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.text) || "";
 });
 const executeImageAnalysis = (prompt, imagePart, agentConfig) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
-    const model = (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.model) || 'gemini-2.5-flash';
     const textPart = { text: prompt };
     const response = yield ai.models.generateContent({
-        model,
+        model: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.model) || 'gemini-1.5-flash',
         contents: [{ role: "user", parts: [textPart, imagePart] }],
         config: {
             temperature: agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.temperature,
-            systemInstruction: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.systemInstruction) ? { role: "system", parts: [{ text: agentConfig.systemInstruction }] } : undefined,
+            systemInstruction: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.systemInstruction) || undefined,
         },
     });
     return ((_e = (_d = (_c = (_b = (_a = response.candidates) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.parts) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.text) || "";
 });
 const executeGroundedGeneration = (prompt, agentConfig) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h;
-    const model = (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.model) || 'gemini-2.5-flash';
     const response = yield ai.models.generateContent({
-        model,
+        model: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.model) || 'gemini-1.5-flash',
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
-            tools: [{ googleSearch: {} }],
-            systemInstruction: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.systemInstruction) ? { role: "system", parts: [{ text: agentConfig.systemInstruction }] } : undefined,
             temperature: agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.temperature,
-        }
+            systemInstruction: (agentConfig === null || agentConfig === void 0 ? void 0 : agentConfig.systemInstruction) || undefined,
+            tools: [{ googleSearch: {} }],
+        },
     });
     const groundingChunks = ((_c = (_b = (_a = response.candidates) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.groundingMetadata) === null || _c === void 0 ? void 0 : _c.groundingChunks) || [];
     const sources = groundingChunks

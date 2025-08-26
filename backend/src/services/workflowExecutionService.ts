@@ -35,30 +35,30 @@ const templateString = (template: string, dataStore: DataStore): any => {
 };
 
 const executeGeminiPrompt = async (prompt: string, agentConfig?: AgentConfig): Promise<string> => {
-    const model = agentConfig?.model || 'gemini-2.5-flash';
+    
     const response = await ai.models.generateContent({
-        model: model,
+        model: agentConfig?.model || 'gemini-1.5-flash',
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
             temperature: agentConfig?.temperature,
             topK: agentConfig?.topK,
             topP: agentConfig?.topP,
-            systemInstruction: agentConfig?.systemInstruction ? { role: "system", parts: [{ text: agentConfig.systemInstruction }] } : undefined,
+            systemInstruction: agentConfig?.systemInstruction || undefined,
         },
     });
     return response.candidates?.[0]?.content?.parts?.[0]?.text || "";
 };
 
 const executeImageAnalysis = async (prompt: string, imagePart: Part, agentConfig?: AgentConfig): Promise<string> => {
-    const model = agentConfig?.model || 'gemini-2.5-flash';
+    
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model,
+        model: agentConfig?.model || 'gemini-1.5-flash',
         contents: [{ role: "user", parts: [textPart, imagePart] }],
         config: {
             temperature: agentConfig?.temperature,
-            systemInstruction: agentConfig?.systemInstruction ? { role: "system", parts: [{ text: agentConfig.systemInstruction }] } : undefined,
+            systemInstruction: agentConfig?.systemInstruction || undefined,
         },
     });
 
@@ -66,15 +66,15 @@ const executeImageAnalysis = async (prompt: string, imagePart: Part, agentConfig
 };
 
 const executeGroundedGeneration = async (prompt: string, agentConfig?: AgentConfig): Promise<{ text: string, sources: any[] }> => {
-    const model = agentConfig?.model || 'gemini-2.5-flash';
+    
     const response = await ai.models.generateContent({
-        model,
+        model: agentConfig?.model || 'gemini-1.5-flash',
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
-            tools: [{ googleSearch: {} }],
-            systemInstruction: agentConfig?.systemInstruction ? { role: "system", parts: [{ text: agentConfig.systemInstruction }] } : undefined,
             temperature: agentConfig?.temperature,
-        }
+            systemInstruction: agentConfig?.systemInstruction || undefined,
+            tools: [{ googleSearch: {} }],
+        },
     });
 
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];

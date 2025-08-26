@@ -2,6 +2,8 @@
 
 ## Systemic Functional Linguistics Framework Implementation
 
+The overarching goal of the SFL Prompt Studio is to streamline the creation and management of AI prompts and complex, multi-task AI workflows. It achieves this by implementing a framework based on Systemic Functional Linguistics (SFL) which breaks down language into three core metafunctions: Field (ideational content), Tenor (social relationships), and Mode (textual organization). The system's specific task is to programmatically generate prompts that are more effective, consistent, and contextually aware by allowing users to define these linguistic components in a structured way. The system also enables the orchestration of these prompts into multi-step workflows, addressing the need for more complex, automated AI-driven processes.
+
 ### 1. SFL Framework Core Components
 
 #### 1.1 Field Component (Experiential Metafunction)

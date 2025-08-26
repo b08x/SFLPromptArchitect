@@ -17,6 +17,8 @@ const crypto_1 = __importDefault(require("crypto"));
 const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
 const routes_1 = __importDefault(require("./api/routes"));
 const app = (0, express_1.default)();
+// Enable trust proxy for containerized environments
+app.set('trust proxy', true);
 // Security middleware
 app.use((0, helmet_1.default)({
     contentSecurityPolicy: {

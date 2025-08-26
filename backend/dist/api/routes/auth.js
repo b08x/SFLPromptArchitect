@@ -33,7 +33,11 @@ const authRateLimit = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
     // Skip rate limiting for successful requests
-    skipSuccessfulRequests: true
+    skipSuccessfulRequests: true,
+    // Handle Docker/proxy environment correctly
+    skipFailedRequests: false,
+    // Use correct IP identification
+    keyGenerator: (req) => req.ip || 'unknown'
 });
 // More lenient rate limiting for general auth endpoints
 const generalAuthRateLimit = (0, express_rate_limit_1.default)({
@@ -45,7 +49,11 @@ const generalAuthRateLimit = (0, express_rate_limit_1.default)({
         retryAfter: '15 minutes'
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    // Handle Docker/proxy environment correctly
+    skipFailedRequests: false,
+    // Use correct IP identification
+    keyGenerator: (req) => req.ip || 'unknown'
 });
 /**
  * @route POST /api/auth/register

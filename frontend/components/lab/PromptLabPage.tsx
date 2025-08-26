@@ -123,6 +123,7 @@ const PromptLabPage: React.FC<PromptLabPageProps> = () => {
                     onClose={handleCloseModal}
                     onSave={handleSaveWorkflow}
                     workflowToEdit={activeWorkflow?.isDefault ? null : activeWorkflow}
+                    prompts={prompts}
                 />
             )}
             
@@ -131,6 +132,7 @@ const PromptLabPage: React.FC<PromptLabPageProps> = () => {
                     isOpen={true}
                     onClose={handleCloseModal}
                     onSave={handleSaveWorkflow}
+                    prompts={prompts}
                 />
             )}
         </div>

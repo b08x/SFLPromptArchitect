@@ -21,8 +21,8 @@ require("../../types/express");
 class PromptController {
     /**
      * @method createPrompt
-     * @description Creates a new prompt.
-     * @param {Request} req - The Express request object, containing the prompt data in the body and user info.
+     * @description Creates a new prompt. Requires authentication.
+     * @param {Request} req - The Express request object, containing the prompt data in the body and authenticated user info.
      * @param {Response} res - The Express response object.
      * @param {NextFunction} next - The Express next middleware function.
      * @returns {Promise<void>} - A promise that resolves when the response is sent.
@@ -31,6 +31,7 @@ class PromptController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
+                // Require authentication for prompt creation
                 if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.id)) {
                     return res.status(401).json({ message: 'Authentication required' });
                 }
@@ -91,8 +92,8 @@ class PromptController {
     }
     /**
      * @method updatePrompt
-     * @description Updates an existing prompt.
-     * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter, update data in the body, and user info.
+     * @description Updates an existing prompt. Requires authentication.
+     * @param {Request} req - The Express request object, containing the prompt ID as a URL parameter, update data in the body, and authenticated user info.
      * @param {Response} res - The Express response object.
      * @param {NextFunction} next - The Express next middleware function.
      * @returns {Promise<void>} - A promise that resolves when the response is sent.
@@ -101,6 +102,7 @@ class PromptController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
+                // Require authentication for prompt updates
                 if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.id)) {
                     return res.status(401).json({ message: 'Authentication required' });
                 }
