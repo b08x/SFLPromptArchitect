@@ -46,6 +46,27 @@ export interface ProviderSettingsProps {
 }
 
 /**
+ * Extended props interface for providers that require additional configuration beyond API keys
+ * Used for providers like Ollama that need base URLs and model selection
+ */
+export interface ExtendedProviderSettingsProps extends ProviderSettingsProps {
+  /** Callback for configuration changes */
+  onConfigChange?: (config: Record<string, unknown>) => void;
+}
+
+/**
+ * Configuration interface for Ollama provider
+ */
+export interface OllamaConfig {
+  /** Base URL for the Ollama server */
+  baseURL: string;
+  /** Selected model name */
+  selectedModel?: string;
+  /** Available models from the server */
+  availableModels?: string[];
+}
+
+/**
  * Provider component mapping type
  * Maps provider names to their corresponding React components
  */

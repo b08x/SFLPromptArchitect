@@ -15,6 +15,8 @@ import {
   ModelParameters 
 } from '../types/aiProvider';
 import { getProviderCapabilities, validateParameters } from './providerService';
+import { PROVIDER_CONFIGS } from '../config/modelCapabilities';
+import { sessionCacheService, SessionSettings } from './sessionCacheService';
 
 /**
  * Event types for provider configuration changes
@@ -56,7 +58,14 @@ class ProviderConfigService {
   private providerStatuses: Map<AIProvider, ProviderStatus>;
 
   constructor() {
+    // Load configuration from localStorage first
     this.currentConfig = this.loadConfiguration();
+    
+    // Try to overlay session cache if available (more recent settings)
+    if (this.loadFromSessionCache()) {
+      console.log('Loaded recent settings from session cache');
+    }
+    
     this.eventListeners = new Map();
     this.providerStatuses = new Map();
     
@@ -93,6 +102,7 @@ class ProviderConfigService {
     };
     
     this.saveConfiguration();
+    this.saveToSessionCache();
     this.emit('provider-changed', this.currentConfig);
   }
 
@@ -114,6 +124,7 @@ class ProviderConfigService {
     };
     
     this.saveConfiguration();
+    this.saveToSessionCache();
     this.emit('provider-changed', this.currentConfig);
   }
 
@@ -138,6 +149,7 @@ class ProviderConfigService {
     };
     
     this.saveConfiguration();
+    this.saveToSessionCache();
     this.emit('parameters-changed', this.currentConfig);
   }
 
@@ -325,7 +337,69 @@ class ProviderConfigService {
     };
     
     this.saveConfiguration();
+    this.saveToSessionCache();
     this.emit('provider-changed', this.currentConfig);
+  }
+
+  /**
+   * Load cached settings from session storage if available
+   * @returns True if settings were loaded from cache
+   */
+  loadFromSessionCache(): boolean {
+    try {
+      const cacheResult = sessionCacheService.loadSessionSettings();
+      
+      if (!cacheResult.success || !cacheResult.data) {
+        return false;
+      }
+
+      const cachedSettings = cacheResult.data;
+      
+      // Validate that the cached provider is still available in PROVIDER_CONFIGS
+      const providerConfig = PROVIDER_CONFIGS[cachedSettings.provider];
+      if (!providerConfig) {
+        sessionCacheService.clearSessionCache();
+        return false;
+      }
+
+      // Validate that the cached model is still available
+      const model = providerConfig.models.find(m => m.id === cachedSettings.model);
+      if (!model) {
+        sessionCacheService.clearSessionCache();
+        return false;
+      }
+
+      // Apply cached settings to current configuration
+      this.currentConfig = {
+        ...this.currentConfig,
+        provider: cachedSettings.provider,
+        model: cachedSettings.model,
+        parameters: cachedSettings.parameters,
+        apiKey: this.getApiKey(cachedSettings.provider),
+        baseUrl: providerConfig.baseUrl
+      };
+
+      return true;
+    } catch (error) {
+      console.warn('Failed to load from session cache:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get session cache information
+   * @returns Cache status and information
+   */
+  getSessionCacheInfo() {
+    return sessionCacheService.getCacheInfo();
+  }
+
+  /**
+   * Clear session cache
+   * @returns Result indicating success/failure
+   */
+  clearSessionCache() {
+    return sessionCacheService.clearSessionCache();
   }
 
   /**
@@ -430,6 +504,24 @@ class ProviderConfigService {
       localStorage.setItem(STORAGE_KEYS.PROVIDER_STATUS, JSON.stringify(statusObject));
     } catch (error) {
       console.warn('Failed to save provider statuses:', error);
+    }
+  }
+
+  /**
+   * Private: Save current settings to session cache
+   */
+  private saveToSessionCache(): void {
+    try {
+      const sessionSettings = {
+        provider: this.currentConfig.provider,
+        model: this.currentConfig.model,
+        parameters: this.currentConfig.parameters
+      };
+      
+      sessionCacheService.saveSessionSettings(sessionSettings);
+    } catch (error) {
+      // Session cache failures should not interrupt normal operation
+      console.warn('Failed to save to session cache:', error);
     }
   }
 
