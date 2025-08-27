@@ -113,11 +113,14 @@ export enum TaskType {
  * @description Defines the configuration for an AI agent used in a task.
  */
 export interface AgentConfig {
+  provider?: string;
   model?: string;
   temperature?: number;
+  maxTokens?: number;
   topK?: number;
   topP?: number;
   systemInstruction?: string;
+  baseUrl?: string;
 }
 
 /**

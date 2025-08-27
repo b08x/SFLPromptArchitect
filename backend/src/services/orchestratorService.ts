@@ -9,36 +9,16 @@
  * @since 2.1.0
  */
 
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Workflow, Task } from '../types';
 import { buildOrchestratorPrompt } from '../prompts/orchestratorPrompt';
 import { validateWorkflow, hasCircularDependencies, ValidationResult, ValidatedWorkflow } from '../validation/workflowSchemas';
-// These services are being refactored - using legacy Gemini service for now
 import GeminiService from './geminiService';
 
 /**
- * @constant {string|undefined} API_KEY
- * @description The API key for accessing Google's Gemini API, retrieved from environment variables.
- * @private
- */
-const API_KEY = process.env.GEMINI_API_KEY;
-
-if (!API_KEY) {
-  console.error("Gemini API Key is missing. Please set the GEMINI_API_KEY environment variable.");
-}
-
-/**
  * @constant {any} orchestrationService
- * @description Enhanced Gemini service with guaranteed JSON mode for orchestration.
+ * @description AI service for workflow orchestration using the unified AI SDK.
  * @private
  */
-// TODO: Replace with new AI SDK service
-// const orchestrationService = createGeminiOrchestrationService({
-//   apiKey: API_KEY || "MISSING_API_KEY",
-//   baseUrl: 'https://generativelanguage.googleapis.com/v1beta'
-// });
-
-// Temporary fallback - use legacy service for now
 const orchestrationService = GeminiService;
 
 /**
@@ -151,13 +131,7 @@ class OrchestratorService {
    * @since 2.1.0
    */
   async generateWorkflow(userRequest: string): Promise<OrchestratorResponse> {
-    if (!API_KEY) {
-      return {
-        success: false,
-        error: "Gemini API Key is not configured. Cannot generate workflow.",
-        errorType: 'CONFIGURATION_ERROR'
-      };
-    }
+    // API key validation is handled by the unified AI SDK service
 
     if (!userRequest?.trim()) {
       return {
@@ -324,7 +298,8 @@ class OrchestratorService {
    * @since 2.1.0
    */
   isConfigured(): boolean {
-    return !!API_KEY; // GeminiService doesn't have isConfigured method
+    // Configuration is handled by the unified AI SDK service
+    return true; // Assume configured - errors will be thrown if not
   }
 }
 

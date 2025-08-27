@@ -1,13 +1,7 @@
-import { GoogleGenAI, GenerateContentResponse, Part } from "@google/genai";
+import { generateCompletion, CompletionRequest } from './ai/aiSdkService';
 import { Task, DataStore, AgentConfig, PromptSFL, Workflow } from '../types';
-
-const API_KEY = process.env.GEMINI_API_KEY;
-
-if (!API_KEY) {
-  console.error("Gemini API Key is missing. Please set the GEMINI_API_KEY environment variable.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY" });
+import { AIProvider } from '../types/aiProvider';
+import secretsManager from '../config/secrets';
 
 const getNested = (obj: Record<string, any>, path: string): any => {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
@@ -34,57 +28,54 @@ const templateString = (template: string, dataStore: DataStore): any => {
     });
 };
 
-const executeGeminiPrompt = async (prompt: string, agentConfig?: AgentConfig): Promise<string> => {
+const executeAIPrompt = async (prompt: string, agentConfig?: AgentConfig): Promise<string> => {
+    const provider: AIProvider = (agentConfig?.provider as AIProvider) || 'google';
+    const model = agentConfig?.model || 'gemini-1.5-flash';
     
-    const response = await ai.models.generateContent({
-        model: agentConfig?.model || 'gemini-1.5-flash',
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        config: {
+    // Get API key for the provider
+    let apiKey: string;
+    if (provider === 'ollama') {
+        apiKey = 'local'; // Ollama doesn't require an API key for local instances
+    } else {
+        try {
+            apiKey = await secretsManager.getProviderApiKey(provider);
+        } catch (error) {
+            throw new Error(`API key not found for provider: ${provider}. Please configure the API key in settings.`);
+        }
+    }
+    
+    const request: CompletionRequest = {
+        provider,
+        model,
+        prompt,
+        systemMessage: agentConfig?.systemInstruction,
+        parameters: {
             temperature: agentConfig?.temperature,
+            maxTokens: agentConfig?.maxTokens,
             topK: agentConfig?.topK,
             topP: agentConfig?.topP,
-            systemInstruction: agentConfig?.systemInstruction || undefined,
         },
-    });
-    return response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        apiKey,
+        baseUrl: agentConfig?.baseUrl,
+    };
+    
+    const response = await generateCompletion(request);
+    return response.text;
 };
 
-const executeImageAnalysis = async (prompt: string, imagePart: Part, agentConfig?: AgentConfig): Promise<string> => {
-    
-    const textPart = { text: prompt };
-
-    const response: GenerateContentResponse = await ai.models.generateContent({
-        model: agentConfig?.model || 'gemini-1.5-flash',
-        contents: [{ role: "user", parts: [textPart, imagePart] }],
-        config: {
-            temperature: agentConfig?.temperature,
-            systemInstruction: agentConfig?.systemInstruction || undefined,
-        },
-    });
-
-    return response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+const executeImageAnalysis = async (prompt: string, imageData: { base64: string; type: string }, agentConfig?: AgentConfig): Promise<string> => {
+    // For now, throw an error as image analysis needs to be implemented with the new AI SDK
+    // This would require implementing vision capabilities in the unified AI service
+    throw new Error('Image analysis is not yet supported with the unified AI SDK. Please use a text-only workflow.');
 };
 
 const executeGroundedGeneration = async (prompt: string, agentConfig?: AgentConfig): Promise<{ text: string, sources: any[] }> => {
-    
-    const response = await ai.models.generateContent({
-        model: agentConfig?.model || 'gemini-1.5-flash',
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        config: {
-            temperature: agentConfig?.temperature,
-            systemInstruction: agentConfig?.systemInstruction || undefined,
-            tools: [{ googleSearch: {} }],
-        },
-    });
-
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const sources = groundingChunks
-        .map((chunk: any) => chunk.web)
-        .filter((web: any) => web && web.uri);
-
+    // For now, use regular AI generation and return empty sources
+    // Grounded generation would need to be implemented with specific providers that support it
+    const text = await executeAIPrompt(prompt, agentConfig);
     return {
-        text: response.candidates?.[0]?.content?.parts?.[0]?.text || "",
-        sources: sources,
+        text,
+        sources: [],
     };
 };
 
@@ -255,11 +246,11 @@ class WorkflowExecutionService {
                     const finalPromptText = templateString(linkedPrompt.promptText, { ...dataStore, ...resolvedInputs });
                     const finalAgentConfig = { ...task.agentConfig, systemInstruction };
                     
-                    return executeGeminiPrompt(finalPromptText, finalAgentConfig);
+                    return executeAIPrompt(finalPromptText, finalAgentConfig);
 
                 } else {
                     if (!interpolatedPrompt) throw new Error("Prompt template is missing for non-linked prompt task.");
-                    return executeGeminiPrompt(interpolatedPrompt, task.agentConfig);
+                    return executeAIPrompt(interpolatedPrompt, task.agentConfig);
                 }
             }
             
@@ -280,14 +271,7 @@ class WorkflowExecutionService {
                     throw new Error(`Image data from key "${imageInputKey}" is missing, malformed, or not found in inputs.`);
                 }
 
-                const imagePart: Part = {
-                    inlineData: {
-                        data: imageData.base64,
-                        mimeType: imageData.type,
-                    },
-                };
-
-                return executeImageAnalysis(interpolatedPrompt, imagePart, task.agentConfig);
+                return executeImageAnalysis(interpolatedPrompt, imageData, task.agentConfig);
             }
 
             case 'TEXT_MANIPULATION':

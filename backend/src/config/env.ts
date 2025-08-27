@@ -130,7 +130,8 @@ export default {
   },
 
   async getOllamaApiKey(): Promise<string> {
-    return await secretsManager.getProviderApiKey('ollama');
+    // Ollama doesn't require an API key (local deployment)
+    return '';
   },
 
   async getCohereApiKey(): Promise<string> {

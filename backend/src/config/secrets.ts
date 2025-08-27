@@ -253,11 +253,10 @@ export class SecretsManager {
     // Map common secret keys to environment variable names
     const envKeyMap: Record<string, string> = {
       'gemini_api_key': 'GEMINI_API_KEY',
-      'google_ai_api_key': 'GEMINI_API_KEY',  // Map to actual env var
+      'google_ai_api_key': 'GEMINI_API_KEY',
       'openai_api_key': 'OPENAI_API_KEY',
       'anthropic_api_key': 'ANTHROPIC_API_KEY',
       'openrouter_api_key': 'OPENROUTER_API_KEY',
-      'ollama_api_key': 'OLLAMA_API_KEY',
       'cohere_api_key': 'COHERE_API_KEY',
       'mistral_api_key': 'MISTRAL_API_KEY',
       'groq_api_key': 'GROQ_API_KEY',
