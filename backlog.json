@@ -1,0 +1,82 @@
+{
+  "backlog": [
+    {
+      "id": "BE-PROV-1",
+      "title": "Add 'preferred_provider' field to user settings",
+      "description": "Modify the database schema to store a user's preferred AI provider. This field will ensure the user's choice is persistent across sessions and restarts.",
+      "assignee": "Backend",
+      "dependencies": [],
+      "priority": "High",
+      "relevantFiles": [
+        "database/migrations/001_initial_schema.sql",
+        "backend/src/types.ts"
+      ]
+    },
+    {
+      "id": "FE-PROV-1",
+      "title": "Update ProviderSetupPage to save and load preferred provider",
+      "description": "Update the `ProviderSetupPage` component to fetch the user's saved preferred provider on load. When a user selects a new provider, send this choice to the backend.",
+      "assignee": "Frontend",
+      "dependencies": ["BE-PROV-1"],
+      "priority": "High",
+      "relevantFiles": [
+        "frontend/components/settings/ProviderSetupPage.tsx",
+        "frontend/services/providerService.ts"
+      ]
+    },
+    {
+      "id": "BE-PROV-2",
+      "title": "Update providerController to persist preferred provider",
+      "description": "The `saveApiKey` function in `providerController.ts` must be modified to receive the preferred provider from the frontend and save it to the database for the current user.",
+      "assignee": "Backend",
+      "dependencies": ["FE-PROV-1"],
+      "priority": "High",
+      "relevantFiles": [
+        "backend/src/api/controllers/providerController.ts",
+        "backend/src/api/routes.ts"
+      ]
+    },
+    {
+      "id": "BE-PROV-3",
+      "title": "Refactor UnifiedAIService to prioritize user-saved provider",
+      "description": "The `UnifiedAIService` must be refactored to first attempt to retrieve a provider from a user's persistent settings before defaulting to a hardcoded provider. This prevents unexpected behavior and billing.",
+      "assignee": "Backend",
+      "dependencies": ["BE-PROV-2"],
+      "priority": "Critical",
+      "relevantFiles": ["backend/src/services/unifiedAIService.ts"]
+    },
+    {
+      "id": "FE-PROV-2",
+      "title": "Pass selected provider to workflow execution endpoint",
+      "description": "Modify the `WorkflowCanvas` component to explicitly pass the user's chosen provider and model to the `run-task` endpoint, ensuring the backend receives the correct instruction for each workflow execution.",
+      "assignee": "Frontend",
+      "dependencies": ["BE-PROV-3"],
+      "priority": "High",
+      "relevantFiles": [
+        "frontend/components/lab/WorkflowCanvas.tsx",
+        "frontend/hooks/useWorkflowRunner.ts"
+      ]
+    },
+    {
+      "id": "QA-TEST-1",
+      "title": "Create integration tests for provider switching",
+      "description": "Write a comprehensive test suite to verify that when a user selects a new provider, all subsequent API calls for prompts and workflows correctly route to the new provider without defaulting to Google.",
+      "assignee": "QA/Test-Automator",
+      "dependencies": ["BE-PROV-3", "FE-PROV-2"],
+      "priority": "High",
+      "relevantFiles": [
+        "testing/test-provider-switching.js",
+        "testing/provider-integration-workflow.test.js"
+      ]
+    },
+    {
+      "id": "DOC-1",
+      "title": "Update README and API documentation",
+      "description": "Revise the `README.md` and `openapi.yaml` to reflect the new functionality of persisting a user's preferred provider, including updated API endpoints and data models.",
+      "assignee": "Documentation",
+      "dependencies": ["BE-PROV-2", "BE-PROV-3"],
+      "priority": "Medium",
+      "relevantFiles": ["README.md", "documentation/api/openapi.yaml"]
+    }
+  ]
+}

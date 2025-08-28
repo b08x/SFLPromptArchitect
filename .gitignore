@@ -44,6 +44,5 @@ backend/dist/
 frontend/dist/
 .code-packager-csv-config
 SFL-Prompt-Studio.csv
-backlog.json
 backlog-sfl.json
 backlog-sfl-multi-provider.json
