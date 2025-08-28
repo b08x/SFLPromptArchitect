@@ -19,18 +19,23 @@ import React, { useState, useEffect } from 'react';
 import { Workflow, ModalType, StagedUserInput } from '../../types';
 import { useAppStore } from '../../store/appStore';
 import { useWorkflowManager } from '../../hooks/useWorkflowManager';
+import { useActiveProvider } from '../../store/providerStore';
 import WorkflowControls from './WorkflowControls';
 import UserInputArea from './UserInputArea';
 import WorkflowCanvas from './WorkflowCanvas';
 import WorkflowEditorModal from './modals/WorkflowEditorModal';
 import WorkflowWizardModal from './modals/WorkflowWizardModal';
+import ProviderSwitcher from '../ProviderSwitcher';
+import ProviderStatus from '../ProviderStatus';
 
 /**
  * @interface PromptLabPageProps
  * @description Defines the props for the PromptLabPage component.
  * No props are needed as prompts are accessed from the store.
  */
-interface PromptLabPageProps {}
+interface PromptLabPageProps {
+  // No props needed - all state managed by stores
+}
 
 /**
  * The main page component for the Prompt Lab feature.
@@ -42,9 +47,12 @@ interface PromptLabPageProps {}
 const PromptLabPage: React.FC<PromptLabPageProps> = () => {
     const { prompts } = useAppStore();
     const { workflows, saveWorkflow, deleteWorkflow, isLoading, saveCustomWorkflows } = useWorkflowManager();
+    const activeProviderConfig = useActiveProvider();
     const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(null);
     const [activeModal, setActiveModal] = useState<ModalType>(ModalType.NONE);
     const [stagedInput, setStagedInput] = useState<StagedUserInput>({});
+
+    
 
     const activeWorkflow = workflows.find(wf => wf.id === activeWorkflowId) || null;
 
@@ -96,16 +104,21 @@ const PromptLabPage: React.FC<PromptLabPageProps> = () => {
                     onDeleteWorkflow={deleteWorkflow}
                     onImportWorkflows={handleImportWorkflows}
                 />
+                <ProviderSwitcher
+                    showAdvanced={true}
+                />
+                <ProviderStatus />
                 <UserInputArea onStageInput={setStagedInput} onWorkflowGenerated={handleSaveWorkflow} />
             </aside>
             
             <main className="flex-1 flex flex-col overflow-hidden">
-                 {activeWorkflow ? (
+                 {activeWorkflow && activeProviderConfig ? (
                     <WorkflowCanvas
                         key={activeWorkflow.id}
                         workflow={activeWorkflow}
                         stagedInput={stagedInput}
                         prompts={prompts}
+                        providerConfig={activeProviderConfig}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full text-center text-text-secondary">

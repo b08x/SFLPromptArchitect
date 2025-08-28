@@ -15,7 +15,7 @@
  */
 
 import React, { useState } from 'react';
-import { Workflow, StagedUserInput, TaskStatus, PromptSFL } from '../../types';
+import { Workflow, StagedUserInput, TaskStatus, PromptSFL, ActiveProviderConfig } from '../../types';
 import { useWorkflowRunner } from '../../hooks/useWorkflowRunner';
 import TaskNode from './TaskNode';
 import DataStoreViewer from './DataStoreViewer';
@@ -35,6 +35,7 @@ interface WorkflowCanvasProps {
     workflow: Workflow;
     stagedInput: StagedUserInput;
     prompts: PromptSFL[];
+    providerConfig: ActiveProviderConfig;
 }
 
 /**
@@ -44,7 +45,7 @@ interface WorkflowCanvasProps {
  * @param {WorkflowCanvasProps} props - The props for the component.
  * @returns {JSX.Element} The rendered workflow canvas.
  */
-const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, prompts }) => {
+const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, prompts, providerConfig }) => {
     const { 
         dataStore, 
         taskStates, 
@@ -56,7 +57,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflow, stagedInput, 
         currentExecution, 
         executionMode, 
         setExecutionMode 
-    } = useWorkflowRunner(workflow, prompts);
+    } = useWorkflowRunner(workflow, prompts, providerConfig);
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<string | null>(null);
 
     const handleTaskClick = (taskId: string) => {

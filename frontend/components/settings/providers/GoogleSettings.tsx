@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ProviderSettingsProps } from './types';
-import { ModelInfo } from '../../../services/providerService';
+import { ModelInfo } from '../../../types/aiProvider';
 
 /**
  * Gemini-specific parameter settings

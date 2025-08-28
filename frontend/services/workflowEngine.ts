@@ -7,7 +7,7 @@
  * @requires ../types
  */
 
-import { Task, DataStore, PromptSFL, Workflow } from '../types';
+import { Task, DataStore, PromptSFL, Workflow, ActiveProviderConfig } from '../types';
 import authService from './authService';
 
 /**
@@ -95,7 +95,12 @@ const executeTextManipulation = (funcBody: string, inputs: Record<string, any>):
  * @returns {Promise<any>} A promise that resolves with the task's output.
  * @throws {Error} Throws an error if the task execution fails, either on the client or server.
  */
-export const executeTask = async (task: Task, dataStore: DataStore, prompts: PromptSFL[]): Promise<any> => {
+export const executeTask = async (
+  task: Task, 
+  dataStore: DataStore, 
+  prompts: PromptSFL[], 
+  providerConfig?: ActiveProviderConfig
+): Promise<any> => {
     const isClientSideTask = ['DATA_INPUT', 'TEXT_MANIPULATION', 'DISPLAY_CHART', 'SIMULATE_PROCESS'].includes(task.type);
 
     if (isClientSideTask) {
@@ -128,7 +133,7 @@ export const executeTask = async (task: Task, dataStore: DataStore, prompts: Pro
         // For server-side tasks, call the backend
         const response = await authService.authenticatedFetch(`${API_BASE_URL}/run-task`, {
             method: 'POST',
-            body: JSON.stringify({ task, dataStore }),
+            body: JSON.stringify({ task, dataStore, providerConfig }),
         });
 
         if (!response.ok) {
@@ -214,7 +219,8 @@ export const runWorkflow = async (
     prompts: PromptSFL[],
     onTaskComplete: (taskId: string, result: any) => void,
     onTaskError: (taskId: string, error: Error) => void,
-    onWorkflowComplete: (finalDataStore: DataStore) => void
+    onWorkflowComplete: (finalDataStore: DataStore) => void,
+    providerConfig?: ActiveProviderConfig
 ) => {
     const { sortedTasks, feedback } = topologicalSort(tasks);
     
@@ -232,7 +238,7 @@ export const runWorkflow = async (
 
     for (const task of sortedTasks) {
         try {
-            const result = await executeTask(task, dataStore, prompts);
+            const result = await executeTask(task, dataStore, prompts, providerConfig);
             dataStore[task.outputKey] = result;
             onTaskComplete(task.id, result);
         } catch (error: any) {

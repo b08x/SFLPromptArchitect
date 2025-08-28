@@ -5,7 +5,7 @@
  * for consistent integration with the main ProviderSetupPage.
  */
 
-import { AIProvider } from '../../../services/providerService';
+import { AIProvider } from '../../../types/aiProvider';
 
 /**
  * Validation status type for API key validation

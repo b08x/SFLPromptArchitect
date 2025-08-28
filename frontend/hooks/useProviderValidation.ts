@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   isApplicationReady,
   checkProviderHealth,
+  getStoredProviders,
   type AIProvider,
   type ProviderHealthResponse,
 } from '../services/providerService';
@@ -24,6 +25,8 @@ export interface UseProviderValidationResult {
   preferredProvider: AIProvider | null;
   /** Whether the user needs to configure providers */
   requiresSetup: boolean;
+  /** List of providers with stored keys */
+  storedProviders: AIProvider[];
   /** Function to manually refresh provider status */
   refresh: () => Promise<void>;
   /** Function to check if setup is complete and redirect if necessary */
@@ -39,6 +42,7 @@ export function useProviderValidation(): UseProviderValidationResult {
   const [error, setError] = useState<string | null>(null);
   const [preferredProvider, setPreferredProvider] = useState<AIProvider | null>(null);
   const [requiresSetup, setRequiresSetup] = useState<boolean>(true);
+  const [storedProviders, setStoredProviders] = useState<AIProvider[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   /**
@@ -55,15 +59,21 @@ export function useProviderValidation(): UseProviderValidationResult {
       return;
     }
 
+    // Prevent concurrent refresh calls (this might not work across different component instances)
+    // But it helps reduce some redundant calls
     setIsLoading(true);
     setError(null);
     
     try {
-      const health = await checkProviderHealth();
+      const [health, stored] = await Promise.all([
+        checkProviderHealth(),
+        getStoredProviders(),
+      ]);
       
       setIsReady(health.healthy);
       setPreferredProvider(health.preferredProvider);
       setRequiresSetup(health.requiresSetup);
+      setStoredProviders(stored.providers || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
@@ -97,7 +107,7 @@ export function useProviderValidation(): UseProviderValidationResult {
     }
   }, [isReady, refresh]);
 
-  // Check authentication status and run validation
+  // Check authentication status and run validation - only run once on mount
   useEffect(() => {
     const checkAuthAndRefresh = () => {
       const authStatus = authService.isAuthenticated();
@@ -116,7 +126,7 @@ export function useProviderValidation(): UseProviderValidationResult {
     };
 
     checkAuthAndRefresh();
-  }, [refresh]);
+  }, []); // Only run on mount
 
   return {
     isReady,
@@ -124,6 +134,7 @@ export function useProviderValidation(): UseProviderValidationResult {
     error,
     preferredProvider,
     requiresSetup,
+    storedProviders,
     refresh,
     checkSetupComplete,
   };
@@ -159,7 +170,7 @@ export function useProviderSetupCheck() {
 
   useEffect(() => {
     checkSetup();
-  }, [checkSetup]);
+  }, []); // Only run on mount
 
   return {
     needsSetup,

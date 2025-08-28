@@ -304,3 +304,6 @@ export interface WorkflowExecution {
     createdAt: string;
     updatedAt: string;
 }
+
+// Re-export AI Provider types from types/aiProvider.ts
+export type { AIProvider, ActiveProviderConfig } from './types/aiProvider';

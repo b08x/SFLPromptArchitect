@@ -5,7 +5,7 @@
  * creates the component mapping for dynamic provider selection.
  */
 
-import { AIProvider } from '../../../services/providerService';
+import { AIProvider } from '../../../types/aiProvider';
 import { ProviderComponentMap, ProviderMetadata } from './types';
 
 // Import all provider components

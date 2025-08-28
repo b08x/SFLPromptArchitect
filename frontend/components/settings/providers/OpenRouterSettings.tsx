@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ProviderSettingsProps } from './types';
-import { getProviderConfiguration, ModelInfo } from '../../../services/providerService';
+import { getProviderConfiguration } from '../../../services/providerService';
+import { ModelInfo } from '../../../types/aiProvider';
 
 /**
  * Gateway provider parameters (OpenRouter/Groq)

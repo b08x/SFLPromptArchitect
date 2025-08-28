@@ -10,7 +10,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Workflow, DataStore, TaskStateMap, TaskStatus, Task, PromptSFL, WorkflowExecution } from '../types';
+import { Workflow, DataStore, TaskStateMap, TaskStatus, Task, PromptSFL, WorkflowExecution, ActiveProviderConfig } from '../types';
 import { topologicalSort, executeTask } from '../services/workflowEngine';
 import authService from '../services/authService';
 
@@ -51,7 +51,11 @@ import authService from '../services/authService';
  *   ))}
  * </div>
  */
-export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[]) => {
+export const useWorkflowRunner = (
+  workflow: Workflow | null, 
+  prompts: PromptSFL[], 
+  providerConfig: ActiveProviderConfig
+) => {
     /**
      * @state
      * @description The central data repository for the workflow run.
@@ -305,6 +309,7 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
                 body: JSON.stringify({
                     workflow,
                     userInput: stagedUserInput,
+                    providerConfig,
                 }),
             });
 
@@ -333,7 +338,7 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             setRunFeedback([`Failed to start execution: ${error.message}`]);
             setIsRunning(false);
         }
-    }, [workflow, initializeStates, connectWebSocket]);
+    }, [workflow, initializeStates, connectWebSocket, providerConfig]);
 
     /**
      * @function
@@ -391,7 +396,7 @@ export const useWorkflowRunner = (workflow: Workflow | null, prompts: PromptSFL[
             
             try {
                 const currentDataStore = await new Promise<DataStore>(resolve => setDataStore(current => { resolve(current); return current; }));
-                const result = await executeTask(task, currentDataStore, prompts);
+                const result = await executeTask(task, currentDataStore, prompts, providerConfig);
 
                 // Check for cancellation after task execution
                 if (cancellationRef.current.cancelled) {
