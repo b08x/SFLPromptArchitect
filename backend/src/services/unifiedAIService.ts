@@ -8,7 +8,6 @@
 import { generateCompletion, CompletionRequest, AIResponse, AIServiceError } from './ai/aiSdkService';
 import { AIProvider, AIRequest, ModelParameters } from '../types/aiProvider';
 import { PromptSFL, Workflow } from '../types';
-import GeminiService from './geminiService';
 
 /**
  * Request configuration for provider-aware AI operations
@@ -106,12 +105,6 @@ export class UnifiedAIService {
       const response = await generateCompletion(request);
       return response.text;
     } catch (error) {
-      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
-      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
-          !(error instanceof AIServiceError)) {
-        console.warn('aiSdkService failed for Google provider, falling back to legacy GeminiService:', error);
-        return await GeminiService.testPrompt(promptText);
-      }
       throw error;
     }
   }
@@ -163,12 +156,6 @@ export class UnifiedAIService {
 
       return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
     } catch (error) {
-      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
-      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
-          !(error instanceof AIServiceError)) {
-        console.warn('aiSdkService failed for Google provider SFL generation, falling back to legacy GeminiService:', error);
-        return await GeminiService.generateSFLFromGoal(goal, sourceDocContent);
-      }
       throw error;
     }
   }
@@ -232,12 +219,6 @@ export class UnifiedAIService {
 
       return jsonData as Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>;
     } catch (error) {
-      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
-      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
-          !(error instanceof AIServiceError)) {
-        console.warn('aiSdkService failed for Google provider SFL regeneration, falling back to legacy GeminiService:', error);
-        return await GeminiService.regenerateSFLFromSuggestion(currentPrompt, suggestion);
-      }
       throw error;
     }
   }
@@ -282,12 +263,6 @@ export class UnifiedAIService {
 
       return jsonData as Workflow;
     } catch (error) {
-      // Fallback to legacy Gemini service only for Google provider if aiSdkService fails
-      if ((!providerConfig?.provider || providerConfig.provider === 'google') && 
-          !(error instanceof AIServiceError)) {
-        console.warn('aiSdkService failed for Google provider workflow generation, falling back to legacy GeminiService:', error);
-        return await GeminiService.generateWorkflowFromGoal(goal);
-      }
       throw error;
     }
   }
@@ -373,7 +348,7 @@ export class UnifiedAIService {
         case 'anthropic':
           return process.env.ANTHROPIC_API_KEY || '';
         case 'google':
-          return process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || '';
+          return process.env.GEMINI_API_KEY || '';
         case 'openrouter':
           return process.env.OPENROUTER_API_KEY || '';
         case 'ollama':
@@ -544,7 +519,7 @@ Rules for specific task types:
   }
 
   /**
-   * Parse JSON content from AI-generated text (adapted from geminiService)
+   * Parse JSON content from AI-generated text
    */
   private parseJsonFromText(text: string): any {
     console.log("Attempting to parse JSON from text:", text.substring(0, 200) + "...");

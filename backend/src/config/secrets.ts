@@ -251,9 +251,10 @@ export class SecretsManager {
    */
   private getSecretFromEnv(key: string): string {
     // Map common secret keys to environment variable names
+    // Updated to use modern unified AI SDK variable names
     const envKeyMap: Record<string, string> = {
-      'gemini_api_key': 'GEMINI_API_KEY',
       'google_ai_api_key': 'GEMINI_API_KEY',
+      'gemini_api_key': 'GEMINI_API_KEY',
       'openai_api_key': 'OPENAI_API_KEY',
       'anthropic_api_key': 'ANTHROPIC_API_KEY',
       'openrouter_api_key': 'OPENROUTER_API_KEY',
@@ -282,7 +283,7 @@ export class SecretsManager {
    */
   async getProviderApiKey(provider: string): Promise<string> {
     const keyMap: Record<string, string> = {
-      'google': 'google_ai_api_key',
+      'google': 'gemini_api_key',
       'openai': 'openai_api_key',
       'anthropic': 'anthropic_api_key',
       'openrouter': 'openrouter_api_key',

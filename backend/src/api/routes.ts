@@ -2,7 +2,6 @@ import { Router } from 'express';
 import PromptController from './controllers/promptController';
 import WorkflowController from './controllers/workflowController';
 import ModelController from './controllers/modelController';
-import GeminiController from './controllers/geminiController';
 import WorkflowExecutionController from './controllers/workflowExecutionController';
 import ProviderController from './controllers/providerController';
 import authRoutes from './routes/auth';
@@ -41,11 +40,6 @@ router.post('/workflows/stop/:jobId', authMiddleware, WorkflowExecutionControlle
 // Model routes (protected)
 router.get('/models', authMiddleware, ModelController.getModels);
 
-// Gemini routes (optional authentication for initial setup)
-router.post('/gemini/test-prompt', optionalAuthMiddleware, GeminiController.testPrompt);
-router.post('/gemini/generate-sfl', optionalAuthMiddleware, GeminiController.generateSFLFromGoal);
-router.post('/gemini/regenerate-sfl', optionalAuthMiddleware, GeminiController.regenerateSFLFromSuggestion);
-router.post('/gemini/generate-workflow', optionalAuthMiddleware, GeminiController.generateWorkflowFromGoal);
 
 // Provider validation routes (optional authentication for setup)
 router.get('/providers/status', optionalAuthMiddleware, ProviderController.getProviderStatus);
@@ -62,5 +56,10 @@ router.get('/providers/stored-keys', optionalAuthMiddleware, ProviderController.
 
 // AI proxy routes (optional authentication)
 router.post('/proxy/generate', optionalAuthMiddleware, ProviderController.proxyGenerate);
+
+// SFL generation routes (optional authentication for setup)
+router.post('/providers/generate-sfl', optionalAuthMiddleware, ProviderController.generateSFLFromGoal);
+router.post('/providers/regenerate-sfl', optionalAuthMiddleware, ProviderController.regenerateSFLFromSuggestion);
+router.post('/providers/generate-workflow', optionalAuthMiddleware, ProviderController.generateWorkflowFromGoal);
 
 export default router;

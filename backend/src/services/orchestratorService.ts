@@ -3,7 +3,7 @@
  * @description Service for AI-powered workflow orchestration. This service takes high-level user requests
  * and uses LLM-powered decomposition to generate complete, executable workflows automatically.
  * 
- * @requires @google/genai
+ * @requires UnifiedAIService
  * @requires ../types
  * @requires ../prompts/orchestratorPrompt
  * @since 2.1.0
@@ -12,14 +12,7 @@
 import { Workflow, Task } from '../types';
 import { buildOrchestratorPrompt } from '../prompts/orchestratorPrompt';
 import { validateWorkflow, hasCircularDependencies, ValidationResult, ValidatedWorkflow } from '../validation/workflowSchemas';
-import GeminiService from './geminiService';
-
-/**
- * @constant {any} orchestrationService
- * @description AI service for workflow orchestration using the unified AI SDK.
- * @private
- */
-const orchestrationService = GeminiService;
+import UnifiedAIService from './unifiedAIService';
 
 /**
  * @interface OrchestratorResponse
@@ -153,7 +146,7 @@ class OrchestratorService {
       console.log("Orchestrator: [API_CALL] Model: gemini-2.5-flash");
       console.log("Orchestrator: [API_CALL] Temperature: 0.3");
       // TODO: Replace with proper orchestration method
-      const text = await orchestrationService.testPrompt(orchestratorPrompt);
+      const text = await UnifiedAIService.testPrompt(orchestratorPrompt);
       console.log("Orchestrator: [API_RESPONSE] Received response from Gemini API");
       console.log("Orchestrator: [API_RESPONSE] Response type:", typeof text);
       console.log("Orchestrator: [API_RESPONSE] Starting JSON parsing...");

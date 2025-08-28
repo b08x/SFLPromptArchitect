@@ -29,7 +29,7 @@ interface Config {
   getDatabaseUrl(): Promise<string>;
   /** Get the connection URL for the Redis server */
   getRedisUrl(): Promise<string>;
-  /** Get the API key for accessing Google's Gemini service */
+  /** Get the API key for accessing Google's Gemini AI service via @ai-sdk/google */
   getGeminiApiKey(): Promise<string>;
   /** Get the API key for accessing OpenAI's service */
   getOpenaiApiKey(): Promise<string>;

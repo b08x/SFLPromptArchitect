@@ -20,7 +20,7 @@ import {
   getSupportedProviders,
   AIServiceError
 } from '../../services/ai/aiSdkService';
-import { UnifiedAIService } from '../../services/unifiedAIService';
+import UnifiedAIService from '../../services/unifiedAIService';
 import { AIProvider } from '../../types/aiProvider';
 import { MODEL_CONFIG, getProviderConfig } from '../../config/model-config';
 
@@ -539,7 +539,7 @@ class ProviderController {
       const baseUrl = req.session?.baseUrls?.[provider];
 
       // Create unified AI service instance
-      const unifiedAI = UnifiedAIService.getInstance();
+      const unifiedAI = UnifiedAIService;
       
       // Make the AI request through the unified service
       const response = await unifiedAI.testPrompt(sanitizedPrompt, {
@@ -703,6 +703,120 @@ class ProviderController {
     } catch (error) {
       console.error('Error retrieving API key from session:', error);
       return null;
+    }
+  }
+
+  /**
+   * Generate SFL prompt from goal using unified AI service
+   * @route POST /api/providers/generate-sfl
+   */
+  static async generateSFLFromGoal(req: Request, res: Response): Promise<void> {
+    try {
+      const { goal, sourceDocContent, provider, model, parameters } = req.body;
+      
+      if (!goal) {
+        res.status(400).json({
+          success: false,
+          error: 'Goal is required'
+        });
+        return;
+      }
+
+      const providerConfig = {
+        provider: provider as AIProvider,
+        model,
+        parameters
+      };
+
+      const result = await UnifiedAIService.generateSFLFromGoal(goal, sourceDocContent, providerConfig);
+      
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Error generating SFL from goal:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate SFL prompt',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
+  /**
+   * Regenerate SFL prompt from suggestion using unified AI service
+   * @route POST /api/providers/regenerate-sfl
+   */
+  static async regenerateSFLFromSuggestion(req: Request, res: Response): Promise<void> {
+    try {
+      const { currentPrompt, suggestion, provider, model, parameters } = req.body;
+      
+      if (!currentPrompt || !suggestion) {
+        res.status(400).json({
+          success: false,
+          error: 'Current prompt and suggestion are required'
+        });
+        return;
+      }
+
+      const providerConfig = {
+        provider: provider as AIProvider,
+        model,
+        parameters
+      };
+
+      const result = await UnifiedAIService.regenerateSFLFromSuggestion(currentPrompt, suggestion, providerConfig);
+      
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Error regenerating SFL from suggestion:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to regenerate SFL prompt',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
+  /**
+   * Generate workflow from goal using unified AI service
+   * @route POST /api/providers/generate-workflow
+   */
+  static async generateWorkflowFromGoal(req: Request, res: Response): Promise<void> {
+    try {
+      const { goal, provider, model, parameters } = req.body;
+      
+      if (!goal) {
+        res.status(400).json({
+          success: false,
+          error: 'Goal is required'
+        });
+        return;
+      }
+
+      const providerConfig = {
+        provider: provider as AIProvider,
+        model,
+        parameters
+      };
+
+      const result = await UnifiedAIService.generateWorkflowFromGoal(goal, providerConfig);
+      
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Error generating workflow from goal:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate workflow',
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   }
 }
