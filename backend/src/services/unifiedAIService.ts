@@ -81,11 +81,12 @@ export class UnifiedAIService {
    */
   async testPrompt(
     promptText: string, 
-    providerConfig?: ProviderAwareRequest | SessionAwareRequest
+    providerConfig?: ProviderAwareRequest | SessionAwareRequest,
+    req?: import('express').Request
   ): Promise<string> {
     try {
-      // Default to Google provider if none specified (backward compatibility)
-      const provider = providerConfig?.provider || 'google';
+      // Get preferred provider if not specified
+      const provider = providerConfig?.provider || (req ? await (await import('./providerValidationService')).getPreferredProvider(req) : null) || 'google';
       
       // Use new aiSdkService for all providers
       const apiKey = await this.getApiKey({
@@ -116,11 +117,12 @@ export class UnifiedAIService {
   async generateSFLFromGoal(
     goal: string,
     sourceDocContent?: string,
-    providerConfig?: ProviderAwareRequest
+    providerConfig?: ProviderAwareRequest,
+    req?: import('express').Request
   ): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> {
     try {
-      // Default to Google provider if none specified (backward compatibility)
-      const provider = providerConfig?.provider || 'google';
+      // Get preferred provider if not specified
+      const provider = providerConfig?.provider || (req ? await (await import('./providerValidationService')).getPreferredProvider(req) : null) || 'google';
       
       // Use aiSdkService for all providers
       const apiKey = await this.getApiKey({
@@ -167,11 +169,12 @@ export class UnifiedAIService {
   async regenerateSFLFromSuggestion(
     currentPrompt: Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt' | 'geminiResponse' | 'geminiTestError' | 'isTesting'>,
     suggestion: string,
-    providerConfig?: ProviderAwareRequest
+    providerConfig?: ProviderAwareRequest,
+    req?: import('express').Request
   ): Promise<Omit<PromptSFL, 'id' | 'createdAt' | 'updatedAt'>> {
     try {
-      // Default to Google provider if none specified (backward compatibility)
-      const provider = providerConfig?.provider || 'google';
+      // Get preferred provider if not specified
+      const provider = providerConfig?.provider || (req ? await (await import('./providerValidationService')).getPreferredProvider(req) : null) || 'google';
       
       // Use aiSdkService for all providers
       const apiKey = await this.getApiKey({
@@ -185,7 +188,11 @@ export class UnifiedAIService {
       Here is the current prompt JSON:
       ${JSON.stringify(promptForPayload)}
       
-      ${sourceDocument ? `This prompt is associated with the following source document for stylistic reference:\n---\n${sourceDocument.content}\n---\n` : ''}
+      ${sourceDocument ? `This prompt is associated with the following source document for stylistic reference:
+---
+${sourceDocument.content}
+---
+` : ''}
 
       Here is my suggestion for how to change it:
       "${suggestion}"
@@ -229,11 +236,12 @@ export class UnifiedAIService {
    */
   async generateWorkflowFromGoal(
     goal: string,
-    providerConfig?: ProviderAwareRequest
+    providerConfig?: ProviderAwareRequest,
+    req?: import('express').Request
   ): Promise<Workflow> {
     try {
-      // Default to Google provider if none specified (backward compatibility)
-      const provider = providerConfig?.provider || 'google';
+      // Get preferred provider if not specified
+      const provider = providerConfig?.provider || (req ? await (await import('./providerValidationService')).getPreferredProvider(req) : null) || 'google';
       
       // Use aiSdkService for all providers
       const apiKey = await this.getApiKey({

@@ -42,6 +42,7 @@ router.get('/models', authMiddleware, ModelController.getModels);
 
 
 // Provider validation routes (optional authentication for setup)
+router.get('/providers/env-check', optionalAuthMiddleware, ProviderController.envCheck);
 router.get('/providers/status', optionalAuthMiddleware, ProviderController.getProviderStatus);
 router.get('/providers/available', optionalAuthMiddleware, ProviderController.getAvailableProviders);
 router.get('/providers/capabilities', optionalAuthMiddleware, ProviderController.getProviderCapabilities);

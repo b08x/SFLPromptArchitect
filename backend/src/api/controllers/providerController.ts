@@ -48,6 +48,31 @@ const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
  */
 class ProviderController {
   /**
+   * Checks which providers are configured via server-side environment variables.
+   * @route GET /api/providers/env-check
+   */
+  static async envCheck(req: Request, res: Response): Promise<void> {
+    try {
+      const available = await detectAvailableProviders();
+      const configured = available.filter(p => p.isConfigured).map(p => p.provider);
+      
+      res.json({
+        success: true,
+        data: {
+          configuredProviders: configured,
+        },
+      });
+    } catch (error) {
+      console.error('Error checking environment variables for providers:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to check environment variables',
+        details: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
    * Get the status of all available providers
    * @route GET /api/providers/status
    */
@@ -55,7 +80,7 @@ class ProviderController {
     try {
       const providers = await validateAllProviders();
       const hasAnyValid = providers.some(p => p.validationResult?.success === true);
-      const preferredProvider = await getPreferredProvider();
+      const preferredProvider = await getPreferredProvider(req);
 
       res.json({
         success: true,
@@ -81,7 +106,7 @@ class ProviderController {
    */
   static async getAvailableProviders(req: Request, res: Response): Promise<void> {
     try {
-      const providers = detectAvailableProviders();
+      const providers = await detectAvailableProviders();
 
       res.json({
         success: true,
@@ -239,7 +264,7 @@ class ProviderController {
   static async checkProviderHealth(req: Request, res: Response): Promise<void> {
     try {
       const isHealthy = await hasValidProvider();
-      const preferredProvider = await getPreferredProvider();
+      const preferredProvider = await getPreferredProvider(req);
 
       res.json({
         success: true,
@@ -349,7 +374,7 @@ class ProviderController {
    */
   static async getPreferredProvider(req: Request, res: Response): Promise<void> {
     try {
-      const preferredProvider = await getPreferredProvider();
+      const preferredProvider = await getPreferredProvider(req);
 
       if (!preferredProvider) {
         res.status(404).json({
@@ -447,7 +472,8 @@ class ProviderController {
       const encryptedData = ProviderController.encryptApiKey(sanitizedApiKey);
       
       if (!req.session) {
-        req.session = {} as typeof req.session;
+        // This shouldn't happen with express-session middleware properly configured
+        throw new Error('Session not initialized');
       }
       
       if (!req.session.apiKeys) {
@@ -469,12 +495,15 @@ class ProviderController {
         req.session.baseUrls[provider] = baseUrl;
       }
 
+      // Set this provider as the preferred provider for the session
+      req.session.preferredProvider = provider;
+
       res.json({
         success: true,
         data: {
           provider,
           validated: true,
-          message: 'API key securely stored',
+          message: 'API key securely stored and set as preferred',
         },
       });
     } catch (error) {
@@ -497,20 +526,10 @@ class ProviderController {
       const { provider, model, prompt, parameters, systemMessage } = req.body;
 
       // Input validation
-      if (!provider || !model || !prompt) {
+      if (!model || !prompt) {
         res.status(400).json({
           success: false,
-          error: 'Provider, model, and prompt are required',
-        });
-        return;
-      }
-
-      // Validate provider type using supported providers from aiSdkService
-      const validProviders = getSupportedProviders();
-      if (!validProviders.includes(provider as AIProvider)) {
-        res.status(400).json({
-          success: false,
-          error: `Invalid provider. Must be one of: ${validProviders.join(', ')}`,
+          error: 'Model and prompt are required',
         });
         return;
       }
@@ -525,19 +544,6 @@ class ProviderController {
         return;
       }
 
-      // Retrieve and decrypt API key from session
-      const apiKey = ProviderController.getApiKeyFromSession(req, provider);
-      if (!apiKey) {
-        res.status(401).json({
-          success: false,
-          error: 'No valid API key found for this provider. Please configure your API key first.',
-        });
-        return;
-      }
-
-      // Get baseUrl from session if available
-      const baseUrl = req.session?.baseUrls?.[provider];
-
       // Create unified AI service instance
       const unifiedAI = UnifiedAIService;
       
@@ -546,9 +552,8 @@ class ProviderController {
         provider,
         model,
         parameters: parameters || {},
-        apiKey,
-        baseUrl,
-      });
+        // API key will be resolved by UnifiedAIService from session or config
+      }, req);
 
       res.json({
         success: true,
@@ -728,7 +733,7 @@ class ProviderController {
         parameters
       };
 
-      const result = await UnifiedAIService.generateSFLFromGoal(goal, sourceDocContent, providerConfig);
+      const result = await UnifiedAIService.generateSFLFromGoal(goal, sourceDocContent, providerConfig, req);
       
       res.json({
         success: true,
@@ -766,7 +771,7 @@ class ProviderController {
         parameters
       };
 
-      const result = await UnifiedAIService.regenerateSFLFromSuggestion(currentPrompt, suggestion, providerConfig);
+      const result = await UnifiedAIService.regenerateSFLFromSuggestion(currentPrompt, suggestion, providerConfig, req);
       
       res.json({
         success: true,
@@ -804,7 +809,7 @@ class ProviderController {
         parameters
       };
 
-      const result = await UnifiedAIService.generateWorkflowFromGoal(goal, providerConfig);
+      const result = await UnifiedAIService.generateWorkflowFromGoal(goal, providerConfig, req);
       
       res.json({
         success: true,

@@ -4,6 +4,7 @@
  * @since 0.6.0
  */
 
+import { Request } from 'express';
 import config from '../config/env';
 
 export type AIProvider = 'google' | 'openai' | 'openrouter' | 'anthropic' | 'ollama' | 'cohere' | 'mistral' | 'groq';
@@ -364,22 +365,30 @@ export async function hasValidProvider(): Promise<boolean> {
  * Gets the preferred provider based on configuration and availability
  * @returns Promise resolving to the preferred provider or null if none available
  */
-export async function getPreferredProvider(): Promise<AIProvider | null> {
+export async function getPreferredProvider(req: Request): Promise<AIProvider | null> {
   const results = await validateAllProviders();
+
+  // 1. Check for a user-specific preferred provider in the session
+  if (req.session?.preferredProvider) {
+    const sessionProvider = results.find(r => r.provider === req.session.preferredProvider);
+    if (sessionProvider?.validationResult?.success) {
+      return sessionProvider.provider;
+    }
+  }
   
-  // First try the default provider
+  // 2. First try the default provider
   const defaultProvider = results.find(r => r.provider === config.defaultAiProvider);
   if (defaultProvider?.validationResult?.success) {
     return defaultProvider.provider;
   }
 
-  // Then try the fallback provider
+  // 3. Then try the fallback provider
   const fallbackProvider = results.find(r => r.provider === config.fallbackAiProvider);
   if (fallbackProvider?.validationResult?.success) {
     return fallbackProvider.provider;
   }
 
-  // Finally, return the first valid provider
+  // 4. Finally, return the first valid provider
   const validProvider = results.find(r => r.validationResult?.success);
   return validProvider?.provider || null;
 }
