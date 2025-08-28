@@ -9,7 +9,7 @@
  * @requires ../constants
  * @requires ../utils/generateId
  * @requires ./ModalShell
- * @requires ../services/geminiService
+ * @requires ../services/providerService
  * @requires ./icons/SparklesIcon
  * @requires ./icons/PaperClipIcon
  * @requires ./icons/XCircleIcon
@@ -20,7 +20,7 @@ import { PromptSFL } from '../types';
 import { INITIAL_PROMPT_SFL } from '../constants';
 import { generateId } from '../utils/generateId';
 import ModalShell from './ModalShell';
-import { regenerateSFLFromSuggestion } from '../services/geminiService';
+import { regenerateSFLFromSuggestion, getPreferredProvider } from '../services/providerService';
 import SparklesIcon from './icons/SparklesIcon';
 import PaperClipIcon from './icons/PaperClipIcon';
 import XCircleIcon from './icons/XCircleIcon';
@@ -180,8 +180,19 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({ isOpen, onClose, onSa
     if (!regenState.suggestion.trim()) return;
     setRegenState(prev => ({ ...prev, loading: true }));
     try {
-      const regeneratedData = await regenerateSFLFromSuggestion(formData, regenState.suggestion);
-      setFormData(regeneratedData);
+      const { preferredProvider } = await getPreferredProvider();
+      
+      const result = await regenerateSFLFromSuggestion(
+        formData, 
+        regenState.suggestion,
+        preferredProvider || undefined
+      );
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to regenerate prompt');
+      }
+      
+      setFormData(result.data);
       setRegenState({ shown: false, suggestion: '', loading: false });
     } catch (error) {
       console.error(error);

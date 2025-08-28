@@ -486,3 +486,115 @@ export async function isApplicationReady(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Generate SFL prompt from goal using the unified AI service
+ */
+export async function generateSFLFromGoal(
+  goal: string,
+  sourceDocContent?: string,
+  provider?: AIProvider,
+  model?: string,
+  parameters?: Record<string, unknown>
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const response = await authService.authenticatedFetch('/api/providers/generate-sfl', {
+      method: 'POST',
+      credentials: 'include',
+      body: JSON.stringify({
+        goal,
+        sourceDocContent,
+        provider,
+        model,
+        parameters,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Failed to generate SFL prompt' };
+    }
+    
+    return { success: true, data: data.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error generating SFL prompt',
+    };
+  }
+}
+
+/**
+ * Regenerate SFL prompt from suggestion using the unified AI service
+ */
+export async function regenerateSFLFromSuggestion(
+  currentPrompt: any,
+  suggestion: string,
+  provider?: AIProvider,
+  model?: string,
+  parameters?: Record<string, unknown>
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const response = await authService.authenticatedFetch('/api/providers/regenerate-sfl', {
+      method: 'POST',
+      credentials: 'include',
+      body: JSON.stringify({
+        currentPrompt,
+        suggestion,
+        provider,
+        model,
+        parameters,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Failed to regenerate SFL prompt' };
+    }
+    
+    return { success: true, data: data.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error regenerating SFL prompt',
+    };
+  }
+}
+
+/**
+ * Generate workflow from goal using the unified AI service
+ */
+export async function generateWorkflowFromGoal(
+  goal: string,
+  provider?: AIProvider,
+  model?: string,
+  parameters?: Record<string, unknown>
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const response = await authService.authenticatedFetch('/api/providers/generate-workflow', {
+      method: 'POST',
+      credentials: 'include',
+      body: JSON.stringify({
+        goal,
+        provider,
+        model,
+        parameters,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: data.error || 'Failed to generate workflow' };
+    }
+    
+    return { success: true, data: data.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error generating workflow',
+    };
+  }
+}

@@ -6,14 +6,14 @@
  *
  * @requires react
  * @requires ../../../types
- * @requires ../../../services/geminiService
+ * @requires ../../../services/providerService
  * @requires ../../ModalShell
  * @requires ./WorkflowEditorModal
  */
 
 import React, { useState } from 'react';
 import { Workflow, PromptSFL } from '../../../types';
-import { generateWorkflowFromGoal } from '../../../services/geminiService';
+import { generateWorkflowFromGoal, getPreferredProvider } from '../../../services/providerService';
 import ModalShell from '../../ModalShell';
 import WorkflowEditorModal from './WorkflowEditorModal';
 
@@ -54,8 +54,14 @@ const WorkflowWizardModal: React.FC<WorkflowWizardModalProps> = ({ isOpen, onClo
         setStep('loading');
         setErrorMessage('');
         try {
-            const workflow = await generateWorkflowFromGoal(goal);
-            setGeneratedWorkflow(workflow);
+            const { preferredProvider } = await getPreferredProvider();
+            const result = await generateWorkflowFromGoal(goal, preferredProvider || undefined);
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to generate workflow');
+            }
+            
+            setGeneratedWorkflow(result.data);
             setStep('refinement');
         } catch (error: any) {
             setErrorMessage(error.message || 'An unknown error occurred.');

@@ -18,7 +18,7 @@
  * @requires ./components/HelpModal
  * @requires ./components/Documentation
  * @requires ./components/lab/PromptLabPage
- * @requires ./services/geminiService
+ * @requires ./services/providerService
  * @requires ./services/promptApiService
  * @requires ./constants
  */
@@ -37,7 +37,7 @@ import Documentation from './components/Documentation';
 import PromptLabPage from './components/lab/PromptLabPage';
 import ProviderSetupPage from './components/settings/ProviderSetupPage';
 import AuthGuard from './components/AuthGuard';
-import { testPromptWithGemini } from './services/geminiService';
+import { generateAIResponse, getPreferredProvider } from './services/providerService';
 import { useProviderValidation } from './hooks/useProviderValidation';
 import { useAppStore } from './store/appStore';
 
@@ -354,8 +354,22 @@ const App: React.FC = () => {
     });
 
     try {
-      const responseText = await testPromptWithGemini(finalPromptText);
-      await updatePromptState(promptToTest.id, { isTesting: false, geminiResponse: responseText, geminiTestError: undefined });
+      const { preferredProvider } = await getPreferredProvider();
+      if (!preferredProvider) {
+        throw new Error('No AI provider configured. Please configure a provider first.');
+      }
+      
+      const result = await generateAIResponse(
+        preferredProvider,
+        'gpt-4', // Default model - could be made configurable later
+        finalPromptText
+      );
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to generate response');
+      }
+      
+      await updatePromptState(promptToTest.id, { isTesting: false, geminiResponse: result.response, geminiTestError: undefined });
     } catch (error: any) {
       await updatePromptState(promptToTest.id, { isTesting: false, geminiTestError: error.message, geminiResponse: undefined });
     }

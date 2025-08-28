@@ -7,7 +7,7 @@
  *
  * @requires react
  * @requires ../types
- * @requires ../services/geminiService
+ * @requires ../services/providerService
  * @requires ../constants
  * @requires ./ModalShell
  * @requires ./icons/SparklesIcon
@@ -17,7 +17,7 @@
 
 import React, { useState, useRef } from 'react';
 import { PromptSFL } from '../types';
-import { generateSFLFromGoal, regenerateSFLFromSuggestion } from '../services/geminiService';
+import { generateSFLFromGoal, regenerateSFLFromSuggestion, getPreferredProvider } from '../services/providerService';
 import { INITIAL_PROMPT_SFL } from '../constants';
 import ModalShell from './ModalShell';
 import SparklesIcon from './icons/SparklesIcon';
@@ -92,8 +92,14 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         setErrorMessage('');
 
         try {
-            const generatedData = await generateSFLFromGoal(goal, sourceDoc?.content);
-            setFormData({...generatedData, sourceDocument: sourceDoc || undefined });
+            const { preferredProvider } = await getPreferredProvider();
+            const result = await generateSFLFromGoal(goal, sourceDoc?.content, preferredProvider || undefined);
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to generate SFL prompt');
+            }
+            
+            setFormData({...result.data, sourceDocument: sourceDoc || undefined });
             setStep('refinement');
         } catch (error: any) {
             setErrorMessage(error.message || 'An unknown error occurred.');
@@ -256,8 +262,14 @@ const PromptWizardModal: React.FC<PromptWizardModalProps> = ({ isOpen, onClose, 
         if (!regenState.suggestion.trim()) return;
         setRegenState(prev => ({ ...prev, loading: true }));
         try {
-          const result = await regenerateSFLFromSuggestion(formData, regenState.suggestion);
-          setFormData(result);
+          const { preferredProvider } = await getPreferredProvider();
+          const result = await regenerateSFLFromSuggestion(formData, regenState.suggestion, preferredProvider || undefined);
+          
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to regenerate prompt');
+          }
+          
+          setFormData(result.data);
           setRegenState({ shown: false, suggestion: '', loading: false });
         } catch (error) {
           console.error(error);
