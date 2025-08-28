@@ -8,7 +8,7 @@ info:
     email: support@example.com
 
 servers:
-  - url: http://localhost:3000/api
+  - url: http://localhost:4000/api
     description: Local development server
   - url: https://api.sflprompt.studio/api
     description: Production server
@@ -22,142 +22,90 @@ components:
       description: JWT token-based authentication. Include the token in the Authorization header as 'Bearer <token>'
 
   schemas:
-    PromptSFL:
+    AIGenerationRequest:
       type: object
-      description: Structured Flexible Language (SFL) Prompt Structure
+      required:
+        - provider
+        - model
+        - prompt
       properties:
-        id:
+        provider:
           type: string
-        goal:
+          enum: ['google', 'openai', 'openrouter']
+          description: The AI provider to use for text generation
+        model:
           type: string
-        tenor:
+          description: Specific model to use from the selected provider
+        prompt:
           type: string
-        mode:
-          type: string
-        fields:
-          type: array
-          items:
-            $ref: '#/components/schemas/SFLField'
-
-    SFLField:
-      type: object
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-        type:
-          type: string
-
-    Workflow:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        tasks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Task'
-
-    Task:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        agent:
-          type: string
-        dependencies:
+          description: The input prompt for text generation
+        parameters:
+          type: object
+          properties:
+            temperature:
+              type: number
+              minimum: 0
+              maximum: 2
+              description: Controls randomness of output
+            maxTokens:
+              type: integer
+              description: Maximum number of tokens to generate
+            topP:
+              type: number
+              description: Nucleus sampling parameter
+        fallbackProviders:
           type: array
           items:
             type: string
+          description: Optional list of fallback providers if primary provider fails
 
-    AIProviderStatus:
+    AIGenerationResponse:
       type: object
       properties:
-        name:
+        text:
           type: string
-        available:
-          type: boolean
-        health:
+          description: Generated text response
+        providerUsed:
           type: string
+          description: The actual provider that generated the response
+        tokenUsage:
+          type: object
+          properties:
+            inputTokens:
+              type: integer
+            outputTokens:
+              type: integer
+            totalTokens:
+              type: integer
+        processingTime:
+          type: number
+          description: Time taken to generate response in milliseconds
 
 paths:
-  /prompts:
+  /proxy/generate:
     post:
-      summary: Create a new SFL-structured prompt
+      summary: Generate text using multi-provider AI service
+      description: Generates text using a specified or automatically selected AI provider
       security:
         - bearerAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PromptSFL'
-      responses:
-        '201':
-          description: Prompt created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PromptSFL'
-        '400':
-          description: Invalid prompt structure
-
-  /workflows:
-    post:
-      summary: Create a new workflow
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Workflow'
-      responses:
-        '201':
-          description: Workflow created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Workflow'
-        '400':
-          description: Invalid workflow structure
-
-  /providers/status:
-    get:
-      summary: Get AI provider status
-      security:
-        - bearerAuth: []
+              $ref: '#/components/schemas/AIGenerationRequest'
       responses:
         '200':
-          description: Provider status retrieved
+          description: Successful text generation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AIProviderStatus'
-
-  /gemini/generate-sfl:
-    post:
-      summary: Generate SFL from goal
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                goal:
-                  type: string
-      responses:
-        '200':
-          description: SFL generated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PromptSFL'
+                $ref: '#/components/schemas/AIGenerationResponse'
+        '400':
+          description: Bad request (invalid parameters)
+        '401':
+          description: Unauthorized (invalid JWT token)
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error or all providers failed

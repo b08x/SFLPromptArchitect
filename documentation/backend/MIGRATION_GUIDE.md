@@ -1,21 +1,24 @@
-# Migration Guide: From tempAuth to JWT Authentication
+# Migration Guide: From Single-Provider to Multi-Provider AI Service Architecture
 
 ## Overview
 
-This guide outlines the steps to migrate from the insecure `tempAuth.ts` middleware to the new JWT-based authentication system.
+This guide outlines the migration steps for our unified AI service architecture, transitioning from provider-specific implementations to a flexible, provider-agnostic approach.
 
 ## What Changed
 
 ### Removed Components
-- `backend/src/middleware/tempAuth.ts` - Completely removed
-- Hardcoded system user injection - Replaced with real user authentication
+- Provider-specific service implementations
+- Hardcoded provider configurations
+- Static AI model mappings
+- Manual provider-switching logic
 
 ### New Components
-- `backend/src/middleware/authMiddleware.ts` - JWT validation middleware
-- `backend/src/services/authService.ts` - Authentication business logic
-- `backend/src/api/controllers/authController.ts` - Auth HTTP endpoints
-- `backend/src/api/routes/auth.ts` - Authentication routes
-- Security middleware (Helmet, CORS, Rate limiting)
+- Unified AI Service Interface
+- Dynamic Provider Configuration
+- Standardized AI Request/Response Handling
+- Provider-Agnostic Model Selection
+- Intelligent Provider Routing
+- Enhanced Error Handling for Multi-Provider Scenarios
 
 ### Modified Components
 - `backend/src/app.ts` - Added security middleware, removed tempAuth
@@ -27,25 +30,35 @@ This guide outlines the steps to migrate from the insecure `tempAuth.ts` middlew
 
 ### 1. Environment Setup
 
-Create environment variables for JWT authentication:
+Update environment variables for multi-provider AI service:
 
 ```bash
 # Copy the example environment file
 cp backend/.env.example backend/.env
 
-# Edit with your values
-JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters-long
-JWT_EXPIRES_IN=24h
-BCRYPT_SALT_ROUNDS=12
-SESSION_SECRET=your-session-secret-key
-FRONTEND_URL=http://localhost:3000
+# AI Provider Configuration
+GEMINI_API_KEY=your_google_api_key
+OPENAI_API_KEY=your_openai_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
+
+# Provider Selection and Routing
+DEFAULT_AI_PROVIDER=google  # google|openai|openrouter
+PROVIDER_FALLBACK_ORDER=openai,openrouter
+
+# Optional: Provider-Specific Settings
+AI_REQUEST_TIMEOUT=30000  # 30 seconds
+MAX_TOKENS=4096
+TEMPERATURE=0.7
 ```
 
 ### 2. Install Dependencies
 
 The following packages have been added:
 ```bash
-npm install bcryptjs jsonwebtoken @types/bcryptjs @types/jsonwebtoken express-rate-limit helmet cors @types/cors
+npm install @ai-sdk/google @ai-sdk/openai @ai-sdk/openrouter
+npm install @anthropic/sdk
+npm install zod # For runtime type validation
+npm install jose # For robust JWT handling
 ```
 
 ### 3. Database Migration
@@ -83,20 +96,20 @@ app.use(helmet({...}));
 app.use(cors({...}));
 ```
 
-### 5. Update Route Protection
+### 5. Update AI Service Routing
 
-All API routes are now protected with `authMiddleware`:
+All AI generation routes now use unified provider interface:
 
-**Before (tempAuth):**
+**Before (Provider-Specific):**
 ```typescript
-router.post('/prompts', PromptController.createPrompt);
-// All requests had hardcoded system user
+router.post('/gemini/generate', GeminiController.generate);
+router.post('/openai/generate', OpenAIController.generate);
 ```
 
-**After (JWT Auth):**
+**After (Unified Routing):**
 ```typescript
-router.post('/prompts', authMiddleware, PromptController.createPrompt);
-// Only authenticated users can access
+router.post('/proxy/generate', authMiddleware, AIProxyController.generate);
+// Dynamic provider selection and fallback mechanism
 ```
 
 ### 6. Service Layer Changes
@@ -229,14 +242,19 @@ For development and testing:
 cd backend
 npm run dev
 
-# 2. Test authentication endpoints
-curl -X POST http://localhost:3001/api/auth/register \
+# 2. Test multi-provider AI generation
+curl -X POST http://localhost:4000/proxy/generate \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"StrongPass123!"}'
-
-# 3. Use returned token for API calls
-curl -X GET http://localhost:3001/api/prompts \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "provider": "google",
+    "model": "gemini-1.5-pro",
+    "prompt": "Write a Python function to calculate Fibonacci sequence",
+    "parameters": {
+      "temperature": 0.7,
+      "maxTokens": 500
+    }
+  }'
 ```
 
 ### 10. Testing
